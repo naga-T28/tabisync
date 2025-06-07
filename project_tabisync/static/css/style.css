@@ -1,0 +1,254 @@
+* {
+    box-sizing: border-box;
+}
+body, html {
+    overflow-x: hidden;
+    max-width: 100%;
+    height: 100%;
+    font-family: "Noto Sans JP", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    scroll-behavior: smooth;
+    color:rgb(95,96,97);
+    margin: 0;
+    padding: 0;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.page-main {
+  flex: 1;  /* メイン部分が残りの高さを取る */
+  margin-top: 70px; /* ヘッダーの高さ分だけ下げる */
+  margin-bottom: 100px;
+}
+article.user-agreement,
+article.privacy-policy {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+/*----------------------------------------
+  ヘッダーの設定
+----------------------------------------*/
+.page-header{
+    width: 100%;
+    height: auto;
+    background-color: #ffffff;
+    position: fixed;  /* 固定位置 */
+    top: 0;           /* 画面上部に配置 */
+    left: 0;          /* 左端に配置 */
+    width: 100%;      /* 横幅を画面いっぱいに */
+    z-index: 1000; 
+}
+.header-logo a{
+    text-decoration: none;
+    color: #000000;
+    font-size: 1.5rem;
+}
+.logo-image{
+  width: 150px; /* ロゴの幅を調整 */
+  height: auto; /* 高さは自動調整 */
+}
+.header-wrapper{
+    width:95%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+}
+/*----------------------------------------
+  ハンバーガーメニュー
+----------------------------------------*/
+.btn-trigger {
+    position: relative;
+    width: 40px;
+    height: 36px;
+    cursor: pointer;
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 6px;     /* 内側に余白を追加 */
+    margin: 5px 10px;
+  }
+.btn-trigger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: #000000;
+    border-radius: 4px;
+    transition: all .5s;
+    box-sizing: border-box;
+  }
+.btn-trigger span:nth-of-type(1) {
+    top: 0;
+  }
+.btn-trigger span:nth-of-type(2) {
+    top: 15px;
+  }
+.btn-trigger span:nth-of-type(3) {
+    bottom: 0;
+  }
+/* バツ印 */
+#btn08.active span:nth-of-type(1) {
+    transform: translateY(17px) rotate(-315deg);
+  }
+#btn08.active span:nth-of-type(2) {
+    opacity: 0;
+  }
+#btn08.active span:nth-of-type(3) {
+    transform: translateY(-17px) rotate(315deg);
+  }
+  
+/* メニュー本体（初期状態） */
+.header-nav-wrapper {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    transition: all 0.4s ease;
+    padding: 1rem;
+    border-bottom: 1px solid #ccc;
+    z-index: 50;
+    justify-content: center;
+  }
+  
+/* メニュー表示時 */
+.header-nav-item {
+  position: relative;
+  padding: 0;
+}
+
+.header-nav-wrapper.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  .header-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-align: left;
+    list-style: none;
+    align-items: flex-start; /* 左寄せに変更 */
+    width: 100%;
+}
+
+.header-nav-item {
+    width: 100%;
+    padding: 12px 0;
+    border-bottom: 1px dashed #999; /* 点線の区切り */
+}
+
+.header-nav-item:last-child {
+    border-bottom: none; /* 最後のアイテムは区切りを消す */
+}
+
+.header-nav-item a {
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    width: 100%;
+    padding-left: 8px;
+}
+
+/*----------------------------------------
+  フッターの設定
+----------------------------------------*/
+  /*フッターのスタイル*/
+  footer {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;   /* スマホは縦並び */
+    gap: 12px;
+    align-items: center;
+}
+
+footer ul li a.footer-content {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+footer ul li a.footer-content:hover {
+    color: #80caff; /* ホバー時アクセントカラー */
+}
+
+footer ul li a.footer-content i.fas.fa-external-link-alt {
+    margin-left: 5px;
+    font-size: 0.8em;
+    vertical-align: middle;
+}
+
+footer small {
+    display: block;
+    margin-top: 8px;
+    color: #cccccc;
+}
+
+/*----------------------------------------
+  メインビジュアル
+----------------------------------------*/
+.main-visual {
+    width: 100%;
+    height: 600px;
+    background-image: url("../img/main-visu.jpg");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: center;
+    padding-top: 150px;
+}
+.main-visual-wrapper {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* タイトル・サブタイトルの装飾 */
+.main-visual-subtitle {
+    font-weight: 400;
+    color: #ffffff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+.main-visual-btn {
+    margin-top: 20px;
+    width: 90%;
+    font-size: 20px;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff; /* 背景が透けるので文字は白などにするのが一般的 */
+    background-color: transparent; /* 背景色を透明に */
+    border: 2px solid #ffffff;/* 透明にすると境界が見えづらいため枠線追加推奨 */
+    border-radius: 100vh;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+}
+.main-visual-btn:hover {
+    background-color: rgba(255, 255, 255, 0.4); /* ホバーで少し白っぽく */
+}

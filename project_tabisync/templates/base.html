@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>TabiSync</title>
+        <meta name="description" content="無料・登録不要で旅行のしおりを作成共有できるサイトです。">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Font Awesome CDN (最新版) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!---ファビコン-->
+        <link rel="icon" href="images/favicon.png" type="image/png">
+        <!---Googleフォント-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!---リセットcsss-->
+        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <!--オリジナルCSS-->
+        <link rel="stylesheet" href="{% static 'css/style.css'%}">
+    </head>
+    <body>
+        <header class="page-header">
+            <div class="header-wrapper">
+                <div class="header-logo">
+                    <a href="{% url 'tabisync:home' %}">
+                        <img src="{% static 'img/logo_2.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                    </a>
+                </div>
+                <!-- ハンバーガーアイコン -->
+                <div id="btn08" class="btn-trigger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav class="header-nav-wrapper" id="nav-menu">
+                    <ul class="header-nav">
+                        <li class="header-nav-item"><a href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        {% block contents %}
+        {% endblock %}
+
+        <footer>
+            <ul>
+                <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                <li><a class="footer-content" href="https://www.naga-t.jp/contact/">お問い合わせ <i class="fas fa-external-link-alt"></i></a></li>
+            </ul>
+            <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
+        </footer>
+        <script src="{% static 'js/menu.js' %}"></script>
+    </body>
+</html>
