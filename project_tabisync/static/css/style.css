@@ -71,6 +71,10 @@ article.privacy-policy,
     align-items: center;
     margin: 0 auto;
 }
+.img-404{
+  width: 100%;
+  height: auto;
+}
 /*----------------------------------------
   ハンバーガーメニュー
 ----------------------------------------*/

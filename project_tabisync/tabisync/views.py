@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from django.urls import reverse
 from django.views.generic import TemplateView #add_2025.06.07
 from django.views import View
-from .models import Itinerary
+from .models import Itinerary, TravelDate, Schedule, Memo, Item
 
 # ホーム画面を表示するビュー
 class HomeView(TemplateView):
@@ -31,11 +33,9 @@ class UpdatesView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-    
-from django.views import View
-from django.shortcuts import render, redirect
-from .models import Itinerary, TravelDate, Schedule, Memo, Item
 
+#作成フォーム
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class CreateView(View):
     template_name = "tabisync/create.html"
 
@@ -110,10 +110,8 @@ class CreateView(View):
 
 
 #個別ページ
-from django.views.generic import TemplateView
-from django.shortcuts import get_object_or_404
-from .models import Itinerary
 
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ItineraryDetailView(TemplateView):
     template_name = "tabisync/content.html"
 
@@ -140,9 +138,8 @@ class ItineraryDetailView(TemplateView):
         context["items"] = itinerary.items.all()
         return context
 
-
-
-#パスワードの設定
+#パスワード入力画面
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ItineraryPasswordView(View):
     template_name = 'tabisync/password.html'
 
