@@ -1,0 +1,37 @@
+<!-- templates/itinerary_detail.html -->
+<h1>{{ itinerary.title }}</h1>
+<p>{{ itinerary.subtitle }}</p>
+<p>{{ itinerary.description }}</p>
+
+<h2>日程</h2>
+{% for travel_date in travel_dates %}
+  <h3>{{ travel_date.date }}</h3>
+  <ul>
+    {% for schedule in travel_date.schedules.all %}
+      <li>
+        {{ schedule.start_time }} - {{ schedule.end_time }}:
+        {{ schedule.title }} @ {{ schedule.location }}
+        {% if schedule.location_url %}
+          (<a href="{{ schedule.location_url }}" target="_blank">地図</a>)
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+
+<h2>メモ</h2>
+<ul>
+  {% for memo in memos %}
+    <li><strong>{{ memo.title }}</strong>: {{ memo.content }}</li>
+  {% endfor %}
+</ul>
+
+<h2>持ち物</h2>
+<ul>
+  {% for item in items %}
+    <li>
+      <input type="checkbox" {% if item.is_checked %}checked{% endif %} disabled>
+      {{ item.title }} - {{ item.detail }}
+    </li>
+  {% endfor %}
+</ul>
