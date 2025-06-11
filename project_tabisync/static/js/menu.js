@@ -66,3 +66,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
+// main.js（またはテンプレート内）
+flatpickr("input[type='date']", {
+  dateFormat: "Y-m-d",
+  locale: "ja"
+});
+
+flatpickr("input[type='time']", {
+  enableTime: true,
+  noCalendar: true,
+  dateFormat: "H:i",
+  time_24hr: true,
+  locale: "ja"
+});

@@ -2,11 +2,69 @@
 {% block title %}ホーム{% endblock %}
 
 {% block contents %}
+{% load static %}
 <main class="page-main">
     <section class="main-visual">
         <div class="main-visual-wrapper">
             <p class="main-visual-subtitle">登録不要・完全無料で旅行のしおりを作成してみんなと共有できます。</p>
-            <a class="main-visual-btn" href="#"><i class="fa-solid fa-pen-to-square"></i> しおりを作成する</i></a>
+            <a class="main-visual-btn" href="{% url 'tabisync:create' %}"><i class="fa-solid fa-pen-to-square"></i> しおりを作成する</a>
+        </div>
+    </section>
+
+    <section class="about-tabisync">
+        <h2 class="about-tabisync-title">TabiSyncの特徴</h2>
+        <div class="notable-point-pc-wrapper">
+            <div class="notable-point-wrapper">
+                <h3 class="notable-point-title">①アカウント登録不要・完全無料</h3>
+                <img src="{% static 'img/noaccount.jpg' %}" alt="アカウント登録不要・完全無料" class="notable-point-img">
+                <p class="notable-point-description">TabiSyncはアカウント登録なしで使える、完全無料の旅行しおり作成ツールです。すべての機能はWebブラウザ上で完結し、インストールやログインは必要ありません。</p>
+            </div>
+            <div class="notable-point-wrapper">
+                <h3 class="notable-point-title">②旅行に必要な共有はこれひとつで完結</h3>
+                <img src="{% static 'img/checlist.jpg' %}" alt="旅行に必要な共有はこれひとつで完結" class="notable-point-img">
+                <p class="notable-point-description">TabiSyncには、しおり作成機能に加え、持ち物リストやメモ、割り勘機能も搭載されています。旅行の計画や情報の共有に必要なツールがすべて揃っているため、これひとつで旅行準備がスムーズに進みます。</p>
+            </div>
+            <div class="notable-point-wrapper">
+                <h3 class="notable-point-title">③スマートフォンでの使いやすさを重視</h3>
+                <img src="{% static 'img/phone-design.jpg' %}" alt="スマホに最適化されたデザイン" class="notable-point-img">
+                <p class="notable-point-description">
+                    TabiSyncはスマートフォンでの使いやすさを重視してデザインされており、シンプルで見やすく、操作しやすい画面構成になっています。旅行中でも手軽にしおりを確認・編集できます。
+                </p>
+            </div>
+            <a class="about-tabisync-btn" href="{% url 'tabisync:create' %}"><i class="fa-solid fa-pen-to-square"></i> しおりを作成する</a>
+        </div>
+    </section>
+
+    <section class="update-section">
+        <div class="update-wrapper">
+            <h2 class="update-title"><a href="{% url 'tabisync:updates'%}">アップデート情報  <i class="fa-solid fa-circle-chevron-right"></i></a></h2>
+            <!--最新の3つだけ載せる-->
+            <ul class="update-list"> 
+                <li class="update-item">
+                    <div class="update-version-date">
+                        <span class="update-version"> v0.5.0 </span>
+                        <span class="update-date">2025年06月10日</span>
+                    </div>
+                    <span class="update-content">しおり作成フォームのデザインを更新しました</span>
+                </li>
+                <li class="update-item">
+                    <div class="update-version-date">
+                        <span class="update-version"> v0.0.0 </span>
+                        <span class="update-date">2025年06月09日</span>
+                    </div>
+                    <span class="update-content">サイトをアップロードしました</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="update-section">
+        <div class="update-wrapper">
+            <h2 class="update-title">ご意見・ご要望</h2>
+            <div class="contact-wrapper">
+            <p class="contact-form-description">「こんな機能を実装してほしい」「ここが使いにくい」「ここが便利だった」など、ご意見やご要望がありましたら、以下のお問い合わせフォームよりお気軽にお寄せください。</p>
+            <a class="contact-form-btn" href="https://www.naga-t.jp/contact/">お問い合わせはこちら <i class="fa-solid fa-angles-right"></i></a>
+            </div>
         </div>
     </section>
 </main>
