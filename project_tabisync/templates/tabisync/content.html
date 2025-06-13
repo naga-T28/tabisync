@@ -1,37 +1,224 @@
-<!-- templates/itinerary_detail.html -->
-<h1>{{ itinerary.title }}</h1>
-<p>{{ itinerary.subtitle }}</p>
-<p>{{ itinerary.description }}</p>
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>TabiSync</title>
+        <!-- インデックス防止用-->
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Font Awesome CDN (最新版) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ファビコン -->
+        <link rel="icon" href="{% static 'img/icon-tabisync.png'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.png'%}">
+        <!-- iPhone用のアイコンサイズを指定 -->
+        <meta name="apple-mobile-web-app-title" content="TabiSync">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <!---Googleフォント-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+        <!---リセットcsss-->
+        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <!--オリジナルCSS-->
+        <link rel="stylesheet" href="{% static 'css/style2.css'%}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </head>
+    <body id="content-body">
+        <header class="page-header">
+            <div class="header-wrapper">
+                <div class="header-logo">
+                    <h1>
+                        <a href="{% url 'tabisync:home' %}">
+                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                        </a>
+                    </h1>
+                </div>
+                <!-- ハンバーガーアイコン -->
+                 <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
+            </div>
+        </header>
 
-<h2>日程</h2>
-{% for travel_date in travel_dates %}
-  <h3>{{ travel_date.date }}</h3>
-  <ul>
-    {% for schedule in travel_date.schedules.all %}
-      <li>
-        {{ schedule.start_time }} - {{ schedule.end_time }}:
-        {{ schedule.title }} @ {{ schedule.location }}
-        {% if schedule.location_url %}
-          (<a href="{{ schedule.location_url }}" target="_blank">地図</a>)
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-{% endfor %}
+        <main class="content-main">
+          <div class="main-wrapper">
+            <div class="title-visual">
+              <h1 class="siori-title">{{ itinerary.title }}</h1>
+              {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+              <p class="siori-title-date">{{ first_date_str }} ～ {{ last_date_str }}</p>
+            </div>
+              {% if itinerary.description %}
+                <div class="box5-6">
+                  <h2 class="box-title">概要</h2>
+                  <div class="box-content"> 
+                    <p>{{ itinerary.description }}</p>
+                  </div>
+                </div>
+              {% endif %}
+            <div class="box5-6">
+            <h2 class="box-title">日程表</h2>
+            <div class="box-content"> 
+              <div class="tab-navigation">
+                <button id="prev-date">&#x25C0;</button>
+                <span id="current-date-label"></span>
+                <button id="next-date">&#x25B6;</button>
+              </div>
 
-<h2>メモ</h2>
-<ul>
-  {% for memo in memos %}
-    <li><strong>{{ memo.title }}</strong>: {{ memo.content }}</li>
-  {% endfor %}
-</ul>
+              <div id="date-tabs" style="display: none;">
+                {% for travel_date in travel_dates %}
+                  <button class="date-tab" data-date-id="date-{{ travel_date.id }}">
+                     {{ travel_date.date }}
+                  </button>
+                {% endfor %}
+              </div>
 
-<h2>持ち物</h2>
-<ul>
-  {% for item in items %}
-    <li>
-      <input type="checkbox" {% if item.is_checked %}checked{% endif %} disabled>
-      {{ item.title }} - {{ item.detail }}
-    </li>
-  {% endfor %}
-</ul>
+              {% for travel_date in travel_dates %}
+                <div class="date-section" id="date-{{ travel_date.id }}" style="display: none;">
+                  <h3 class="plan-title">{{ travel_date.date }}</h3>
+                  <div class="schedule-timeline">
+                    {% for schedule in travel_date.schedules.all|dictsort:"start_time" %}
+                        <div class="timeline-entry"
+                            id="schedule-{{ schedule.id }}"
+                            data-start-datetime="{{ travel_date.date|date:'Y-m-d' }}T{{ schedule.start_time|time:'H:i:s' }}"
+                        >
+
+                        <div class="timeline-entry-wrapper {% if not forloop.last %} with-connector{% endif %}">
+                          <div class="timeline-time-wrapper">
+                            <div class="timeline-time">{{ schedule.start_time|time:"H:i" }}</div>
+                              {% if not forloop.last %}
+                                <div class="timeline-blank"></div>
+                              {% endif %}
+                          </div>
+                          <div class="timeline-details">
+                            <div class="timeline-title">{{ schedule.title }}</div>
+                            {% if schedule.location %}
+                              <div class="timeline-location">
+                                {% if schedule.location_url %}
+                                  <a class="location-url" href="{{ schedule.location_url }}" target="_blank"><i class="fa-solid fa-location-dot"></i> {{ schedule.location }}</a>
+                                {% else %}
+                                  <p class="location-url"><i class="fa-solid fa-location-dot"></i> {{ schedule.location }}</p>
+                                {% endif %}
+                              </div>
+                            {% endif %}
+                            {% if schedule.description %}
+                              <div class="timeline-description">{{ schedule.description|linebreaksbr }}</div>
+                            {% endif %}
+                            <div class="blank"></div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+
+            </div>
+
+          </div>
+        </main>
+        <footer>
+            <nav class="footer-nav">
+                <ul class="footer-nav-ul">
+                    <li class="footer-nav-li footer-nav-li-select"><a class="footer-nav-a" href="{% url 'tabisync:content' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-house"></i><div>旅程表</div></a></li>
+                    <!-- <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:user_agreement' %}"><i class="fa-solid fa-wallet"></i><div>割り勘</div></a></li> -->
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_list' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-list-check"></i><div>リスト</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_memo' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-clipboard"></i><div>メモ</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:user_agreement' %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
+                </ul>
+            </nav>
+            <ul>
+                <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
+                <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+            </ul>
+            <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
+        </footer>
+        <script src="{% static 'js/menu.js' %}"></script>
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            const sections = Array.from(document.querySelectorAll(".date-section"));
+            const label = document.getElementById("current-date-label");
+            let currentIndex = 0;
+
+            function showSection(index) {
+              sections.forEach((s, i) => s.style.display = i === index ? "block" : "none");
+              label.textContent = `Day ${index + 1}`;
+            }
+
+            document.getElementById("prev-date").addEventListener("click", () => {
+              currentIndex = (currentIndex - 1 + sections.length) % sections.length;
+              showSection(currentIndex);
+            });
+
+            document.getElementById("next-date").addEventListener("click", () => {
+              currentIndex = (currentIndex + 1) % sections.length;
+              showSection(currentIndex);
+            });
+
+            if (sections.length > 0) showSection(0);
+
+            // === 次の予定をハイライト ===
+            const now = new Date();
+            let nextSchedule = null;
+            let minDiff = Infinity;
+
+            document.querySelectorAll(".timeline-entry").forEach(entry => {
+              const datetimeStr = entry.dataset.startDatetime;
+              if (!datetimeStr) return;
+
+              const start = new Date(datetimeStr); // ここでエラーが出なくなる
+              const diff = start - now;
+
+              if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nextSchedule = entry;
+              }
+            });
+            if (nextSchedule) {
+              nextSchedule.classList.add('next-highlight');
+
+              const timeElem = nextSchedule.querySelector('.timeline-time');
+              const timeWrapper = nextSchedule.querySelector('.timeline-time-wrapper');
+              if (timeElem && timeWrapper) {
+
+                // nextの時間だけにクラス追加
+                timeWrapper.classList.add('highlight-next-time');
+              }
+
+              const parentSection = nextSchedule.closest(".date-section");
+              const index = sections.findIndex(s => s === parentSection);
+              if (index !== -1) {
+                currentIndex = index;
+                showSection(index);
+              }
+            }
+
+        });
+        document.getElementById('share-button').addEventListener('click', function () {
+          if (navigator.share) {
+            navigator.share({
+              title: document.title,
+              text: '旅行しおりを共有します',
+              url: window.location.href
+            })
+            .then(() => console.log('共有成功'))
+            .catch((error) => console.log('共有失敗', error));
+          } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            // Web Share API非対応時、クリップボードにURLをコピー
+            navigator.clipboard.writeText(window.location.href)
+              .then(() => {
+                alert('URLをクリップボードにコピーしました。共有したい場所に貼り付けてください。');
+              })
+              .catch(() => {
+                alert('クリップボードへのコピーに失敗しました。手動でURLをコピーしてください。\n' + window.location.href);
+              });
+          } else {
+            // クリップボードAPIも無理なら、古典的にpromptでURLを表示
+            prompt('URLをコピーしてください:', window.location.href);
+          }
+          });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,27 @@
+services:
+  app:
+    container_name: tabisync-test
+    build:
+      context: .
+      dockerfile: ./containers/django/Dockerfile
+    environment:    
+      - DJANGO_SETTINGS_MODULE=app_config.settings
+      - GOOGLE_APPLICATION_CREDENTIALS=/code/key.json
+    volumes:
+      - .:/code
+      - ~/.config:/root/.config:ro
+    expose:
+      - "8000"
+    env_file:
+      - ../.env
+    command: sh -c "/usr/local/bin/entrypoint.sh"
+
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    external: true  #
+
+
+

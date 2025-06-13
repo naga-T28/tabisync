@@ -10,9 +10,9 @@ class Itinerary(models.Model):
     subtitle = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    view_password = models.CharField(max_length=128, blank=True)  # ハッシュ化
-    edit_password = models.CharField(max_length=128, blank=True)  # ハッシュ化
-    reset_email = models.EmailField(blank=True)
+    view_password = models.CharField(max_length=128, blank=True,null=True)  # ハッシュ化
+    edit_password = models.CharField(max_length=128, blank=True,null=True)  # ハッシュ化
+    reset_email = models.EmailField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
