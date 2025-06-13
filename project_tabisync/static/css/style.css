@@ -35,12 +35,12 @@ article.privacy-policy,
     margin-right: auto;
     margin-top: 20px;
 }
-@media screen and (min-width: 960px) {
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 960px;
-  }
+.updates-article{
+  margin-bottom: 600px;
+}
+.header-nav-pc-wrapper{
+  display: none;
+
 }
 /*----------------------------------------
   ヘッダーの設定
@@ -236,10 +236,10 @@ footer small {
     justify-content: center;
     align-items: flex-start;
     text-align: center;
-    padding-top: 150px;
+    padding-top: 100px;
 }
 .main-visual-wrapper {
-    width: 80%;
+    width: 90%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -268,7 +268,21 @@ footer small {
   transition: all 0.3s ease;
   z-index: 0;
 }
-
+.demo-btn{
+  position: relative;
+  overflow: hidden; /* 擬似要素がはみ出さないように */
+  margin-top: 20px;
+  width: 90%;
+  font-size: 20px;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: transparent;
+  border: 2px solid #ffffff;
+  border-radius: 100vh;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+  z-index: 0;
+}
 /* シャイン用の擬似要素 */
 .main-visual-btn::before {
   content: "";
@@ -315,7 +329,15 @@ footer small {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
+}
+.notable-point-pc-wrapper-btn{
+    width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .notable-point-wrapper{
   width: 100%;
@@ -710,4 +732,104 @@ h3.input-item-title-first{
   color: #999;
   font-size: 12px;
   margin-bottom: 5px;
+}
+
+.password-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top:200px;
+  margin-bottom: 500px;
+  gap:10px
+}
+.password-btn {
+  display: flex;
+  flex-direction: row;
+}
+
+@media screen and (min-width: 720px) {
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  .notable-point-pc-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap:50px;
+  }
+  .notable-point-pc-wrapper-btn,
+  .main-visual-btn,
+  .demo-btn {
+    width: 650px;
+  }
+  .header-nav-pc-wrapper{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .notable-point-wrapper{
+    display:flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+  .header-nav-pc{
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    gap:20px;
+  }
+  .header-nav-pc li{
+    display: flex;
+    align-items: flex-end;
+  }
+  
+  .header-nav-pc li a{
+    font-style: none;
+    text-decoration: none;
+    font-size: 18px;
+    color:rgb(95,96,97);
+  }
+  .btn-trigger{
+    display: none;
+  }
+  .header-wrapper{
+    display: flex;
+    align-items: flex-end;
+  }
+  .section3-wrapper{
+    width: 90%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: row;
+  }
+  .update-wrapper{
+    flex:1;
+    height: 100%;
+  }
+  .contact-wrapper{
+    display: flex;
+    flex-direction: column;
+    align-content: space-between;
+  }
+  .page-header{
+    width: 100%;
+    height: 80px;
+    background-color: #ffffff;
+    position: fixed;  /* 固定位置 */
+    top: 0;           /* 画面上部に配置 */
+    left: 0;          /* 左端に配置 */
+    width: 100%;      /* 横幅を画面いっぱいに */
+    z-index: 1000; 
+  }
+  .logo-image{
+    margin-top: 10px;
+    height: 60px; /* 高さは自動調整 */
+    width: auto; /* ロゴの幅を調整 */
+  }
+
 }

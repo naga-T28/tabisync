@@ -8,6 +8,7 @@
         <div class="main-visual-wrapper">
             <p class="main-visual-subtitle">登録不要・完全無料で旅行のしおりを作成してみんなと共有できます。</p>
             <a class="main-visual-btn" href="{% url 'tabisync:create' %}"><i class="fa-solid fa-pen-to-square"></i> しおりを作成する</a>
+            <a class="demo-btn" href="{% url 'tabisync:demo_content' %}"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i> しおりの使い心地を試す</a>
         </div>
     </section>
 
@@ -31,41 +32,44 @@
                     TabiSyncはスマートフォンでの使いやすさを重視してデザインされており、シンプルで見やすく、操作しやすい画面構成になっています。旅行中でも手軽にしおりを確認・編集できます。
                 </p>
             </div>
+        </div>
+        <div class="notable-point-pc-wrapper-btn">
             <a class="about-tabisync-btn" href="{% url 'tabisync:create' %}"><i class="fa-solid fa-pen-to-square"></i> しおりを作成する</a>
         </div>
     </section>
-
-    <section class="update-section">
-        <div class="update-wrapper">
-            <h2 class="update-title"><a href="{% url 'tabisync:updates'%}">アップデート情報  <i class="fa-solid fa-circle-chevron-right"></i></a></h2>
-            <!--最新の3つだけ載せる-->
-            <ul class="update-list"> 
-                <li class="update-item">
-                    <div class="update-version-date">
-                        <span class="update-version"> v0.5.0 </span>
-                        <span class="update-date">2025年06月10日</span>
-                    </div>
-                    <span class="update-content">しおり作成フォームのデザインを更新しました</span>
-                </li>
-                <li class="update-item">
-                    <div class="update-version-date">
-                        <span class="update-version"> v0.0.0 </span>
-                        <span class="update-date">2025年06月09日</span>
-                    </div>
-                    <span class="update-content">サイトをアップロードしました</span>
-                </li>
-            </ul>
-        </div>
-    </section>
-
-    <section class="update-section">
-        <div class="update-wrapper">
-            <h2 class="update-title">ご意見・ご要望</h2>
-            <div class="contact-wrapper">
-            <p class="contact-form-description">「こんな機能を実装してほしい」「ここが使いにくい」「ここが便利だった」など、ご意見やご要望がありましたら、以下のお問い合わせフォームよりお気軽にお寄せください。</p>
-            <a class="contact-form-btn" href="https://www.naga-t.jp/contact/">お問い合わせはこちら <i class="fa-solid fa-angles-right"></i></a>
+    <div class="section3-wrapper">
+        <section class="update-section">
+            <div class="update-wrapper">
+                <h2 class="update-title"><a href="{% url 'tabisync:updates'%}">アップデート情報  <i class="fa-solid fa-circle-chevron-right"></i></a></h2>
+                <!--最新の3つだけ載せる-->
+                <ul class="update-list"> 
+                    <li class="update-item">
+                        <div class="update-version-date">
+                            <span class="update-version"> v0.5.0 </span>
+                            <span class="update-date">2025年06月10日</span>
+                        </div>
+                        <span class="update-content">しおり作成フォームのデザインを更新しました</span>
+                    </li>
+                    <li class="update-item">
+                        <div class="update-version-date">
+                            <span class="update-version"> v0.0.0 </span>
+                            <span class="update-date">2025年06月09日</span>
+                        </div>
+                        <span class="update-content">サイトをアップロードしました</span>
+                    </li>
+                </ul>
             </div>
-        </div>
-    </section>
+        </section>
+
+        <section class="update-section">
+            <div class="update-wrapper">
+                <h2 class="update-title">ご意見・ご要望</h2>
+                <div class="contact-wrapper">
+                <p class="contact-form-description">「こんな機能を実装してほしい」「ここが使いにくい」「ここが便利だった」など、ご意見やご要望がありましたら、以下のお問い合わせフォームよりお気軽にお寄せください。</p>
+                <a class="contact-form-btn" href="https://www.naga-t.jp/contact/">お問い合わせはこちら <i class="fa-solid fa-angles-right"></i></a>
+                </div>
+            </div>
+        </section>
+    </div>
 </main>
 {% endblock %}

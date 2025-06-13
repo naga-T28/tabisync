@@ -18,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / 'staticfiles' 
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,9 +28,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 SECRET_KEY = 'django-insecure-i@!cvz4i1di!o$yq#h3ga8ep_-2-z%&i((c-6lwj(c2v+jj_0r'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.193','0.0.0.0']
+ALLOWED_HOSTS = ['192.168.0.193','0.0.0.0','10.10.4.170']
 
 
 # Application definition
