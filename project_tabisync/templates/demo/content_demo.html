@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>TabiSync - デモページ</title>
+    <!-- インデックス防止用-->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Font Awesome CDN (最新版) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ファビコン -->
+    <link rel="icon" href="{% static 'img/icon-tabisync.png'%}">
+    <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.png'%}">
+    <!-- iPhone用のアイコンサイズを指定 -->
+    <meta name="apple-mobile-web-app-title" content="TabiSync">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Googleフォント -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+    <!-- リセットCSS -->
+    <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+    <!-- オリジナルCSS -->
+    <link rel="stylesheet" href="{% static 'css/style2.css'%}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body id="content-body">
+    <header class="page-header">
+        <div class="header-wrapper">
+            <div class="header-logo">
+                <h1>
+                    <a href="{% url 'tabisync:home' %}">
+                        <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                    </a>
+                </h1>
+            </div>
+            <!-- ハンバーガーアイコン -->
+            <div id="btn08" class="btn-trigger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav class="header-nav-wrapper" id="nav-menu">
+                <ul class="header-nav">
+                    <li class="header-nav-item"><a href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
+                    <li class="header-nav-item"><a href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="content-main">
+        <div class="main-wrapper">
+            <div class="title-visual">
+                <h1 class="siori-title">タイトルサンプル</h1>
+                <p class="siori-sub-title">~サンプル旅程のサブタイトル~</p>
+                <p class="siori-title-date">2025-06-13 ～ 2025-06-15</p>
+            </div>
+
+            <div class="box5-6">
+                <h2 class="box-title">概要</h2>
+                <div class="box-content">
+                    <p>これは旅程の概要説明が入る場所です。旅行の目的や注意事項などを書きます。</p>
+                </div>
+            </div>
+
+            <div class="box5-6">
+                <h2 class="box-title">日程表</h2>
+                <div class="box-content">
+                    <div class="tab-navigation">
+                        <button id="prev-date">&#x25C0;</button>
+                        <span id="current-date-label">Day 1</span>
+                        <button id="next-date">&#x25B6;</button>
+                    </div>
+
+                    <div id="date-tabs" style="display: none;">
+                        <button class="date-tab" data-date-id="date-1">2025-06-13</button>
+                        <button class="date-tab" data-date-id="date-2">2025-06-14</button>
+                        <button class="date-tab" data-date-id="date-3">2025-06-15</button>
+                    </div>
+
+                    <!-- 日程1 -->
+                    <div class="date-section" id="date-1" style="display: block;">
+                        <h3 class="plan-title">2025-06-13</h3>
+                        <div class="schedule-timeline">
+                            <div class="timeline-entry" id="schedule-101" style="background-color: #fffae6; margin-left:-5px; padding-left:5px; padding-right:5px;">
+                                <div class="timeline-entry-wrapper with-connector">
+                                    <div class="timeline-time-wrapper">
+                                        <div class="timeline-time">09:00</div>
+                                        <div class="timeline-blank"></div>
+                                    </div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-title">東京観光スタート</div>
+                                        <div class="timeline-location">
+                                            <a class="location-url" href="https://maps.app.goo.gl/Dktsbg41GThnZayW8" target="_blank"><i class="fa-solid fa-location-dot"></i> 東京駅</a>
+                                        </div>
+                                        <div class="timeline-description">現時刻を参考にして、次の予定はこのように背景が黄色くなります</div>
+                                        <div class="blank"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="timeline-entry" id="schedule-102">
+                                <div class="timeline-entry-wrapper">
+                                    <div class="timeline-time-wrapper">
+                                        <div class="timeline-time">12:00</div>
+                                    </div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-title">ランチ</div>
+                                        <div class="timeline-location">
+                                            <p class="location-url"><i class="fa-solid fa-location-dot"></i> 銀座レストラン</p>
+                                        </div>
+                                        <div class="timeline-description">美味しい和食を堪能します。</div>
+                                        <div class="blank"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日程2 -->
+                    <div class="date-section" id="date-2" style="display: none;">
+                        <h3 class="plan-title">2025-06-14</h3>
+                        <div class="schedule-timeline">
+                            <div class="timeline-entry" id="schedule-201">
+                                <div class="timeline-entry-wrapper with-connector">
+                                    <div class="timeline-time-wrapper">
+                                        <div class="timeline-time">10:00</div>
+                                        <div class="timeline-blank"></div>
+                                    </div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-title">美術館訪問</div>
+                                        <div class="timeline-location">
+                                            <a class="location-url" href="https://museum.jp" target="_blank"><i class="fa-solid fa-location-dot"></i> 国立美術館</a>
+                                        </div>
+                                        <div class="timeline-description">最新の展示を観覧します。</div>
+                                        <div class="blank"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="timeline-entry" id="schedule-202">
+                                <div class="timeline-entry-wrapper">
+                                    <div class="timeline-time-wrapper">
+                                        <div class="timeline-time">14:00</div>
+                                    </div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-title">カフェタイム</div>
+                                        <div class="timeline-location">
+                                            <p class="location-url"><i class="fa-solid fa-location-dot"></i> 表参道カフェ</p>
+                                        </div>
+                                        <div class="timeline-description">ゆっくり休憩。</div>
+                                        <div class="blank"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日程3 -->
+                    <div class="date-section" id="date-3" style="display: none;">
+                        <h3 class="plan-title">2025-06-15</h3>
+                        <div class="schedule-timeline">
+                            <div class="timeline-entry" id="schedule-301">
+                                <div class="timeline-entry-wrapper">
+                                    <div class="timeline-time-wrapper">
+                                        <div class="timeline-time">08:00</div>
+                                    </div>
+                                    <div class="timeline-details">
+                                        <div class="timeline-title">帰宅準備</div>
+                                        <div class="timeline-location">
+                                            <p class="location-url"><i class="fa-solid fa-location-dot"></i> ホテル</p>
+                                        </div>
+                                        <div class="timeline-description">荷造りして空港へ向かいます。</div>
+                                        <div class="blank"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <nav class="footer-nav">
+            <ul class="footer-nav-ul">
+                <li class="footer-nav-li footer-nav-li-select"><a class="footer-nav-a" href="{% url 'tabisync:demo_content' %}"><i class="fa-solid fa-house"></i><div>旅程表</div></a></li>
+                <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_list' %}"><i class="fa-solid fa-list-check"></i><div>リスト</div></a></li>
+                <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_memo' %}"><i class="fa-solid fa-clipboard"></i><div>メモ</div></a></li>
+                <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_edit' %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
+            </ul>
+        </nav>
+        <ul>
+            <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
+            <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+        </ul>
+        <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
+    </footer>
+
+    <script src="{% static 'js/menu.js' %}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sections = Array.from(document.querySelectorAll(".date-section"));
+            const label = document.getElementById("current-date-label");
+            let currentIndex = 0;
+
+            function showSection(index) {
+                sections.forEach((s, i) => s.style.display = i === index ? "block" : "none");
+                label.textContent = `Day ${index + 1}`;
+            }
+
+            document.getElementById("prev-date").addEventListener("click", () => {
+                currentIndex = (currentIndex - 1 + sections.length) % sections.length;
+                showSection(currentIndex);
+            });
+
+            document.getElementById("next-date").addEventListener("click", () => {
+                currentIndex = (currentIndex + 1) % sections.length;
+                showSection(currentIndex);
+            });
+
+            // 初期表示
+            if (sections.length > 0) showSection(0);
+        });
+
+        // ハンバーガーメニューのトグル例（もとのJSと合わせて調整してください）
+        document.getElementById("btn08").addEventListener("click", function () {
+            const nav = document.getElementById("nav-menu");
+            nav.classList.toggle("open");
+            this.classList.toggle("open");
+        });
+    </script>
+</body>
+</html>

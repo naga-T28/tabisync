@@ -20,14 +20,15 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
-        <link rel="stylesheet" href="{% static 'css/style.css'%}">
+        <link rel="stylesheet" href="{% static 'css/style2.css'%}">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
-    <body>
+    <body id="content-body">
         <header class="page-header">
             <div class="header-wrapper">
                 <div class="header-logo">
@@ -52,10 +53,47 @@
             </div>
         </header>
 
-        {% block contents %}
-        {% endblock %}
+        <main class="content-main">
+          <div class="main-wrapper">
+            <div class="title-visual">
+              <h1 class="siori-title">メモ</h1>
+              <p class="siori-sub-title">-タイトルサンプル-</p>
+            </div>
 
+            <div class="box5-6">
+                <h2 class="box-title">メモのタイトル</h2>
+                <div class="box-content">
+                    ここにメモの詳細を書けます
+                </div>
+            </div>
+            <div class="box5-6">
+                <h2 class="box-title">メモのタイトル</h2>
+                <div class="box-content">
+                    このようにメモが増えていきます
+                </div>
+            </div>
+
+            <div class="box5-6">
+                <h2 class="box-title">メモについて</h2>
+                <div class="box-content"> 
+                    <ul class="precaution">
+                        <li>メモの編集は右下の編集ボタンから行えます</li>
+                        <li>クレジットカードや個人情報などの記入はおやめください</li>
+                    </ul>
+                </div>
+            </div>
+
+          </div>
+        </main>
         <footer>
+            <nav class="footer-nav">
+                <ul class="footer-nav-ul">
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_content' %}"><i class="fa-solid fa-house"></i><div>旅程表</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_list' %}"><i class="fa-solid fa-list-check"></i><div>リスト</div></a></li>
+                    <li class="footer-nav-li footer-nav-li-select"><a class="footer-nav-a" href="{% url 'tabisync:demo_memo' %}"><i class="fa-solid fa-clipboard"></i><div>メモ</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:demo_edit' %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
+                </ul>
+            </nav>
             <ul>
                 <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
                 <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
@@ -63,5 +101,6 @@
             <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
         </footer>
         <script src="{% static 'js/menu.js' %}"></script>
+
     </body>
 </html>

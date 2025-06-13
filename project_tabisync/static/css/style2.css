@@ -1,0 +1,608 @@
+/*----------------------------------------
+  全体のの設定
+----------------------------------------*/
+* {
+    box-sizing: border-box;
+}
+body, html {
+    overflow-x: hidden;
+    max-width: 100%;
+    height: 100%;
+    font-family: "Noto Sans JP", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    scroll-behavior: smooth;
+    color:rgb(95,96,97);
+    margin: 0;
+    padding: 0;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-bottom: 60px;
+}
+.page-main {
+  flex: 1;  /* メイン部分が残りの高さを取る */
+  margin-top: 40px; /* ヘッダーの高さ分だけ下げる */
+  margin-bottom: 100px;
+}
+main{
+    font-family: 'Yusei Magic', sans-serif;
+}
+article.user-agreement,
+article.privacy-policy,
+.updates-article{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+}
+@media screen and (min-width: 960px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 960px;
+  }
+}
+/*----------------------------------------
+  ヘッダーの設定
+----------------------------------------*/
+.page-header{
+    width: 100%;
+    height: auto;
+    background-color: #ffffff;
+    position: fixed;  /* 固定位置 */
+    top: 0;           /* 画面上部に配置 */
+    left: 0;          /* 左端に配置 */
+    width: 100%;      /* 横幅を画面いっぱいに */
+    z-index: 1000; 
+}
+.header-logo a{
+    text-decoration: none;
+    color: #000000;
+    font-size: 1.5rem;
+}
+.logo-image{
+  height: 40px; /* 高さは自動調整 */
+  width: auto; /* ロゴの幅を調整 */
+}
+.header-wrapper{
+    width:95%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+}
+.img-404{
+  width: 100%;
+  height: auto;
+}
+/*----------------------------------------
+  固定フッター
+----------------------------------------*/
+.footer-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #fff; /* 背景色を必要に応じて変更 */
+  border-top: 1px solid #ccc;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.footer-nav-ul {
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.footer-nav-li{
+  flex: 1; 
+  padding-top: 5px;
+} 
+.footer-nav-a{
+  text-decoration: none;
+  color: rgb(120, 120, 120);;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.footer-nav-a i{
+  font-size: 25px;
+}
+.footer-nav-a div{
+  font-size: 12px;
+}
+.footer-nav-li-select{
+  border-top: 5px solid rgb(175, 41, 187);
+
+}
+.footer-nav-li-select .footer-nav-a{
+  color: rgb(175, 41, 187);
+}
+
+.karidome{
+  margin-top:500px;
+  margin-bottom: 500px;
+
+}
+/*----------------------------------------
+  ハンバーガーメニュー
+----------------------------------------*/
+.btn-trigger {
+    position: relative;
+    width: 30px;
+    height: 29px;
+    cursor: pointer;
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 4px;     /* 内側に余白を追加 */
+    margin: 5px 10px;
+  }
+.btn-trigger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: rgb(95,96,97);;
+    border-radius: 4px;
+    transition: all .5s;
+    box-sizing: border-box;
+  }
+.btn-trigger span:nth-of-type(1) {
+    top: 0;
+  }
+.btn-trigger span:nth-of-type(2) {
+    top: 12px;
+  }
+.btn-trigger span:nth-of-type(3) {
+    bottom: 0;
+  }
+/* バツ印 */
+#btn08.active span:nth-of-type(1) {
+    transform: translateY(13px) rotate(-315deg);
+  }
+#btn08.active span:nth-of-type(2) {
+    opacity: 0;
+  }
+#btn08.active span:nth-of-type(3) {
+    transform: translateY(-13px) rotate(315deg);
+  }
+  
+/* メニュー本体（初期状態） */
+.header-nav-wrapper {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    transition: all 0.4s ease;
+    padding: 1rem;
+    border-bottom: 1px solid #ccc;
+    z-index: 50;
+    justify-content: center;
+  }
+  
+/* メニュー表示時 */
+.header-nav-item {
+  position: relative;
+  padding: 0;
+}
+
+.header-nav-wrapper.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  .header-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-align: left;
+    list-style: none;
+    align-items: flex-start; /* 左寄せに変更 */
+    width: 100%;
+}
+
+.header-nav-item {
+    width: 100%;
+    padding: 12px 0;
+    border-bottom: 1px dashed #999; /* 点線の区切り */
+}
+
+.header-nav-item:last-child {
+    border-bottom: none; /* 最後のアイテムは区切りを消す */
+}
+
+.header-nav-item a {
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    width: 100%;
+    padding-left: 8px;
+}
+
+/*----------------------------------------
+  フッターの設定
+----------------------------------------*/
+  /*フッターのスタイル*/
+footer {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;   /* スマホは縦並び */
+    gap: 12px;
+    align-items: center;
+}
+
+footer ul li a.footer-content {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+footer ul li a.footer-content:hover {
+    color: #80caff; /* ホバー時アクセントカラー */
+}
+
+footer ul li a.footer-content i.fas.fa-external-link-alt {
+    margin-left: 5px;
+    font-size: 0.8em;
+    vertical-align: middle;
+}
+
+footer small {
+    display: block;
+    margin-top: 8px;
+    color: #cccccc;
+}
+
+/*----------------------------------------
+  content全体の設定
+----------------------------------------*/
+.content-main{
+    width: 100%;
+    margin: 0; /* 外側の余白（上下と中央配置） */
+    background-image: repeating-linear-gradient(
+        -45deg,           /* ストライプの角度 */
+        #f2f3f7 0,        /* ストライプの色（薄いグレー） */
+        #f2f3f7 3px,      /* ストライプの太さ（3pxの間隔） */
+        transparent 3px,  /* 透明部分 */
+        transparent 6px   /* 透明部分（3pxから6pxまで） */
+    );
+}
+.main-wrapper{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 70px;
+    margin-bottom: 100px;
+}
+.title-visual{
+    margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
+    position: relative; /* 相対位置指定 */
+    background-color: #fff;
+}
+.title-visual:before{
+    border-bottom: 30px solid transparent; /* 上側に透明の三角形 */
+    border-left: 30px solid #aba7b0; /* 左側の三角形（色は#c6d4c6） */
+    content: ''; /* 擬似要素にコンテンツなし */
+    display: block; /* ブロック要素として表示 */
+    position: absolute; /* 絶対位置指定 */
+    top: 0px; /* 上から0px */
+    left: 0px; /* 左から0px */
+}
+.title-visual:after{
+    border-left: 30px solid transparent; /* 右側に透明の三角形 */
+    border-bottom: 30px solid #aba7b0; /* 下側の三角形（色は#c6d4c6） */
+    content: ''; /* 擬似要素にコンテンツなし */
+    display: block; /* ブロック要素として表示 */
+    position: absolute; /* 絶対位置指定 */
+    bottom: 0px; /* 下から0px */
+    right: 0px; /* 右から0px */
+}
+.siori-title{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 40px;
+    margin:0;
+    padding:0;
+    margin-top: 30px;
+}
+.siori-sub-title{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 20px;
+    margin-top: -10px;
+}
+.siori-title-date{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 30px;
+    padding-bottom: 10px;
+}
+
+/* セロテープ風 */
+.box5-6 {
+    position: relative; /* タイトルをボックス内の左上に配置するための基準 */
+    margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
+    background-color: #ffffff; /* ボックス背景色 */
+}
+
+.box5-6 .box-title {
+    background-color: rgb(255 255 255 / .1); /* テープ背景色と透過 */
+    border-left: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ左 */
+    border-right: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ右 */
+    box-shadow: 0 0 5px rgb(0 0 0 / .12); /* テープ影 */
+    transform: rotate(-2deg); /* テープの傾き */
+    color: #666; /* タイトル文字色 */
+    padding: 10px 20px; /* タイトルの余白 */
+    line-height: 1; /* タイトルの行の高さ */
+    position: absolute; /* 親要素の左上に固定 */
+    top: -1em; /* 上端に配置 */
+    left: 1em; /* 左端に配置 */
+    display: inline-block; /* タイトルの幅を内容に合わせる */
+    font-size: 0.9em; /* タイトルのフォントサイズ */
+    width: auto; /* タイトル幅を内容に応じて可変にする */
+    max-width: calc(100% - 2em); /* 左右の余白を考慮して最大幅を調整 */
+    white-space: nowrap; /* タイトルを1行に固定 */
+    overflow: hidden; /* はみ出した部分を非表示 */
+    text-overflow: ellipsis; /* 省略記号（...）を表示 */
+}
+
+.box5-6 .box-content {
+    padding: 2.5em 1em 1em; /* コンテンツ内の余白 */
+}
+
+.list-ul{
+    list-style: none;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.list-li{
+    font-size:18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px dotted #818181;
+}
+.list-li:last-child{
+    border-bottom:none;
+}
+.list-description {
+    margin-left: 20px;
+    font-weight: 400;
+}
+
+.precaution{
+    padding-left: 0;
+    margin-left: 15px;
+}
+
+.precaution li{
+    margin-bottom: 10px;
+}
+
+.balloon1-top {
+  position: relative;
+  display: inline-block;
+  width: 90%;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  margin-left: 10%;
+  margin-right: 0;
+  padding: 7px 10px;
+  min-width: 120px;
+  max-width: 100%;
+  color: #656565;
+  font-size: 14px;
+  background: #f6f6f6;
+}
+input{
+    height: 100%;
+    width: auto;
+}
+
+.list-li-wrapper{
+    display: flex;
+    align-items: center;
+    gap:6px;
+}
+
+/*----------------------------------------
+  日付部分のデザイン
+----------------------------------------*/
+.tab-navigation{
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+#current-date-label{
+    font-size: 30px;
+}
+#prev-date,
+#next-date{
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgb(95,96,97);
+    color:#fff;
+    font-size: 18px;
+    margin: 0;
+    padding: 0;
+}
+.plan-title{
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #c6c6c6;
+}
+
+.timeline-entry-wrapper{
+    display: flex;
+    flex-direction: row;
+    gap:10px;
+}
+
+.timeline-details{
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+}
+.timeline-title{
+    font-size: 20px;
+    font-weight: bold;
+}
+.location-url{
+    text-decoration: none;
+    color:rgb(95,96,97);
+}
+.timeline-location{
+    text-align: left;
+    margin-left: 20px;
+}
+.timeline-description{
+    width: 90%;
+    margin-left: 20px;
+    padding:5px;
+    background-color: #ededed;
+}
+.timeline-time-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.timeline-time {
+  width: 70px;
+  height: 30px;
+  font-size: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(95,96,97);
+  color: #fff;
+  z-index: 1;
+}
+
+
+.timeline-blank {
+  flex: 1; /* 残りのスペースを埋める */
+  width: 2px;
+  position: relative;
+}
+
+.timeline-blank::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  border-left: 2px dotted #888;
+}
+
+.blank{
+    height: 30px;
+}
+
+.about-tabisync-btn{
+  width: 90%;
+  height: 50px;
+  background-color: rgb(0, 0, 0);
+  border-radius: 20px;
+  font-size: 20px;
+  text-align: center;
+  text-decoration: none;
+  color:rgb(255, 255, 255);
+  padding-top: 8px;
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+.box-content-demo{
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-wrapper-demo{
+    margin-bottom: 400px;
+}
+
+.box-demo{
+    margin-top: 250px;
+}
+
+
+.next-highlight {
+  background-color: #fffae6;
+  padding-top: 5px;
+  padding-right: 5px;
+  margin-left: -5px;
+  padding-left: 5px;
+}
+
+
+.next-label {
+    color:orange
+}
+
+.list-li-wrapper{
+    margin-bottom: 5px;
+}
+
+#share-button{
+    all: unset;  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-right: 5%;
+}
+#share-button i{
+    font-size: 25px;
+}

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 <div class="input-start-end-time">
                   <label class="input-time-label">終了時刻：</label>
-                  <input type="time" class="time-input" name="dates[${dateIndex}][schedules][0][end_time]" required>
+                  <input type="time" class="time-input" name="dates[${dateIndex}][schedules][0][end_time]">
                 </div>
                 <input class="input-title" type="text" name="dates[${dateIndex}][schedules][0][title]" placeholder="タイトル (例：首里城で遊ぶ)">
                 <textarea class="input-description" name="dates[${dateIndex}][schedules][0][description]" placeholder="詳細 (例：公園内の龍潭を見る)"></textarea>

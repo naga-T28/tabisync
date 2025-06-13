@@ -1,0 +1,23 @@
+services:
+  app:
+    container_name: tabisync
+
+    build:
+      context: .
+      dockerfile: ./containers/django/Dockerfile
+
+    environment:    
+      - DJANGO_SETTINGS_MODULE=app_config.settings
+
+    volumes:
+      - .:/code
+      - ~/.config:/root/.config:ro
+
+    ports:
+      - 8000:8000
+
+        
+    env_file:
+      - ../.env
+
+    command: sh -c "/usr/local/bin/entrypoint.sh" 

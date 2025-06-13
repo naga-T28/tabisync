@@ -12,7 +12,7 @@
             <div class="create-title-wrapper-sub">
                 <h2 class="create-title">しおりの作成</h2>
                 <div>
-                    <input class="input-title" type="text" name="title" placeholder="タイトル（例：沖縄旅行）">
+                    <input class="input-title" type="text" name="title" placeholder="タイトル（例：沖縄旅行）" required>
                     <input class="input-title" type="text" name="subtitle" placeholder="サブタイトル（例：2泊3日の卒業旅行）">
                     <textarea class="input-description input-description-under" name="description" placeholder="概要（例：卒業旅行で沖縄に行きます！首里城や美ら海水族館を訪問予定！）"></textarea>
                 </div>
@@ -40,7 +40,7 @@
                             </div>
                             <div class="input-start-end-time">
                                 <label "input-time-label" for="input-date-label">終了時刻：</label>
-                                <input type="time" class="time-input" name="dates[0][schedules][0][end_time]" required>
+                                <input type="time" class="time-input" name="dates[0][schedules][0][end_time]">
                             </div>
                             <input class="input-title" type="text" name="dates[0][schedules][0][title]" placeholder="タイトル (例：首里城で遊ぶ)">
                             <textarea class="input-description" name="dates[0][schedules][0][description]" placeholder="詳細 (例：公園内の龍潭を見る)"></textarea>
@@ -48,7 +48,7 @@
                             <input class="location-input" type="url" name="dates[0][schedules][0][location_url]" placeholder="位置情報URL (例：https://maps.app.goo.gl/yJqUXTNRwRkWvcKP6)">
                         </div>
                     </div>
-                    <button type="button" class="add-schedule-btn"><i class="fa-solid fa-circle-plus"></i> 予定を追加</button>
+                    <button type="button" class="add-schedule-btn" data-date-index="0"><i class="fa-solid fa-circle-plus"></i> 予定を追加</button>
                 </div>
             </div>
             </div>
