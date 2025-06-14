@@ -14,26 +14,105 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+# .envファイルの読み込み
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 load_dotenv(dotenv_path)
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# BASE_DIRの設定
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / 'staticfiles' 
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key')
-
+# DEBUG設定
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+# Turnstile keys（Cloudflare管理画面から取得）
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 
+# DEBUGによって設定を切り替える
+if not DEBUG:
+    # 本番環境設定
+
+    # SECRET_KEYは必須。設定されていなければ例外を投げる
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        raise Exception("SECRET_KEYが設定されていません。本番環境で必須です。")
+
+    # ALLOWED_HOSTSも必須。本番ドメインをカンマ区切りで指定
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+    if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
+        raise Exception("ALLOWED_HOSTSが設定されていません。本番環境で必須です。")
+
+    # HTTPS関連のセキュリティ設定
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+
+    # 静的ファイル設定
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = [BASE_DIR / "static"]
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+    # データベース設定（例: PostgreSQL）
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+
+    # ログ設定（ログファイルを保存）
+    LOG_DIR = BASE_DIR / 'logs'
+    if not LOG_DIR.exists():
+        LOG_DIR.mkdir()
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'file': {
+                'level': 'WARNING',
+                'class': 'logging.FileHandler',
+                'filename': LOG_DIR / 'django.log',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['file'],
+                'level': 'WARNING',
+                'propagate': True,
+            },
+        },
+    }
+
+else:
+    # 開発環境設定
+
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key')
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = [BASE_DIR / "static"]
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+    # ロギングはデフォルトのまま
 
 # Application definition
 
@@ -44,7 +123,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tabisync.apps.TabisyncConfig',#add_2025.06.07
+    'tabisync.apps.TabisyncConfig',  # add_2025.06.07
 ]
 
 MIDDLEWARE = [
@@ -62,7 +141,7 @@ ROOT_URLCONF = 'project_tabisync.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, "templates")], #add_2025.06.07
+        'DIRS': [os.path.join(BASE_DIR, "templates")],  # add_2025.06.07
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,20 +156,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project_tabisync.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -106,10 +172,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# メール設定
+# メール送信元
+DEFAULT_FROM_EMAIL = "no-reply@tabisync.com"
 
+# お問い合わせ受信先
+CONTACT_RECEIVER_EMAIL = "contact@tabisync.com"
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "sv16270.xserver.jp"  # ご契約のサーバー名に合わせて変更してください
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "no-reply@tabisync.com"  # 送信に使うメールアドレス
+EMAIL_HOST_PASSWORD = "hnsw0208"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'ja'
 
@@ -119,13 +197,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATIC_URL = 'static/'
-
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
