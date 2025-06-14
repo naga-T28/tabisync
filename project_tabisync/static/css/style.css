@@ -688,9 +688,16 @@ h3.input-item-title-first{
 }
 /*利用規約に同意して〜の部分*/
 .input-user-agreement-check{
-  margin-top:100px;
+  margin-top:10px;
   margin-bottom: 10px;
   text-align: center;
+}
+
+.cf-turnstile{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top:80px;
 }
 /*利用規約*/
 .user-agreement-sub-title{
@@ -746,6 +753,49 @@ h3.input-item-title-first{
 .password-btn {
   display: flex;
   flex-direction: row;
+}
+
+
+.contact-form-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+.contact-form-wrapper{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-btn{
+  margin-top: 20px;
+  width: 100%;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.contact-thanks-wrapper{
+  margin-top: 150px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+.contact-thnks-btn{
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 500px;
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #000000;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media screen and (min-width: 720px) {
@@ -833,3 +883,5 @@ h3.input-item-title-first{
   }
 
 }
+
+
