@@ -12,6 +12,7 @@ urlpatterns = [
     path('demo/edit', views.DemoEditView.as_view(), name='demo_edit'),
     path('demo/list', views.DemoListView.as_view(), name='demo_list'),
     path('demo/memo', views.DemoMemoView.as_view(), name='demo_memo'),
+    path("contact/", views.ContactFormView.as_view(), name="contact"),
     path('updates/',views.UpdatesView.as_view(), name='updates'),
     path('content/<int:pk>/<uuid:token>/', views.ItineraryDetailView.as_view(), name='content'),
     path('content/<int:pk>/<uuid:token>/memo/', views.MemoDetailView.as_view(), name='content_memo'),

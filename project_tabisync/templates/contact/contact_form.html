@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}お問い合わせ{% endblock %}
+
+{% block contents %}
+{% load static %}
+<main class="page-main">
+    <div class="contact-form-wrapper">
+        <h2>お問い合わせフォーム</h2>
+        <form class="contact-foem" method="post">
+            {% csrf_token %}
+            <div class="contact-form-content">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+            </div>
+
+            <div class="contact-form-content">
+                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+            </div>
+            <div class="contact-form-content">
+                <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                {{ form.subject }}
+            </div>
+            <div class="contact-form-content">
+                <label for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
+                {{ form.message }}
+            </div>
+            <button class="contact-btn" type="submit">送信</button>
+        </form>
+    </div>
+</main>
+
+{% endblock %}

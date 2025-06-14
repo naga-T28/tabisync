@@ -5,6 +5,45 @@ from django.urls import reverse
 from django.views.generic import TemplateView #add_2025.06.07
 from django.views import View
 from .models import Itinerary, TravelDate, Schedule, Memo, Item
+from django.core.mail import send_mail
+from .forms import ContactForm
+import urllib.request
+import urllib.parse
+import json
+import os
+from django.conf import settings
+
+def verify_turnstile(request):
+    secret_key = os.environ.get('CLOUDFLARE_TURNSTILE_SECRET_KEY')
+    token = request.POST.get('cf-turnstile-response')
+    remoteip = request.META.get('REMOTE_ADDR')
+
+    if not token:
+        return False
+
+    data = urllib.parse.urlencode({
+        'secret': secret_key,
+        'response': token,
+        'remoteip': remoteip,
+    }).encode()
+
+    req = urllib.request.Request(
+        url='https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        data=data,
+        method='POST'
+    )
+    req.add_header("Content-type", "application/x-www-form-urlencoded")
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            response_data = json.loads(resp.read().decode())
+            return response_data.get('success', False)
+    except Exception as e:
+        print("Turnstile verify error:", e)
+        return False
+
+# utils.py（または views.py の冒頭でも可）
+
 
 # ホーム画面を表示するビュー
 class HomeView(TemplateView):
@@ -59,7 +98,10 @@ class DemoListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-#作成フォーム
+
+
+
+    
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class CreateView(View):
     template_name = "tabisync/create.html"
@@ -68,6 +110,8 @@ class CreateView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
+        #if not verify_turnstile(request):
+            #return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
         # 1. しおり本体の作成
         itinerary = Itinerary(
             title=request.POST.get('title'),
@@ -283,3 +327,60 @@ class ItineraryPasswordView(View):
         else:
             context = {'error': 'パスワードが違います', 'pk': pk, 'token': token}
             return render(request, self.template_name, context)
+        
+
+#form
+class ContactFormView(View):
+    template_name = "contact/contact_form.html"
+    success_template_name = "contact/thanks.html"
+
+    def get(self, request):
+        form = ContactForm()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request):
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            name = form.cleaned_data["name"]
+            subject = form.cleaned_data["subject"]
+            message = form.cleaned_data["message"]
+
+            # 管理者向けメール内容
+            full_message = f"送信者: {name} <{email}>\n\n{message}"
+
+            # 1. 管理者宛にメール送信
+            send_mail(
+                subject=subject,
+                message=full_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.CONTACT_RECEIVER_EMAIL],
+            )
+
+            # 2. 自動返信メール送信
+            auto_reply_subject = "【自動返信】お問い合わせありがとうございます"
+            auto_reply_message = (
+                f"{name} 様\n\n"
+                "この度はお問い合わせいただきありがとうございます。\n"
+                "以下の内容でお問い合わせを受け付けました。\n\n"
+                "------\n"
+                f"件名: {subject}\n"
+                f"内容:\n{message}\n"
+                "------\n\n"
+                "担当者より折り返しご連絡いたしますので、今しばらくお待ちください。\n\n"
+                "※本メールは自動返信です。返信いただいても対応できません。\n"
+                "--------------------------------------------------\n"
+                f"{getattr(settings, 'SITE_NAME', '当サイト')} サポート"
+            )
+
+            send_mail(
+                subject=auto_reply_subject,
+                message=auto_reply_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+            )
+
+            return render(request, self.success_template_name)
+
+        # バリデーションエラー時
+        return render(request, self.template_name, {"form": form})
