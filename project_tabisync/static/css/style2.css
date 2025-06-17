@@ -31,6 +31,9 @@ body {
 main{
     font-family: 'Yusei Magic', sans-serif;
 }
+main#edit-main{
+    font-family: "Noto Sans JP", sans-serif;
+}
 article.user-agreement,
 article.privacy-policy,
 .updates-article{
@@ -38,13 +41,6 @@ article.privacy-policy,
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
-}
-@media screen and (min-width: 960px) {
-  body {
-    display: flex;
-    flex-direction: column;
-    min-height: 960px;
-  }
 }
 /*----------------------------------------
   ヘッダーの設定
@@ -272,7 +268,7 @@ footer ul li a.footer-content {
 }
 
 footer ul li a.footer-content:hover {
-    color: #80caff; /* ホバー時アクセントカラー */
+    color:rgb(211,134,146); /* ホバー時アクセントカラー */
 }
 
 footer ul li a.footer-content i.fas.fa-external-link-alt {
@@ -605,4 +601,460 @@ input{
 }
 #share-button i{
     font-size: 25px;
+}
+
+.header-nav-pc-wrapper{
+  display: none;
+
+}
+
+/*-----------------------------------------
+  入力フォームのデザイン
+-----------------------------------------*/
+.create-title-wrapper{
+  width: 100%;
+  height: 400px;
+  background-image: url("../img/create-body.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.create-title-wrapper-sub{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.create-form{
+  width: 100%;
+}
+/*フォーム全体の装飾*/
+.input-first-wrapper{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+/*作成画面全体の装飾*/
+.create-title{
+  text-align: center;
+  padding-top: 60px;
+  margin-bottom: 50px;
+  font-size: 30px;
+  color:#ffffff;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+/*タイトルの入力欄*/
+.input-title{ 
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom:10px;
+}
+h3.input-item-title-first{
+  border: none;
+}
+/*詳細の入力がめん*/
+.input-description{
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  field-sizing: content;
+}
+/*時間(開始時間や終了時間)*/
+.input-start-end-time{
+  display: flex;
+  margin-bottom: 5px;
+}
+.input-time-label{
+  white-space: nowrap;
+}
+.time-input{
+  flex: 1; 
+  height: auto;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+/*日付*/
+.input-date{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: cneter;
+  padding: 5px;
+}
+.input-date-label{
+  white-space: nowrap;
+  text-align: center;
+  font-size: 20px;
+  color: #ffffff;
+}
+.date-input-in{
+  flex: 1; 
+  height: auto;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+/*DAy1とかの部分*/
+.input-day-number{
+  text-align: center;
+  font-size: 20px;
+  color: #ffffff;
+}
+.input-date-flex{
+  display:flex;
+}
+/*グラデーション*/
+.date-block{
+  margin-bottom:5px;
+  margin-top: 5px;
+  padding: 2px;
+  border-radius: 8px;
+  background-color: #000000;
+}
+.schedules-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  padding:5px;
+}
+.schedules-container-wrapper{
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  border: 2px solid #000000;
+  padding:10px;
+}
+/*位置情報*/
+.location-input{
+  width: 100%;
+  margin-bottom: 5px;
+  border: 1px solid #ccc;
+}
+/*予定の追加ボタン*/
+.add-schedule-btn{
+  width: 95%;
+  height: 40px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #000000;
+  border: none;
+  color:white;
+}
+.input-item-title{
+  text-align: center;
+  padding-top: 40px;
+  margin-bottom: 10px;
+  font-size: 25px;
+  border-top: 1px dotted rgb(111, 112, 112);
+}
+.input-item-description{
+  text-align: left;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+/*jsで追加されるブロック*/
+.schedule-block-next{
+  width: 100%;
+}
+.next-arrow{
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 20px;
+  text-align: center;
+}
+/*日付追加ボタン*/
+#add-date-btn,
+#add-item-btn,
+#add-memo-btn{
+  width: 100%;
+  height: 40px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 60px;
+  border-radius: 20px;
+  background-color: #000000;
+  border: none;
+  color:white;
+}
+/*jsで表示される部分*/
+.input-date-delete{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 5px;
+}
+.input-date-delete-number{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+}
+.input-date-delete-btn{
+  margin-left: auto;
+}
+
+/*メモとリストのタイトル*/
+.memo-block,
+.item-block{
+  width: 100%;
+  border:2px solid black;
+  border-radius: 13px;
+  margin-bottom: 10px;
+}
+.memo-title-next{
+  width: 100%;
+  color:white;
+  text-align: center;
+  font-size: 20px;
+  background-color: #000000;
+  border-top-right-radius: 10px;
+  border-top-left-radius: 10px;
+}
+.memo-bloc-wrapper{
+  padding:10px;
+}
+/*削除ボタン*/
+.delete-btn-under{
+  width:100%;
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  color:black;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+/*作成ボタン*/
+.enter-input-btn{
+  width: 100%;
+  height: 50px;
+  background-color: rgb(175, 41, 187);
+  border-radius: 20px;
+  font-size: 20px;
+  color:rgb(255, 255, 255);
+}
+/*利用規約に同意して〜の部分*/
+.input-user-agreement-check{
+  margin-top:10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.cf-turnstile{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top:80px;
+}
+/*利用規約*/
+.user-agreement-sub-title{
+  margin-top: 20px;
+}
+.user-agreement-title{
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.mt-4{
+  margin-top: 100px;
+  text-align: right;
+}
+
+/*パスワード*/
+.input-password{
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom:5px;
+}
+.input-password-last{
+  margin-bottom: 40px;
+}
+
+.input-description-under{
+  margin-bottom:50px;
+}
+/*注意事項*/
+.precautions-area{
+  width: 90%;
+  margin-left: 0;
+  margin-right: auto;
+  margin-top: 20px;
+
+}
+.precautions-area ul li{
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.password-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top:200px;
+  margin-bottom: 500px;
+  gap:10px
+}
+.password-btn {
+  display: flex;
+  flex-direction: row;
+}
+
+
+.contact-form-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+.contact-form-wrapper{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-btn{
+  margin-top: 20px;
+  width: 100%;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.contact-thanks-wrapper{
+  margin-top: 150px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+.contact-thnks-btn{
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 500px;
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #000000;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media screen and (min-width: 960px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 960px;
+  }
+  .page-main {
+  flex: 1;  /* メイン部分が残りの高さを取る */
+  margin-top: 80px; /* ヘッダーの高さ分だけ下げる */
+  margin-bottom: 100px;
+}
+.main-wrapper{
+    width: 70%;
+    padding-top: 30px;
+
+}
+  .notable-point-pc-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap:50px;
+  }
+  .notable-point-pc-wrapper-btn,
+  .main-visual-btn,
+  .demo-btn {
+    width: 650px;
+  }
+  .header-nav-pc-wrapper{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .notable-point-wrapper{
+    display:flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+  .header-nav-pc{
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    gap:40px;
+  }
+  .header-nav-pc li{
+    display: flex;
+    align-items: flex-end;
+  }
+    .header-nav-pc li:hover a{
+    color:rgb(211,134,146);
+  }
+  
+  .header-nav-pc li a{
+    font-style: none;
+    text-decoration: none;
+    font-size: 18px;
+    color:rgb(95,96,97);
+  }
+  .btn-trigger{
+    display: none;
+  }
+  .header-wrapper{
+    display: flex;
+    align-items: flex-end;
+  }
+  .section3-wrapper{
+    width: 90%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: row;
+  }
+  .update-wrapper{
+    flex:1;
+    height: 100%;
+  }
+  .contact-wrapper{
+    display: flex;
+    flex-direction: column;
+    align-content: space-between;
+  }
+  .page-header{
+    width: 100%;
+    height: 80px;
+    background-color: #ffffff;
+    position: fixed;  /* 固定位置 */
+    top: 0;           /* 画面上部に配置 */
+    left: 0;          /* 左端に配置 */
+    width: 100%;      /* 横幅を画面いっぱいに */
+    z-index: 1000; 
+  }
+  .logo-image{
+    margin-top: 10px;
+    height: 60px; /* 高さは自動調整 */
+    width: auto; /* ロゴの幅を調整 */
+  }
+     .create-title-wrapper-sub,
+   .input-first-wrapper{
+    width: 70%;
+ }
+ .contact-form-wrapper{
+  width: 70%;
+ }
+
 }

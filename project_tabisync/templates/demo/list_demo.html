@@ -3,7 +3,7 @@
 <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <title>TabiSync</title>
+        <title>TabiSync - デモページ</title>
         <!-- インデックス防止用-->
         <meta name="robots" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,8 +46,17 @@
                 </div>
                 <nav class="header-nav-wrapper" id="nav-menu">
                     <ul class="header-nav">
-                        <li class="header-nav-item"><a href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:home' %}">ホーム</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:create' %}">しおり作成</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:demo_content' %}">しおりサンプル</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:contact' %}">お問い合わせ</a></li>
+                    </ul>
+                </nav>
+                <nav class="header-nav-pc-wrapper">
+                    <ul class="header-nav-pc">
+                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:home' %}">HOME</a></li>
+                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:demo_content' %}">DEMO</a></li>
+                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
                     </ul>
                 </nav>
             </div>

@@ -46,15 +46,19 @@
                 </div>
                 <nav class="header-nav-wrapper" id="nav-menu">
                     <ul class="header-nav">
-                        <li class="header-nav-item"><a href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:home' %}">ホーム</a></li>
+                        <li class="header-nav-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">ブログ</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:create' %}">しおり作成</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:demo_content' %}">しおりサンプル</a></li>
+                        <li class="header-nav-item"><a href="{% url 'tabisync:contact' %}">お問い合わせ</a></li>
                     </ul>
                 </nav>
                 <nav class="header-nav-pc-wrapper">
                     <ul class="header-nav-pc">
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:home' %}">HOME</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:demo_content' %}">DEMO</a></li>
-                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:privacy_policy' %}">お問い合わせ</a></li>
+                        <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
+                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
                     </ul>
                 </nav>
             </div>

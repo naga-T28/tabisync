@@ -126,7 +126,7 @@
                     <!-- <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:user_agreement' %}"><i class="fa-solid fa-wallet"></i><div>割り勘</div></a></li> -->
                     <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_list' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-list-check"></i><div>リスト</div></a></li>
                     <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_memo' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-clipboard"></i><div>メモ</div></a></li>
-                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:user_agreement' %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
                 </ul>
             </nav>
             <ul>
@@ -219,6 +219,11 @@
             prompt('URLをコピーしてください:', window.location.href);
           }
           });
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.register("{% static 'sw.js' %}")
+                .then(() => console.log("Service Worker 登録成功"))
+                .catch(err => console.error("SW 登録失敗:", err));
+            }
         </script>
     </body>
 </html>
