@@ -4,7 +4,7 @@
 # Uncomment if needed
 # while ! nc -z db 5432; do sleep 1; done
 
-python manage.py makemigrations --noinput
-python manage.py migrate --noinput
+python3 manage.py makemigrations --noinput
+python3 manage.py migrate --noinput
 exec "$@"
 
