@@ -1,6 +1,14 @@
 version: '3.12'
 
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: tabisync_staging
+      POSTGRES_USER: nagat
+      POSTGRES_PASSWORD: b5G9upUk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   app:
     container_name: tabisync
     build:
