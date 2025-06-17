@@ -7,5 +7,6 @@
 python3 project_tabisync/manage.py collectstatic --noinput
 python3 project_tabisync/manage.py makemigrations --noinput
 python3 project_tabisync/manage.py migrate --noinput
-exec "$@"
+exec gunicorn project_tabisync.wsgi:application --bind 0.0.0.0:8000
+
 
