@@ -59,7 +59,6 @@ if not DEBUG:
     STATICFILES_DIRS = [BASE_DIR / "static"]
     STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-
     # データベース設定（例: PostgreSQL）
     DATABASES = {
         'default': {
