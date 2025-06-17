@@ -57,7 +57,8 @@ if not DEBUG:
     # 静的ファイル設定
     STATIC_URL = '/static/'
     STATICFILES_DIRS = [BASE_DIR / "static"]
-    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATIC_ROOT = BASE_DIR / 'project_tabisync' / 'staticfiles'
+
 
     # データベース設定（例: PostgreSQL）
     DATABASES = {
