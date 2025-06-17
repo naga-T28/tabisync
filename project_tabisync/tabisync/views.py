@@ -130,8 +130,8 @@ class CreateView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        #if not verify_turnstile(request):
-            #return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
+        if not verify_turnstile(request):
+            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
         # 1. しおり本体の作成
         itinerary = Itinerary(
             title=request.POST.get('title'),
