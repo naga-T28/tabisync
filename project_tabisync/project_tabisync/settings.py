@@ -42,6 +42,9 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
 
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
     # CSRF_TRUSTED_ORIGINSの設定（https:// または http://を付ける）
     CSRF_TRUSTED_ORIGINS = []
     for host in ALLOWED_HOSTS:
