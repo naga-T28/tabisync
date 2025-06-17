@@ -26,6 +26,8 @@ services:
     networks:
       - webnet
 
-networks:
-  webnet:
-    external: true  # ← docker network ls で存在確認
+
+
+volumes:
+  pgdata:
+

@@ -1,23 +1,29 @@
 version: '3.12'
 
 services:
-  app:
-    container_name: tabisync-test
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: tabisync_staging
+      POSTGRES_USER: nagat
+      POSTGRES_PASSWORD: b5G9upUk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  tabisync:
+    container_name: tabisync
     build:
       context: .
       dockerfile: ./containers/django/Dockerfile
     environment:
       - DJANGO_SETTINGS_MODULE=project_tabisync.settings
     env_file:
-      - ../.env  # ← docker-compose 実行位置からの相対パスを確認
+      - ../.env
     volumes:
       - .:/code
     ports:
-      - "8000:8000"  # ← expose ではなく ports を推奨
+      - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
-    networks:
-      - webnet
 
-networks:
-  webnet:
-    external: true  # ← docker network ls で存在確認
+volumes:
+  pgdata:
