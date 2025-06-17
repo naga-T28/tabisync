@@ -9,6 +9,7 @@ django-ratelimit = "*"
 python-dotenv = "*"
 psycopg = "*"
 
+
 [dev-packages]
 
 [requires]
