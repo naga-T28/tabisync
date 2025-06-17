@@ -12,6 +12,26 @@ import urllib.parse
 import json
 import os
 from django.conf import settings
+# views.py
+from django.core import signing
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.contrib import messages
+from .models import Itinerary  # あなたのモデルに合わせてインポート
+from django.views import View
+from django.core import signing
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.http import Http404
+from .models import Itinerary
+from django.contrib.auth.hashers import make_password
+from django.shortcuts import render
+
+def offline_view(request):
+    return render(request, "offline.html")
+
+
 
 def verify_turnstile(request):
     secret_key = os.environ.get('CLOUDFLARE_TURNSTILE_SECRET_KEY')
@@ -139,16 +159,22 @@ class CreateView(View):
                 prefix = f'dates[{i}][schedules][{j}]'
                 if f'{prefix}[start_time]' not in request.POST:
                     break
+
+                # end_time の空文字を None に変換
+                raw_end_time = request.POST.get(f'{prefix}[end_time]', '')
+                end_time = raw_end_time if raw_end_time else None
+
                 Schedule.objects.create(
                     travel_date=travel_date,
-                    start_time=request.POST.get(f'{prefix}[start_time]', ''),
-                    end_time=request.POST.get(f'{prefix}[end_time]', ''),
+                    start_time=request.POST.get(f'{prefix}[start_time]', ''),  # ここも空の場合に注意した方がよい
+                    end_time=end_time,
                     title=request.POST.get(f'{prefix}[title]', ''),
                     description=request.POST.get(f'{prefix}[description]', ''),
                     location=request.POST.get(f'{prefix}[location]', ''),
                     location_url=request.POST.get(f'{prefix}[location_url]', ''),
                     order=j
                 )
+
 
         # 3. メモ
         for i in range(100):
@@ -241,22 +267,27 @@ class MemoDetailView(TemplateView):
 
         travel_dates = itinerary.travel_dates.all().order_by('date')
 
-            # 最初と最後の日付を取得（存在する場合）
         if travel_dates.exists():
             first_date = travel_dates.first().date
             last_date = travel_dates.last().date
-
-            # "2025.02.08" 形式にフォーマット（strftime使用）
             context["first_date_str"] = first_date.strftime('%Y.%m.%d')
             context["last_date_str"] = last_date.strftime('%Y.%m.%d')
         else:
             context["first_date_str"] = None
             context["last_date_str"] = None
 
+        # タイトル・内容が両方空でないメモのみ表示
+        memos = [
+            memo for memo in itinerary.memos.all()
+            if memo.title.strip() or memo.content.strip()
+        ]
+        context["memos"] = memos
+        context["has_memos"] = len(memos) > 0
+
         context["itinerary"] = itinerary
         context["travel_dates"] = itinerary.travel_dates.all()
-        context["memos"] = itinerary.memos.all()
         context["items"] = itinerary.items.all()
+
         return context
 
 #listページ
@@ -314,22 +345,29 @@ class ItineraryPasswordView(View):
     template_name = 'tabisync/password.html'
 
     def get(self, request, pk, token):
-        return render(request, self.template_name, {'pk': pk, 'token': token})
+        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+        context = {'pk': pk, 'token': token, 'itinerary': itinerary}
+        return render(request, self.template_name, context)
 
     def post(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         input_password = request.POST.get('view_password', '')
 
         if itinerary.check_view_password(input_password):
-            # セッションに認証済みフラグをセット（キーは任意）
             request.session[f'view_auth_{pk}_{token}'] = True
             return redirect(reverse('tabisync:content', kwargs={'pk': pk, 'token': token}))
         else:
-            context = {'error': 'パスワードが違います', 'pk': pk, 'token': token}
+            context = {
+                'error': 'パスワードが違います',
+                'pk': pk,
+                'token': token,
+                'itinerary': itinerary  # ← ここが抜けていた
+            }
             return render(request, self.template_name, context)
         
 
 #form
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ContactFormView(View):
     template_name = "contact/contact_form.html"
     success_template_name = "contact/thanks.html"
@@ -367,10 +405,10 @@ class ContactFormView(View):
                 f"件名: {subject}\n"
                 f"内容:\n{message}\n"
                 "------\n\n"
-                "担当者より折り返しご連絡いたしますので、今しばらくお待ちください。\n\n"
+                "折り返しご連絡いたしますので、今しばらくお待ちください。\n\n"
                 "※本メールは自動返信です。返信いただいても対応できません。\n"
                 "--------------------------------------------------\n"
-                f"{getattr(settings, 'SITE_NAME', '当サイト')} サポート"
+                f"{getattr(settings, 'TabiSync', '旅シンク')} サポート"
             )
 
             send_mail(
@@ -384,3 +422,120 @@ class ContactFormView(View):
 
         # バリデーションエラー時
         return render(request, self.template_name, {"form": form})
+    
+
+#編集画面
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+class EditView(View):
+    template_name = "tabisync/edit.html"
+    password_template = "tabisync/edit_password.html"  # 新たに用意
+
+    def get(self, request, pk, token, *args, **kwargs):
+        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+        session_key = f"edit_auth_{itinerary.pk}"
+
+        if itinerary.edit_password:
+            if not request.session.get(session_key):
+                return render(request, self.password_template, {
+                    "itinerary": itinerary,
+                    "pk": pk,
+                    "token": token
+                })
+
+        return render(request, self.template_name, {"itinerary": itinerary})
+
+    def post(self, request, pk, token, *args, **kwargs):
+        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+        session_key = f"edit_auth_{itinerary.pk}"
+
+        # パスワード入力画面からの認証処理
+        if itinerary.edit_password and not request.session.get(session_key):
+            password = request.POST.get("password", "")
+            if itinerary.check_edit_password(password):
+                request.session[session_key] = True
+                return redirect(reverse("tabisync:edit", kwargs={"pk": pk, "token": token}))
+            else:
+                return render(request, self.password_template, {
+                    "error": "パスワードが間違っています。",
+                    "itinerary": itinerary,
+                    "pk": pk,
+                    "token": token
+                })
+
+        # 編集内容保存処理（前述の内容と同様）
+        itinerary.title = request.POST.get("title")
+        itinerary.subtitle = request.POST.get("subtitle")
+        itinerary.description = request.POST.get("description")
+        itinerary.save()
+
+        itinerary.travel_dates.all().delete()
+        itinerary.memos.all().delete()
+        itinerary.items.all().delete()
+
+        # 以下、createと同じ日付・スケジュール・メモ・持ち物処理...
+
+        return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
+
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+def send_reset_link(request, pk, token, type):
+    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+
+    if request.method == "POST" and itinerary.reset_email:
+        # 署名付きトークンを生成（1時間有効）
+        data = {"pk": pk, "token": str(token), "type": type}
+        signed_token = signing.dumps(data, salt="tabisync-password-reset")
+
+        reset_url = request.build_absolute_uri(
+            reverse("tabisync:reset_password", kwargs={"signed_token": signed_token})
+        )
+
+        subject = "【TabiSync】パスワード再設定リンク"
+        message = (
+            f"{'編集' if type == 'edit' else '閲覧'}パスワードの再設定リンクはこちらです。\n"
+            f"1時間以内に以下のURLにアクセスしてください。\n\n{reset_url}"
+        )
+
+        from_email = None  # settings.py に DEFAULT_FROM_EMAIL があれば None でOK
+        send_mail(subject, message, from_email, [itinerary.reset_email])
+
+        messages.success(request, "再設定用リンクをメールで送信しました。")
+    else:
+        messages.error(request, "送信できませんでした。")
+
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+class ResetPasswordView(View):
+    def get(self, request, signed_token):
+        try:
+            data = signing.loads(signed_token, salt="tabisync-password-reset", max_age=3600)  # 1時間有効
+        except signing.BadSignature:
+            raise Http404("無効または期限切れのリンクです。")
+
+        return render(request, "tabisync/reset_password.html", {"signed_token": signed_token, "type": data["type"]})
+
+    def post(self, request, signed_token):
+        try:
+            data = signing.loads(signed_token, salt="tabisync-password-reset", max_age=3600)
+        except signing.BadSignature:
+            raise Http404("無効または期限切れのリンクです。")
+
+        itinerary = get_object_or_404(Itinerary, pk=data["pk"], token=data["token"])
+        new_pw = request.POST.get("password", "").strip()
+
+        if not new_pw:
+            messages.error(request, "新しいパスワードを入力してください。")
+            return redirect(request.path)
+
+        if data["type"] == "edit":
+            itinerary.edit_password = make_password(new_pw)
+        else:
+            itinerary.view_password = make_password(new_pw)
+
+        itinerary.save()
+        messages.success(request, "パスワードを再設定しました。")
+
+        if data["type"] == "edit":
+            return redirect("tabisync:edit", pk=data["pk"], token=data["token"])
+        else:
+            return redirect("tabisync:content", pk=data["pk"], token=data["token"])
