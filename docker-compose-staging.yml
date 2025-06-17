@@ -9,9 +9,8 @@ services:
       POSTGRES_PASSWORD: b5G9upUk
     volumes:
       - pgdata:/var/lib/postgresql/data
-
     networks:
-      - staging_webnet
+      - staging_tabisync
 
   staging_tabisync:
     container_name: staging_tabisync
@@ -28,11 +27,11 @@ services:
       - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
     networks:
-      - staging_webnet
+      - staging_tabisync
 
 volumes:
   pgdata:
 
 networks:
-  staging_webnet:
-    driver: bridge
+  staging_tabisync:
+    external: true
