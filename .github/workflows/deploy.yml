@@ -34,7 +34,7 @@ jobs:
 
       - name: Rsync to VPS
         run: |
-          rsync -avz --delete ./ \
+          rsync -avz --delete --exclude='.env' ./ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/tabisync/${{ steps.set-dir.outputs.dir }}/
 
       - name: Run docker-compose on VPS
@@ -44,3 +44,5 @@ jobs:
             docker compose -f ${{ steps.set-dir.outputs.compose_path }} down
             docker compose -f ${{ steps.set-dir.outputs.compose_path }} up -d --build
           EOF
+
+
