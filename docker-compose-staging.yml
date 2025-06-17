@@ -34,5 +34,5 @@ volumes:
   pgdata:
 
 networks:
-  webnet:
+  staging_webnet:
     driver: bridge
