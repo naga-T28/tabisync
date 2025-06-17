@@ -20,7 +20,7 @@ COPY . /code/
 RUN pipenv install --system --deploy --ignore-pipfile
 
 # collectstatic 実行
-RUN python manage.py collectstatic --noinput
+RUN python project_tabisync/manage.py collectstatic --noinput
 # エントリーポイントを登録
 COPY ./containers/django/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
