@@ -428,7 +428,7 @@ class ContactFormView(View):
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class EditView(View):
     template_name = "tabisync/edit.html"
-    password_template = "tabisync/edit_password.html"  # 新たに用意
+    password_template = "tabisync/edit_password.html"
 
     def get(self, request, pk, token, *args, **kwargs):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -448,7 +448,6 @@ class EditView(View):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         session_key = f"edit_auth_{itinerary.pk}"
 
-        # パスワード入力画面からの認証処理
         if itinerary.edit_password and not request.session.get(session_key):
             password = request.POST.get("password", "")
             if itinerary.check_edit_password(password):
@@ -462,17 +461,51 @@ class EditView(View):
                     "token": token
                 })
 
-        # 編集内容保存処理（前述の内容と同様）
+        # 基本情報更新
         itinerary.title = request.POST.get("title")
         itinerary.subtitle = request.POST.get("subtitle")
         itinerary.description = request.POST.get("description")
         itinerary.save()
 
+        # --- travel_dates 更新処理 ---
         itinerary.travel_dates.all().delete()
-        itinerary.memos.all().delete()
-        itinerary.items.all().delete()
+        for i in range(0, 100):
+            date_val = request.POST.get(f"dates[{i}][date]")
+            if not date_val:
+                break
+            date_obj = TravelDate.objects.create(itinerary=itinerary, date=date_val)
 
-        # 以下、createと同じ日付・スケジュール・メモ・持ち物処理...
+            for j in range(0, 100):
+                start = request.POST.get(f"dates[{i}][schedules][{j}][start_time]")
+                if not start:
+                    break
+                Schedule.objects.create(
+                    date=date_obj,
+                    start_time=start,
+                    end_time=request.POST.get(f"dates[{i}][schedules][{j}][end_time]"),
+                    title=request.POST.get(f"dates[{i}][schedules][{j}][title]"),
+                    description=request.POST.get(f"dates[{i}][schedules][{j}][description]"),
+                    location=request.POST.get(f"dates[{i}][schedules][{j}][location]"),
+                    location_url=request.POST.get(f"dates[{i}][schedules][{j}][location_url]"),
+                )
+
+        # --- メモ更新処理 ---
+        itinerary.memos.all().delete()
+        for i in range(0, 100):
+            title = request.POST.get(f"memos[{i}][title]")
+            content = request.POST.get(f"memos[{i}][content]")
+            if not title and not content:
+                continue
+            Memo.objects.create(itinerary=itinerary, title=title, content=content)
+
+        # --- 持ち物リスト更新処理 ---
+        itinerary.items.all().delete()
+        for i in range(0, 100):
+            title = request.POST.get(f"items[{i}][title]")
+            detail = request.POST.get(f"items[{i}][detail]")
+            if not title and not detail:
+                continue
+            Item.objects.create(itinerary=itinerary, title=title, detail=detail)
 
         return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 
