@@ -42,123 +42,75 @@
                  <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
             </div>
         </header>
-<main class="page-main" id="edit-main">
-    <form class="create-form" method="post">
-        {% csrf_token %}
-        
-        <!-- しおり基本情報 -->
-        <div class="create-title-wrapper">
-            <div class="create-title-wrapper-sub">
-                <h2 class="create-title">しおりを編集</h2>
-                <div>
-                    <input class="input-title" type="text" name="title" placeholder="タイトル" required value="{{ itinerary.title }}">
-                    <input class="input-title" type="text" name="subtitle" placeholder="サブタイトル" value="{{ itinerary.subtitle }}">
-                    <textarea class="input-description input-description-under" name="description" placeholder="概要">{{ itinerary.description }}</textarea>
-                </div>
-            </div>
-        </div>
+<body>
+            <main>
+                <form method="post">
+                {% csrf_token %}
+                <section>
+                    <input type="text" name="title" placeholder="タイトル" value="{{ itinerary.title }}" required>
+                    <input type="text" name="subtitle" placeholder="サブタイトル" value="{{ itinerary.subtitle }}">
+                    <textarea name="description" placeholder="概要">{{ itinerary.description }}</textarea>
+                </section>
 
-        <div class="input-first-wrapper">
-            <!-- 日付 + スケジュール -->
-            <h3 class="input-item-title input-item-title-first"><i class="fa-solid fa-calendar-days"></i> スケジュール</h3>
-            <p class="input-item-description">日付と予定を編集できます。</p>
-            <div id="dates-container">
-                {% for date in itinerary.travel_dates.all %}
-                <div class="date-block" data-date-index="{{ forloop.counter0 }}">
-                    <div class="input-date">
-                        <p class="input-day-number">DAY{{ forloop.counter }}</p>
-                        <div class="input-date-flex">
-                            <label class="input-date-label">日付：</label>
-                            <input class="date-input-in" type="date" name="dates[{{ forloop.counter0 }}][date]" value="{{ date.date|date:'Y-m-d' }}" required>
+                <!-- 日付とスケジュール -->
+                <section id="dates-container">
+                    {% for date in itinerary.travel_dates.all %}
+                    <div class="date-block" data-date-index="{{ forloop.counter0 }}">
+                    <input type="date" name="dates[{{ forloop.counter0 }}][date]" value="{{ date.date|date:'Y-m-d' }}" required>
+                    <div class="schedules-container-wrapper">
+                        {% for schedule in date.schedules.all %}
+                        <div class="schedule-block">
+                        <input type="time" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][start_time]" value="{{ schedule.start_time|time:'H:i' }}" required>
+                        <input type="time" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][end_time]" value="{{ schedule.end_time|time:'H:i' }}">
+                        <input type="text" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][title]" value="{{ schedule.title }}">
+                        <textarea name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][description]">{{ schedule.description }}</textarea>
+                        <input type="text" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][location]" value="{{ schedule.location }}">
+                        <input type="url" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][location_url]" value="{{ schedule.location_url }}">
+                        <button type="button" class="delete-btn">この予定を削除</button>
                         </div>
+                        {% endfor %}
                     </div>
-                    <div class="schedules-container">
-                        <div class="schedules-container-wrapper">
-                            {% for schedule in date.schedules.all %}
-                            <div class="schedule-block">
-                                <div class="input-start-end-time">
-                                    <label class="input-time-label">開始時刻：</label>
-                                    <input type="time" class="time-input" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][start_time]" value="{{ schedule.start_time|time:'H:i' }}" required>
-                                </div>
-                                <div class="input-start-end-time">
-                                    <label class="input-time-label">終了時刻：</label>
-                                    <input type="time" class="time-input" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][end_time]" value="{{ schedule.end_time|time:'H:i' }}">
-                                </div>
-                                <input class="input-title" type="text" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][title]" placeholder="タイトル" value="{{ schedule.title }}">
-                                <textarea class="input-description" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][description]">{{ schedule.description }}</textarea>
-                                <input class="location-input" type="text" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][location]" placeholder="場所名" value="{{ schedule.location }}">
-                                <input class="location-input" type="url" name="dates[{{ forloop.parentloop.counter0 }}][schedules][{{ forloop.counter0 }}][location_url]" placeholder="位置情報URL" value="{{ schedule.location_url }}">
-                                <button type="button" class="delete-btn delete-btn-under"><i class="fa-solid fa-trash-can"></i> この予定を削除</button>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <button type="button" class="add-schedule-btn" data-date-index="{{ forloop.counter0 }}"><i class="fa-solid fa-circle-plus"></i> 予定を追加</button>
+                    <button type="button" class="add-schedule-btn" data-date-index="{{ forloop.counter0 }}">予定を追加</button>
                     </div>
-                </div>
-                {% endfor %}
-            </div>
-            <button type="button" id="add-date-btn"><i class="fa-solid fa-circle-plus"></i> 日付を追加</button>
+                    {% endfor %}
+                    <button type="button" id="add-date-btn">日付を追加</button>
+                </section>
 
-            <!-- メモ -->
-            <h3 class="input-item-title"><i class="fa-solid fa-clipboard"></i> メモ</h3>
-            <div id="memos-container">
-                {% for memo in itinerary.memos.all %}
-                <div class="memo-block">
-                    <p class="memo-title-next">メモ{{ forloop.counter }}</p>
-                    <div class="memo-bloc-wrapper">
-                        <input class="input-title" type="text" name="memos[{{ forloop.counter0 }}][title]" value="{{ memo.title }}" placeholder="メモタイトル">
-                        <textarea class="input-description" name="memos[{{ forloop.counter0 }}][content]">{{ memo.content }}</textarea>
-                        <button type="button" class="delete-btn delete-btn-under"><i class="fa-solid fa-trash-can"></i> このメモを削除</button>
+                <!-- メモ -->
+                <section id="memos-container">
+                    {% for memo in itinerary.memos.all %}
+                    <div class="memo-block">
+                    <input type="text" name="memos[{{ forloop.counter0 }}][title]" value="{{ memo.title }}">
+                    <textarea name="memos[{{ forloop.counter0 }}][content]">{{ memo.content }}</textarea>
+                    <button type="button" class="delete-btn">このメモを削除</button>
                     </div>
-                </div>
-                {% endfor %}
-                <button type="button" id="add-memo-btn"><i class="fa-solid fa-circle-plus"></i> メモを追加</button>
-            </div>
+                    {% endfor %}
+                    <button type="button" id="add-memo-btn">メモを追加</button>
+                </section>
 
-            <!-- 持ち物 -->
-            <h3 class="input-item-title"><i class="fa-solid fa-list-check"></i> 持ち物リスト</h3>
-            <div id="items-container">
-                {% for item in itinerary.items.all %}
-                <div class="item-block">
-                    <p class="memo-title-next">リスト{{ forloop.counter }}</p>
-                    <div class="memo-bloc-wrapper">
-                        <input class="input-title" type="text" name="items[{{ forloop.counter0 }}][title]" value="{{ item.title }}" placeholder="持ち物タイトル">
-                        <textarea class="input-description" name="items[{{ forloop.counter0 }}][detail]">{{ item.detail }}</textarea>
-                        <button type="button" class="delete-btn delete-btn-under"><i class="fa-solid fa-trash-can"></i> このリストを削除</button>
+                <!-- 持ち物 -->
+                <section id="items-container">
+                    {% for item in itinerary.items.all %}
+                    <div class="item-block">
+                    <input type="text" name="items[{{ forloop.counter0 }}][title]" value="{{ item.title }}">
+                    <textarea name="items[{{ forloop.counter0 }}][detail]">{{ item.detail }}</textarea>
+                    <button type="button" class="delete-btn">このリストを削除</button>
                     </div>
-                </div>
-                {% endfor %}
-                <button type="button" id="add-item-btn"><i class="fa-solid fa-circle-plus"></i> リストを追加</button>
-            </div>
+                    {% endfor %}
+                    <button type="button" id="add-item-btn">リストを追加</button>
+                </section>
 
-            <button class="enter-input-btn" type="submit">保存する</button>
-            <div class="precautions-area">
-                <ul>
-                    <li>個人情報（住所や電話番号等）は記載しないでください。</li>
-                    <li>入力内容は匿名でAIの学習や研究に使用される可能性があります。</li>
-                    <li>パスワードの変更・再設定は別画面で行ってください。</li>
-                </ul>
-            </div>
-        </div>
-    </form>
-</main>
-
-<script>
-    // 既存データの件数から index を初期化
-    const dateIndex = {{ itinerary.travel_dates.count }};
-    const memoIndex = {{ itinerary.memos.count }};
-    const itemIndex = {{ itinerary.items.count }};
-</script>
-<script src="{% static 'js/main.js' %}"></script>
-
-        <footer>
+                <button type="submit">保存する</button>
+                </form>
+            </main>
+          <footer>
             <nav class="footer-nav">
                 <ul class="footer-nav-ul">
-                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-house"></i><div>旅程表</div></a></li>
+                    <li class="footer-nav-li footer-nav-li-select"><a class="footer-nav-a" href="{% url 'tabisync:content' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-house"></i><div>旅程表</div></a></li>
                     <!-- <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:user_agreement' %}"><i class="fa-solid fa-wallet"></i><div>割り勘</div></a></li> -->
                     <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_list' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-list-check"></i><div>リスト</div></a></li>
                     <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:content_memo' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-clipboard"></i><div>メモ</div></a></li>
-                    <li class="footer-nav-li footer-nav-li-select"><a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
+                    <li class="footer-nav-li"><a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-file-pen"></i><div>編集</div></a></li>
                 </ul>
             </nav>
             <ul>
@@ -167,90 +119,7 @@
             </ul>
             <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
         </footer>
-        <script src="{% static 'js/menu.js' %}"></script>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            const sections = Array.from(document.querySelectorAll(".date-section"));
-            const label = document.getElementById("current-date-label");
-            let currentIndex = 0;
 
-            function showSection(index) {
-              sections.forEach((s, i) => s.style.display = i === index ? "block" : "none");
-              label.textContent = `Day ${index + 1}`;
-            }
-
-            document.getElementById("prev-date").addEventListener("click", () => {
-              currentIndex = (currentIndex - 1 + sections.length) % sections.length;
-              showSection(currentIndex);
-            });
-
-            document.getElementById("next-date").addEventListener("click", () => {
-              currentIndex = (currentIndex + 1) % sections.length;
-              showSection(currentIndex);
-            });
-
-            if (sections.length > 0) showSection(0);
-
-            // === 次の予定をハイライト ===
-            const now = new Date();
-            let nextSchedule = null;
-            let minDiff = Infinity;
-
-            document.querySelectorAll(".timeline-entry").forEach(entry => {
-              const datetimeStr = entry.dataset.startDatetime;
-              if (!datetimeStr) return;
-
-              const start = new Date(datetimeStr); // ここでエラーが出なくなる
-              const diff = start - now;
-
-              if (diff > 0 && diff < minDiff) {
-                minDiff = diff;
-                nextSchedule = entry;
-              }
-            });
-            if (nextSchedule) {
-              nextSchedule.classList.add('next-highlight');
-
-              const timeElem = nextSchedule.querySelector('.timeline-time');
-              const timeWrapper = nextSchedule.querySelector('.timeline-time-wrapper');
-              if (timeElem && timeWrapper) {
-
-                // nextの時間だけにクラス追加
-                timeWrapper.classList.add('highlight-next-time');
-              }
-
-              const parentSection = nextSchedule.closest(".date-section");
-              const index = sections.findIndex(s => s === parentSection);
-              if (index !== -1) {
-                currentIndex = index;
-                showSection(index);
-              }
-            }
-
-        });
-        document.getElementById('share-button').addEventListener('click', function () {
-          if (navigator.share) {
-            navigator.share({
-              title: document.title,
-              text: '旅行しおりを共有します',
-              url: window.location.href
-            })
-            .then(() => console.log('共有成功'))
-            .catch((error) => console.log('共有失敗', error));
-          } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            // Web Share API非対応時、クリップボードにURLをコピー
-            navigator.clipboard.writeText(window.location.href)
-              .then(() => {
-                alert('URLをクリップボードにコピーしました。共有したい場所に貼り付けてください。');
-              })
-              .catch(() => {
-                alert('クリップボードへのコピーに失敗しました。手動でURLをコピーしてください。\n' + window.location.href);
-              });
-          } else {
-            // クリップボードAPIも無理なら、古典的にpromptでURLを表示
-            prompt('URLをコピーしてください:', window.location.href);
-          }
-          });
-        </script>
-    </body>
+  <script src="{% static 'js/edit_form.js' %}"></script>
+</body>
 </html>
