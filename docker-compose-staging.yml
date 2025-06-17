@@ -10,6 +10,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+    networks:
+      - webnet
+
   tabisync:
     container_name: tabisync
     build:
@@ -24,6 +27,12 @@ services:
     ports:
       - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
+    networks:
+      - webnet
 
 volumes:
   pgdata:
+
+networks:
+  webnet:
+    driver: bridge
