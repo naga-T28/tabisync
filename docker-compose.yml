@@ -1,23 +1,23 @@
+version: '3.12'
+
 services:
   app:
     container_name: tabisync
-
     build:
       context: .
       dockerfile: ./containers/django/Dockerfile
-
-    environment:    
-      - DJANGO_SETTINGS_MODULE=app_config.settings
-
+    environment:
+      - DJANGO_SETTINGS_MODULE=project_tabisync.settings
+    env_file:
+      - ../.env  # ← docker-compose 実行位置からの相対パスを確認
     volumes:
       - .:/code
-      - ~/.config:/root/.config:ro
-
     ports:
-      - 8000:8000
+      - "8000:8000"  # ← expose ではなく ports を推奨
+    command: sh -c "/usr/local/bin/entrypoint.sh"
+    networks:
+      - webnet
 
-        
-    env_file:
-      - ../.env
-
-    command: sh -c "/usr/local/bin/entrypoint.sh" 
+networks:
+  webnet:
+    external: true  # ← docker network ls で存在確認

@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: ./containers/django/Dockerfile
     environment:
-      - DJANGO_SETTINGS_MODULE=app_config.settings
+      - DJANGO_SETTINGS_MODULE=project_tabisync.settings
     env_file:
       - ../.env  # ← docker-compose 実行位置からの相対パスを確認
     volumes:
