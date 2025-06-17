@@ -43,7 +43,7 @@ if not DEBUG:
         raise Exception("ALLOWED_HOSTSが設定されていません。本番環境で必須です。")
 
     # HTTPS関連のセキュリティ設定
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
