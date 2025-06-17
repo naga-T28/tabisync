@@ -41,8 +41,20 @@ jobs:
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             cd /home/${{ secrets.VPS_USER }}/tabisync/${{ steps.set-dir.outputs.dir }}
+
+            # 停止と削除
+            docker stop web || true
+            docker rm web || true
+
+            # メインのcomposeを停止・再構築・起動
             docker compose -f ${{ steps.set-dir.outputs.compose_path }} down
             docker compose -f ${{ steps.set-dir.outputs.compose_path }} up -d --build
+
+            # Djangoコンテナが起動するまで待機（例: 30秒）
+            echo "Waiting for Django container to be ready..."
+            sleep 30
+
+            # web_appディレクトリに移動してdocker-compose実行
+            cd ~/web_app
+            docker-compose -f docker-compose.yml up -d --build
           EOF
-
-
