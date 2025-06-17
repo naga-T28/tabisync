@@ -26,11 +26,21 @@ jobs:
         run: |
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             echo "dir=prod" >> "$GITHUB_OUTPUT"
+            echo "compose_path=/home/${{ secrets.VPS_USER }}/tabisync/prod/docker-compose.yml" >> "$GITHUB_OUTPUT"
           else
             echo "dir=staging" >> "$GITHUB_OUTPUT"
+            echo "compose_path=/home/${{ secrets.VPS_USER }}/tabisync/staging/docker-compose-staging.yml" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Rsync to VPS
         run: |
           rsync -avz --delete ./ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/tabisync/${{ steps.set-dir.outputs.dir }}/
+
+      - name: Run docker-compose on VPS
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd /home/${{ secrets.VPS_USER }}/tabisync/${{ steps.set-dir.outputs.dir }}
+            docker compose -f ${{ steps.set-dir.outputs.compose_path }} down
+            docker compose -f ${{ steps.set-dir.outputs.compose_path }} up -d --build
+          EOF
