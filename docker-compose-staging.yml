@@ -10,7 +10,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - staging_tabisync
+      - tabisync
 
   staging_tabisync:
     container_name: staging_tabisync
@@ -27,11 +27,11 @@ services:
       - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
     networks:
-      - staging_tabisync
+      - tabisync
 
 volumes:
   pgdata:
 
 networks:
-  staging_tabisync:
-    external: true
+  tabisync:
+      driver: bridge
