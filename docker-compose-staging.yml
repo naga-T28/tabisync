@@ -11,10 +11,10 @@ services:
       - pgdata:/var/lib/postgresql/data
 
     networks:
-      - webnet
+      - staging_webnet
 
-  tabisync:
-    container_name: tabisync
+  staging_tabisync:
+    container_name: staging_tabisync
     build:
       context: .
       dockerfile: ./containers/django/Dockerfile
@@ -28,7 +28,7 @@ services:
       - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
     networks:
-      - webnet
+      - staging_webnet
 
 volumes:
   pgdata:
