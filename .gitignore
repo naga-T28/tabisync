@@ -24,8 +24,6 @@ db.sqlite3
 .idea/
 .vscode/
 
-# Pipenv
-Pipfile.lock
 
 # Migrations (you may want to version control them in some cases)
 **/migrations/__pycache__/
