@@ -461,24 +461,24 @@ class EditView(View):
                     "token": token
                 })
 
-        # 基本情報更新
+        # 基本情報
         itinerary.title = request.POST.get("title")
         itinerary.subtitle = request.POST.get("subtitle")
         itinerary.description = request.POST.get("description")
         itinerary.save()
 
-        # --- travel_dates 更新処理 ---
+        # TravelDates + Schedule
         itinerary.travel_dates.all().delete()
         for i in range(0, 100):
             date_val = request.POST.get(f"dates[{i}][date]")
             if not date_val:
-                break
+                continue
             date_obj = TravelDate.objects.create(itinerary=itinerary, date=date_val)
 
             for j in range(0, 100):
                 start = request.POST.get(f"dates[{i}][schedules][{j}][start_time]")
                 if not start:
-                    break
+                    continue
                 Schedule.objects.create(
                     date=date_obj,
                     start_time=start,
@@ -489,7 +489,7 @@ class EditView(View):
                     location_url=request.POST.get(f"dates[{i}][schedules][{j}][location_url]"),
                 )
 
-        # --- メモ更新処理 ---
+        # Memos
         itinerary.memos.all().delete()
         for i in range(0, 100):
             title = request.POST.get(f"memos[{i}][title]")
@@ -498,7 +498,7 @@ class EditView(View):
                 continue
             Memo.objects.create(itinerary=itinerary, title=title, content=content)
 
-        # --- 持ち物リスト更新処理 ---
+        # Items
         itinerary.items.all().delete()
         for i in range(0, 100):
             title = request.POST.get(f"items[{i}][title]")
