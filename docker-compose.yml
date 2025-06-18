@@ -4,30 +4,35 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: tabisync_staging
+      POSTGRES_DB: tabisync_prod
       POSTGRES_USER: nagat
       POSTGRES_PASSWORD: b5G9upUk
     volumes:
       - pgdata:/var/lib/postgresql/data
-  tabisync:
-    container_name: tabisync
+    networks:
+      - tabisync
+
+  prod_tabisync:
+    container_name: prod_tabisync
     build:
       context: .
       dockerfile: ./containers/django/Dockerfile
     environment:
       - DJANGO_SETTINGS_MODULE=project_tabisync.settings
     env_file:
-      - ../.env  # ← docker-compose 実行位置からの相対パスを確認
+      - ../prod-env/.env
     volumes:
       - .:/code
+      - ../../web_app/tabisync/staging/shared/staticfiles:/code/project_tabisync/staticfiles
     ports:
-      - "8000:8000"  # ← expose ではなく ports を推奨
+      - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
     networks:
-      - webnet
-
-
+      - tabisync
 
 volumes:
   pgdata:
 
+networks:
+  tabisync:
+      driver: bridge
