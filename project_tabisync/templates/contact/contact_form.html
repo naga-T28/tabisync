@@ -4,6 +4,7 @@
 {% block contents %}
 {% load static %}
 <main class="page-main">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> 
     <div class="contact-form-wrapper">
         <h2>お問い合わせフォーム</h2>
         <p class="contact-blank">返信は通常3日以内に行うよう努めておりますが、個人で運営しているため、お時間をいただく場合がございます。何卒ご理解のほどよろしくお願いいたします。</p>
@@ -26,6 +27,7 @@
                 <label for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
                 {{ form.message }}
             </div>
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAABg8TmGAOQbU-N_J"></div>
             <button class="contact-btn" type="submit">送信</button>
         </form>
     </div>
