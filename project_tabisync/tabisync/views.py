@@ -12,6 +12,7 @@ import urllib.parse
 import json
 import os
 from django.conf import settings
+from django.http import HttpResponse
 # views.py
 from django.core import signing
 from django.core.mail import send_mail
@@ -28,9 +29,19 @@ from .models import Itinerary
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import render
 
+
 def offline_view(request):
     return render(request, "offline.html")
 
+#クローラ対策
+def robots_txt_view(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /content/",
+        "Disallow: /reset-link/",
+        "Disallow: /reset/",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
 def verify_turnstile(request):
@@ -215,7 +226,9 @@ class ItineraryDetailView(TemplateView):
         if self.itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -257,7 +270,10 @@ class MemoDetailView(TemplateView):
             # 認証されていなければパスワード入力画面へリダイレクト
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -305,7 +321,9 @@ class ListDetailView(TemplateView):
             # 認証されていなければパスワード入力画面へリダイレクト
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -347,7 +365,9 @@ class ItineraryPasswordView(View):
     def get(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         context = {'pk': pk, 'token': token, 'itinerary': itinerary}
-        return render(request, self.template_name, context)
+        response = render(request, self.template_name, context)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def post(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -438,13 +458,17 @@ class EditView(View):
         session_key = f"edit_auth_{itinerary.pk}"
 
         if itinerary.edit_password and not request.session.get(session_key):
-            return render(request, self.password_template, {
+            response = render(request, self.password_template, {
                 "itinerary": itinerary,
                 "pk": pk,
                 "token": token
             })
+            response["X-Robots-Tag"] = "noindex, nofollow"
+            return response
 
-        return render(request, self.template_name, {"itinerary": itinerary})
+        response = render(request, self.template_name, {"itinerary": itinerary})
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def post(self, request, pk, token, *args, **kwargs):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -674,8 +698,13 @@ class ResetPasswordView(View):
         except signing.BadSignature:
             raise Http404("無効または期限切れのリンクです。")
 
-        return render(request, "tabisync/reset_password.html", {"signed_token": signed_token, "type": data["type"]})
-
+        response = render(request, "tabisync/reset_password.html", {
+            "signed_token": signed_token,
+            "type": data["type"],
+        })
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+    
     def post(self, request, signed_token):
         try:
             data = signing.loads(signed_token, salt="tabisync-password-reset", max_age=3600)
