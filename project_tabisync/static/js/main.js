@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
-    let dateIndex = 1;
-    let memoIndex = 1;
-    let itemIndex = 1;
+    let dateIndex = getMaxIndex("dates") + 1;
+    let memoIndex = getMaxIndex("memos") + 1;
+    let itemIndex = getMaxIndex("items") + 1;
   
     const datesContainer = document.getElementById("dates-container");
     const memosContainer = document.getElementById("memos-container");
