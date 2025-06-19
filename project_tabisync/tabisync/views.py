@@ -370,6 +370,9 @@ class ItineraryPasswordView(View):
         return response
 
     def post(self, request, pk, token):
+        if not verify_turnstile(request):
+            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
+        
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         input_password = request.POST.get('view_password', '')
 
@@ -471,6 +474,8 @@ class EditView(View):
         return response
 
     def post(self, request, pk, token, *args, **kwargs):
+        if not verify_turnstile(request):
+            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         session_key = f"edit_auth_{itinerary.pk}"
 
