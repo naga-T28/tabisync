@@ -1,4 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
+    // --- インデックス最大値取得関数 ---
+    function getMaxIndex(prefix) {
+        const inputs = document.querySelectorAll(`input[name^="${prefix}["]`);
+        let maxIndex = -1;
+        inputs.forEach(input => {
+        const regex = new RegExp(`${prefix}\\[(\\d+)\\]`);
+        const match = input.name.match(regex);
+        if (match) {
+            const idx = parseInt(match[1], 10);
+            if (idx > maxIndex) maxIndex = idx;
+        }
+        });
+        return maxIndex;
+    }
+
+    // --- 各インデックスの初期値設定 ---
     let dateIndex = getMaxIndex("dates") + 1;
     let memoIndex = getMaxIndex("memos") + 1;
     let itemIndex = getMaxIndex("items") + 1;
