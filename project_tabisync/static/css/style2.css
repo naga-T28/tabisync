@@ -950,6 +950,23 @@ h3.input-item-title-first{
   align-items: center;
   justify-content: center;
 }
+#copy-url-box{
+  width: 95%;
+  height: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
+  border: 2px solid #cecece;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;       /* テキストを1行に固定 */
+  overflow: hidden;          /* はみ出た部分を隠す */
+  text-overflow: ellipsis;   /* 末尾に「…」を表示（省略記号）*/
+  padding: 5px 10px;         /* 内側の余白（必要に応じて）*/
+  box-sizing: border-box; 
+  gap:5px;
+}
 
 @media screen and (min-width: 960px) {
   body {

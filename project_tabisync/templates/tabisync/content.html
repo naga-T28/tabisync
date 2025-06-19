@@ -116,8 +116,16 @@
               {% endfor %}
 
             </div>
-
-          </div>
+            </div>
+            <div class="box5-6">
+              <h2 class="box-title">しおりを共有</h2>
+              <div class="box-content">
+                <p class="copy-url-note">右上の「共有」ボタンをクリックするか、以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます</p>
+                <p id="copy-url-box" class="copy-url-box">
+                  <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ request.build_absolute_uri }}</span>
+                </p>
+              </div>
+            </div>
         </main>
         <footer>
             <nav class="footer-nav">
@@ -137,6 +145,24 @@
         </footer>
         <script src="{% static 'js/menu.js' %}"></script>
         <script>
+          document.addEventListener("DOMContentLoaded", function () {
+          const urlBox = document.getElementById("copy-url-box");
+          const urlText = document.getElementById("copy-url-text");
+
+          if (urlBox && urlText) {
+            urlBox.addEventListener("click", function () {
+              const textToCopy = urlText.textContent;
+
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy)
+                  .then(() => alert("URLをコピーしました！"))
+                  .catch(() => prompt("コピーできませんでした。手動でコピーしてください：", textToCopy));
+              } else {
+                prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+              }
+            });
+          }
+        });
           document.addEventListener("DOMContentLoaded", function () {
             const sections = Array.from(document.querySelectorAll(".date-section"));
             const label = document.getElementById("current-date-label");
