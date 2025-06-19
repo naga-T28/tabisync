@@ -25,7 +25,7 @@ services:
       - .:/code
       - ../../web_app/tabisync/staging/shared/staticfiles:/code/project_tabisync/staticfiles
     ports:
-      - "8000:8000"
+      - "8001:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"
     networks:
       - tabisync
