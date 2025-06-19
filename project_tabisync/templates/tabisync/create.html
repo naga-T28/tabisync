@@ -4,7 +4,7 @@
 {% block contents %}
 {% load static %}
 <main class="page-main">
-   <!-- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> -->
+   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> 
     <form class="create-form" method="post">
         {% csrf_token %}
       
@@ -91,7 +91,7 @@
             <input class="input-password" type="password" name="edit_password" placeholder="編集用パスワード(任意)">
             <input class="input-password input-password-last" type="email" name="reset_email" placeholder="再設定用メールアドレス(任意)">
             </div>
-            <!--<div class="cf-turnstile" data-sitekey="0x4AAAAAABg8TmGAOQbU-N_J"></div>-->
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAABg8TmGAOQbU-N_J"></div>
             <p class="input-user-agreement-check"><a href="{% url "tabisync:user_agreement"%}">利用規約<a>に同意して、</p>
             <button class="enter-input-btn" type="submit">作成する</button>
             <div class="precautions-area">
