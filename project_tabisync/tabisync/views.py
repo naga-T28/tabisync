@@ -12,6 +12,7 @@ import urllib.parse
 import json
 import os
 from django.conf import settings
+from django.http import HttpResponse
 # views.py
 from django.core import signing
 from django.core.mail import send_mail
@@ -28,9 +29,19 @@ from .models import Itinerary
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import render
 
+
 def offline_view(request):
     return render(request, "offline.html")
 
+#クローラ対策
+def robots_txt_view(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /content/",
+        "Disallow: /reset-link/",
+        "Disallow: /reset/",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
 def verify_turnstile(request):
@@ -130,8 +141,8 @@ class CreateView(View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        #if not verify_turnstile(request):
-            #return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
+        if not verify_turnstile(request):
+            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
         # 1. しおり本体の作成
         itinerary = Itinerary(
             title=request.POST.get('title'),
@@ -215,7 +226,9 @@ class ItineraryDetailView(TemplateView):
         if self.itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -257,7 +270,10 @@ class MemoDetailView(TemplateView):
             # 認証されていなければパスワード入力画面へリダイレクト
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -305,7 +321,9 @@ class ListDetailView(TemplateView):
             # 認証されていなければパスワード入力画面へリダイレクト
             return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
 
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -347,7 +365,9 @@ class ItineraryPasswordView(View):
     def get(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         context = {'pk': pk, 'token': token, 'itinerary': itinerary}
-        return render(request, self.template_name, context)
+        response = render(request, self.template_name, context)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def post(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -377,6 +397,8 @@ class ContactFormView(View):
         return render(request, self.template_name, {"form": form})
 
     def post(self, request):
+        if not verify_turnstile(request):
+            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
         form = ContactForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
@@ -423,32 +445,35 @@ class ContactFormView(View):
         # バリデーションエラー時
         return render(request, self.template_name, {"form": form})
     
+from datetime import datetime
 
 #編集画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class EditView(View):
     template_name = "tabisync/edit.html"
-    password_template = "tabisync/edit_password.html"  # 新たに用意
+    password_template = "tabisync/edit_password.html"
 
     def get(self, request, pk, token, *args, **kwargs):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         session_key = f"edit_auth_{itinerary.pk}"
 
-        if itinerary.edit_password:
-            if not request.session.get(session_key):
-                return render(request, self.password_template, {
-                    "itinerary": itinerary,
-                    "pk": pk,
-                    "token": token
-                })
+        if itinerary.edit_password and not request.session.get(session_key):
+            response = render(request, self.password_template, {
+                "itinerary": itinerary,
+                "pk": pk,
+                "token": token
+            })
+            response["X-Robots-Tag"] = "noindex, nofollow"
+            return response
 
-        return render(request, self.template_name, {"itinerary": itinerary})
+        response = render(request, self.template_name, {"itinerary": itinerary})
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     def post(self, request, pk, token, *args, **kwargs):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         session_key = f"edit_auth_{itinerary.pk}"
 
-        # パスワード入力画面からの認証処理
         if itinerary.edit_password and not request.session.get(session_key):
             password = request.POST.get("password", "")
             if itinerary.check_edit_password(password):
@@ -462,19 +487,180 @@ class EditView(View):
                     "token": token
                 })
 
-        # 編集内容保存処理（前述の内容と同様）
-        itinerary.title = request.POST.get("title")
-        itinerary.subtitle = request.POST.get("subtitle")
-        itinerary.description = request.POST.get("description")
+        # ------------------------
+        # 基本情報更新
+        # ------------------------
+        itinerary.title = request.POST.get("title", "")
+        itinerary.subtitle = request.POST.get("subtitle", "")
+        itinerary.description = request.POST.get("description", "")
         itinerary.save()
 
-        itinerary.travel_dates.all().delete()
-        itinerary.memos.all().delete()
-        itinerary.items.all().delete()
+        # ------------------------
+        # TravelDate & Schedule 差分更新
+        # ------------------------
+        existing_dates = list(itinerary.travel_dates.all())
 
-        # 以下、createと同じ日付・スケジュール・メモ・持ち物処理...
+        travel_date_indices = sorted({
+            key.split("[")[1].split("]")[0]
+            for key in request.POST.keys()
+            if key.startswith("dates[") and "[date]" in key
+        }, key=int)
+
+        used_date_pks = []
+
+        for idx, i_str in enumerate(travel_date_indices):
+            i = int(i_str)
+            date_str = request.POST.get(f"dates[{i}][date]")
+            if not date_str:
+                continue
+
+            if idx < len(existing_dates):
+                td = existing_dates[idx]
+                td.date = date_str
+                td.order = idx
+                td.save()
+            else:
+                td = TravelDate.objects.create(
+                    itinerary=itinerary,
+                    date=date_str,
+                    order=idx
+                )
+            used_date_pks.append(td.pk)
+
+            # Schedule 差分更新
+            existing_schedules = list(td.schedules.all())
+            schedule_indices = sorted({
+                key.split("[")[3].split("]")[0]
+                for key in request.POST.keys()
+                if key.startswith(f"dates[{i}][schedules][") and "[title]" in key
+            }, key=int)
+
+            used_schedule_pks = []
+
+            for jdx, j_str in enumerate(schedule_indices):
+                j = int(j_str)
+                title = request.POST.get(f"dates[{i}][schedules][{j}][title]", "")
+                location = request.POST.get(f"dates[{i}][schedules][{j}][location]", "")
+                location_url = request.POST.get(f"dates[{i}][schedules][{j}][location_url]", "")
+                description = request.POST.get(f"dates[{i}][schedules][{j}][description]", "")
+                start_time = request.POST.get(f"dates[{i}][schedules][{j}][start_time]")
+                end_time = request.POST.get(f"dates[{i}][schedules][{j}][end_time]") or None
+
+                if start_time:
+                    start_time = datetime.strptime(start_time, "%H:%M").time()
+                if end_time:
+                    end_time = datetime.strptime(end_time, "%H:%M").time()
+
+                if jdx < len(existing_schedules):
+                    sched = existing_schedules[jdx]
+                    sched.title = title
+                    sched.location = location
+                    sched.location_url = location_url
+                    sched.description = description
+                    sched.start_time = start_time
+                    sched.end_time = end_time
+                    sched.order = jdx
+                    sched.save()
+                    used_schedule_pks.append(sched.pk)
+                else:
+                    sched = Schedule.objects.create(
+                        travel_date=td,
+                        title=title,
+                        location=location,
+                        location_url=location_url,
+                        description=description,
+                        start_time=start_time,
+                        end_time=end_time,
+                        order=jdx
+                    )
+                    used_schedule_pks.append(sched.pk)
+
+            # 余ったSchedule削除
+            for s in existing_schedules:
+                if s.pk not in used_schedule_pks:
+                    s.delete()
+
+        # 余ったTravelDate削除
+        for td in existing_dates:
+            if td.pk not in used_date_pks:
+                td.delete()
+
+        # ------------------------
+        # Memo 差分更新
+        # ------------------------
+        existing_memos = list(itinerary.memos.all())
+        memo_indices = sorted({
+            key.split("[")[1].split("]")[0]
+            for key in request.POST.keys()
+            if key.startswith("memos[") and "[title]" in key
+        }, key=int)
+
+        used_memo_pks = []
+
+        for idx, i_str in enumerate(memo_indices):
+            i = int(i_str)
+            title = request.POST.get(f"memos[{i}][title]", "")
+            content = request.POST.get(f"memos[{i}][content]", "")
+
+            if idx < len(existing_memos):
+                memo = existing_memos[idx]
+                memo.title = title
+                memo.content = content
+                memo.save()
+                used_memo_pks.append(memo.pk)
+            else:
+                memo = Memo.objects.create(
+                    itinerary=itinerary,
+                    title=title,
+                    content=content
+                )
+                used_memo_pks.append(memo.pk)
+
+        for m in existing_memos:
+            if m.pk not in used_memo_pks:
+                m.delete()
+
+        # ------------------------
+        # Item 差分更新
+        # ------------------------
+        existing_items = list(itinerary.items.all())
+        item_indices = sorted({
+            key.split("[")[1].split("]")[0]
+            for key in request.POST.keys()
+            if key.startswith("items[") and "[title]" in key
+        }, key=int)
+
+        used_item_pks = []
+
+        for idx, i_str in enumerate(item_indices):
+            i = int(i_str)
+            title = request.POST.get(f"items[{i}][title]", "")
+            detail = request.POST.get(f"items[{i}][detail]", "")
+            is_checked = request.POST.get(f"items[{i}][is_checked]") == "true"
+
+            if idx < len(existing_items):
+                item = existing_items[idx]
+                item.title = title
+                item.detail = detail
+                item.is_checked = is_checked
+                item.save()
+                used_item_pks.append(item.pk)
+            else:
+                item = Item.objects.create(
+                    itinerary=itinerary,
+                    title=title,
+                    detail=detail,
+                    is_checked=is_checked
+                )
+                used_item_pks.append(item.pk)
+
+        for item in existing_items:
+            if item.pk not in used_item_pks:
+                item.delete()
 
         return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
+
+
 
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 def send_reset_link(request, pk, token, type):
@@ -512,8 +698,13 @@ class ResetPasswordView(View):
         except signing.BadSignature:
             raise Http404("無効または期限切れのリンクです。")
 
-        return render(request, "tabisync/reset_password.html", {"signed_token": signed_token, "type": data["type"]})
-
+        response = render(request, "tabisync/reset_password.html", {
+            "signed_token": signed_token,
+            "type": data["type"],
+        })
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+    
     def post(self, request, signed_token):
         try:
             data = signing.loads(signed_token, salt="tabisync-password-reset", max_age=3600)

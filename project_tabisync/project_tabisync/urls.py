@@ -16,8 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.sitemaps.views import sitemap
+from tabisync.sitemaps import StaticViewSitemap
 
+sitemaps = {
+    'static': StaticViewSitemap,
+}
 urlpatterns = [
     path('admin/nagat28/', admin.site.urls),
     path("", include("tabisync.urls")),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django-sitemap'),
 ]

@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: tabisync_prod
+      POSTGRES_DB: tabisync_staging
       POSTGRES_USER: nagat
       POSTGRES_PASSWORD: b5G9upUk
     volumes:
@@ -12,18 +12,18 @@ services:
     networks:
       - tabisync
 
-  prod_tabisync:
-    container_name: prod_tabisync
+  staging_tabisync:
+    container_name: staging_tabisync
     build:
       context: .
       dockerfile: ./containers/django/Dockerfile
     environment:
       - DJANGO_SETTINGS_MODULE=project_tabisync.settings
     env_file:
-      - ../prod-env/.env
+      - ../.env
     volumes:
       - .:/code
-      - ../../web_app/tabisync/prod/shared/staticfiles:/code/project_tabisync/staticfiles
+      - ../../web_app/tabisync/staging/shared/staticfiles:/code/project_tabisync/staticfiles
     ports:
       - "8000:8000"
     command: sh -c "/usr/local/bin/entrypoint.sh"

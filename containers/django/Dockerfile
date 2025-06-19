@@ -8,17 +8,16 @@ WORKDIR /code
 # 基本ツール
 RUN pip install --upgrade pip && pip install pipenv
 
-# Pipfile / Pipfile.lockの反映
+# Pipfile / Pipfile.lock の反映
 COPY ./Pipfile /code/Pipfile
 COPY ./Pipfile.lock /code/Pipfile.lock
 
-RUN pipenv install --system --deploy --ignore-pipfile
-
-# アプリケーションコードをすべてコピー（ここが重要）
+# pipenv install はまだ実行しない（←順番変更）
+# アプリケーションコードを先にコピー
 COPY . /code/
 
-# collectstatic 実行（静的ファイルの準備）
-RUN python manage.py collectstatic --noinput
+# ここで pipenv install（manage.py も static も存在するタイミング）
+RUN pipenv install --system --deploy --ignore-pipfile
 
 # エントリーポイントを登録
 COPY ./containers/django/entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -26,3 +25,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Gunicornでアプリ起動（runserverではなく）
 CMD ["gunicorn", "project_tabisync.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+
+# ...前略...
+
+

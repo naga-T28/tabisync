@@ -43,7 +43,7 @@
             </div>
         </header>
 <main class="page-main" id="edit-main">
-    <form class="create-form" method="post">
+    <form method="post" action="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}">
         {% csrf_token %}
         
         <!-- しおり基本情報 -->
@@ -149,7 +149,7 @@
     const memoIndex = {{ itinerary.memos.count }};
     const itemIndex = {{ itinerary.items.count }};
 </script>
-<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/edit_form.js' %}"></script>
 
         <footer>
             <nav class="footer-nav">
