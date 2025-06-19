@@ -12,7 +12,6 @@ body, html {
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
-    scroll-behavior: smooth;
     color:rgb(95,96,97);
     margin: 0;
     padding: 0;
@@ -31,8 +30,7 @@ article.user-agreement,
 article.privacy-policy,
 .updates-article{
     width: 90%;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
     margin-top: 20px;
 }
 .updates-article{
@@ -74,6 +72,7 @@ article.privacy-policy,
 .img-404{
   width: 100%;
   height: auto;
+  margin-bottom: 600px;
 }
 /*----------------------------------------
   ハンバーガーメニュー
@@ -330,8 +329,7 @@ footer small {
 }
 .notable-point-pc-wrapper{
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   display:flex;
   flex-direction: column;
   align-items: center;
@@ -339,8 +337,7 @@ footer small {
 }
 .notable-point-pc-wrapper-btn{
     width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   display:flex;
   flex-direction: column;
   align-items: center;
@@ -490,8 +487,7 @@ li.update-item{
 }
 .create-title-wrapper-sub{
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
 .create-form{
   width: 100%;
@@ -499,8 +495,7 @@ li.update-item{
 /*フォーム全体の装飾*/
 .input-first-wrapper{
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
 /*作成画面全体の装飾*/
 .create-title{
@@ -592,8 +587,7 @@ h3.input-item-title-first{
 }
 .schedules-container-wrapper{
   width: 95%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   border: 2px solid #000000;
   padding:10px;
 }
@@ -607,8 +601,7 @@ h3.input-item-title-first{
 .add-schedule-btn{
   width: 95%;
   height: 40px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   background-color: #000000;
   border: none;
   color:white;
@@ -641,8 +634,7 @@ h3.input-item-title-first{
 #add-memo-btn{
   width: 100%;
   height: 40px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   margin-bottom: 60px;
   border-radius: 20px;
   background-color: #000000;
@@ -693,8 +685,7 @@ h3.input-item-title-first{
   text-align: center;
   margin-top: 5px;
   margin-bottom: 5px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   color:black;
   background-color: white;
   border: 1px solid black;
@@ -779,7 +770,6 @@ h3.input-item-title-first{
   flex-direction: row;
 }
 
-
 .contact-form-content{
   display: flex;
   flex-direction: column;
@@ -787,13 +777,13 @@ h3.input-item-title-first{
 }
 .contact-form-wrapper{
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
 
 .contact-btn{
   margin-top: 20px;
   width: 100%;
+  height: 50px;
   background-color: #000000;
   color: #ffffff;
 }
@@ -801,8 +791,7 @@ h3.input-item-title-first{
 .contact-thanks-wrapper{
   margin-top: 150px;
   width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: left;
@@ -921,8 +910,7 @@ h3.input-item-title-first{
   .section3-wrapper{
     width: 90%;
     height: auto;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
     display: flex;
     flex-direction: row;
   }
@@ -957,7 +945,4 @@ h3.input-item-title-first{
  .contact-form-wrapper{
   width: 70%;
  }
-
 }
-
-

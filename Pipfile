@@ -8,6 +8,7 @@ django = "*"
 django-ratelimit = "*"
 python-dotenv = "*"
 psycopg = "*"
+gunicorn = "*"
 
 [dev-packages]
 
