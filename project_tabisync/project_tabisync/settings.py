@@ -105,7 +105,7 @@ else:
 
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
-    CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1","https//staging.tabisync.com"]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1","https://staging.tabisync.com"]
 
     STATIC_URL = '/static/'
     STATICFILES_DIRS = [BASE_DIR / "static"]
