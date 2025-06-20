@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}プライバシーポリシー{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy">
+    <h2 class="user-agreement-title">よくある質問</h2>
+    <div class="toc-002">
+        <div>
+            目次
+        </div>
+        <ol>
+            <li><a href="#faq-account">アカウント・パスワード関連</a></li>
+            <li><a href="#faq-create">しおりの作成・編集について</a></li>
+            <li><a href="#faq-security">セキュリティ・データについて</a></li>
+        </ol>
+    </div>
+    <h3 class="user-agreement-sub-title" id="faq-account">アカウント・パスワード関連</h3>
+    <details class="qa-6">
+        <summary>アカウント登録は必要ですか？</summary>
+        <p>いいえ、TabiSyncではアカウント登録不要でご利用いただけます。</p>
+    </details>
+    <details class="qa-6">
+        <summary>パスワードを忘れてしまいました。どうすれば良いですか？</summary>
+        <p>再設定用メールアドレスを登録している場合は、再設定画面から新しいパスワードを設定できます。</p>
+    </details>
+    <details class="qa-6">
+        <summary>作成したURLを忘れてしまった場合はどうすれば良いですか？</summary>
+        <p>申し訳ございませんが、セキュリティの観点からURLの再発行やご案内は行っておりません。お手数ですが、新しくしおりを作成いただきますようお願いいたします。</p>
+    </details>
+
+    <h3 class="user-agreement-sub-title" id="faq-create">しおりの作成・編集について</h3>
+    <details class="qa-6">
+        <summary>しおりの作成方法を教えてください。</summary>
+        <p>トップページの「しおり作成」ボタンから、日程や予定などを入力することで簡単に作成できます。</p>
+    </details>
+    <details class="qa-6">
+        <summary>作成したしおりはあとから編集できますか？</summary>
+        <p>はい、右下の編集ボタンからいつでも内容の編集は可能です。</p>
+    </details>
+
+    <h3 class="user-agreement-sub-title" id="faq-security">セキュリティ・データについて</h3>
+    <details class="qa-6">
+    <summary>しおりの内容は誰でも見られますか？</summary>
+    <p>しおりのURLを知っている人は誰でも閲覧可能です。閲覧や編集にパスワードを設定することで制限できます。</p>
+    </details>
+
+    <details class="qa-6">
+    <summary>入力した情報はどのように扱われますか？</summary>
+    <p>個人を特定しない範囲でのみ利用され、第三者に提供することはありません。詳しくはプライバシーポリシーをご覧ください。</p>
+    </details>
+  </article>
+</main>
+{% endblock %}
