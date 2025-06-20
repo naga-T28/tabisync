@@ -22,7 +22,7 @@ urlpatterns = [
     path('content/<int:pk>/<uuid:token>/edit', views.EditView.as_view(), name='edit'),
     path('content/<int:pk>/<uuid:token>/memo/', views.MemoDetailView.as_view(), name='content_memo'),
     path('content/<int:pk>/<uuid:token>/list/', views.ListDetailView.as_view(), name='content_list'),
-    path("reset-link/<int:pk>/<uuid:token>/<str:type>/",views.send_reset_link,name="send_reset_link"),
+    path("reset-link/<int:pk>/<uuid:token>/<str:type>/",views.SendResetLinkView.as_view(),name="send_reset_link"),
     path("reset/<str:signed_token>/", views.ResetPasswordView.as_view(), name="reset_password"),
     path('content/<int:pk>/<uuid:token>/password/', views.ItineraryPasswordView.as_view(), name='content_password'),
 ]
