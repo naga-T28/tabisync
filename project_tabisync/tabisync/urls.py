@@ -1,11 +1,13 @@
 from django.urls import path
 from . import views
 
-app_name = "tabisync"  
+app_name = "tabisync"
 
 urlpatterns = [
     path("", views.HomeView.as_view(), name="home"),#ホーム画面のパス
     path('create/', views.CreateView.as_view(), name='create'),
+    path('qa/', views.QAView.as_view(), name='qa'),
+    path('profile/', views.ProfileView.as_view(), name='profile'),
     path('user_agreement/', views.UserAgreementView.as_view(), name='user_agreement'),
     path('privacy_policy/', views.PrivacyPolicyView.as_view(), name='privacy_policy'),
     path('demo/', views.DemoContentView.as_view(), name='demo_content'),

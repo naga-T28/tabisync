@@ -6,7 +6,7 @@ class StaticViewSitemap(Sitemap):
     changefreq = 'monthly'
 
     def items(self):
-        return ['tabisync:home', 'tabisync:create', 'tabisync:user_agreement', 'tabisync:privacy_policy', 'tabisync:contact']
+        return ['tabisync:home', 'tabisync:create', 'tabisync:user_agreement', 'tabisync:privacy_policy', 'tabisync:contact','tabisync:qa','tabisync:profile']
 
     def location(self, item):
         return reverse(item)
