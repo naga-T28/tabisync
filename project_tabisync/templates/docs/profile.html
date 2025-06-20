@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}バージョン履歴{% endblock %}
+
+{% block contents %}
+{% load static %}
+<main class="page-main">
+    <article class="privacy-policy">
+            <h2 class="profile-title">運営者プロフィール</h2>
+            <img src="{% static 'img/nagat-icon.png' %}" alt="運営者プロフィール画像" class="profile-image">
+            <h3 class="profile-subtitle">nagaT</h3>
+            <p>
+                TabiSyncの運営・開発をしているnagaTです。<br> 
+                旅の予定をもっと簡単に共有できたらいいなと思い、  
+                「紙のしおりのような使いやすさ」と「スマホの便利さ」を両立できるサービスを目指して作りました。<br>
+                家族や友達との旅行が、もっと楽しくスムーズになるように  
+                これからも少しずつ改善していきます。  
+                旅のおともに、ぜひTabiSyncを使っていただけたら嬉しいです！<br>
+                遺跡巡りを中心とした旅行のブログも書いているので、興味があればぜひご覧ください。<br>
+            </p>
+            <a href="https://blog.naga-t.jp" target="_blank" rel="noopener noreferrer" class="profile-blog-link">
+                <i class="fa-solid fa-blog"></i> nagaTブログ
+            </a>
+    </article>
+</main>
+{% endblock %}
