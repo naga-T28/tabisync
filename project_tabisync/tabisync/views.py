@@ -678,34 +678,37 @@ class EditView(View):
         return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 
 
-
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
-def send_reset_link(request, pk, token, type):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+class SendResetLinkView(View):
+    def post(self, request, pk, token, type):
+        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
-    if request.method == "POST" and itinerary.reset_email:
-        # 署名付きトークンを生成（1時間有効）
-        data = {"pk": pk, "token": str(token), "type": type}
-        signed_token = signing.dumps(data, salt="tabisync-password-reset")
+        if itinerary.reset_email:
+            data = {"pk": pk, "token": str(token), "type": type}
+            signed_token = signing.dumps(data, salt="tabisync-password-reset")
 
-        reset_url = request.build_absolute_uri(
-            reverse("tabisync:reset_password", kwargs={"signed_token": signed_token})
-        )
+            reset_url = request.build_absolute_uri(
+                reverse("tabisync:reset_password", kwargs={"signed_token": signed_token})
+            )
 
-        subject = "【TabiSync】パスワード再設定リンク"
-        message = (
-            f"{'編集' if type == 'edit' else '閲覧'}パスワードの再設定リンクはこちらです。\n"
-            f"1時間以内に以下のURLにアクセスしてください。\n\n{reset_url}"
-        )
+            subject = "【TabiSync】パスワード再設定リンク"
+            message = (
+                f"{'編集' if type == 'edit' else '閲覧'}パスワードの再設定リンクはこちらです。\n"
+                f"1時間以内に以下のURLにアクセスしてください。\n\n{reset_url}"
+            )
 
-        from_email = None  # settings.py に DEFAULT_FROM_EMAIL があれば None でOK
-        send_mail(subject, message, from_email, [itinerary.reset_email])
+            send_mail(subject, message, None, [itinerary.reset_email])
+            messages.success(request, "再設定用リンクをメールで送信しました。")
+        else:
+            messages.error(request, "送信できませんでした。")
 
-        messages.success(request, "再設定用リンクをメールで送信しました。")
-    else:
-        messages.error(request, "送信できませんでした。")
+        return redirect(request.META.get("HTTP_REFERER", "/"))
 
-    return redirect(request.META.get("HTTP_REFERER", "/"))
+    def get(self, request, *args, **kwargs):
+        # POST専用にしたい場合は405返すのがベター
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
 
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ResetPasswordView(View):
