@@ -31,7 +31,7 @@ article.privacy-policy,
 .updates-article{
     width: 90%;
     margin: 0 auto;
-    margin-top: 20px;
+    padding-top: 20px;
 }
 .updates-article{
   margin-bottom: 600px;
@@ -707,12 +707,11 @@ h3.input-item-title-first{
   margin-bottom: 10px;
   text-align: center;
 }
-
 .cf-turnstile{
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top:80px;
+  margin-top:20px;
 }
 /*利用規約*/
 .user-agreement-sub-title{
@@ -727,7 +726,9 @@ h3.input-item-title-first{
   margin-top: 100px;
   text-align: right;
 }
-
+.mt-4-1{
+  text-align: right;
+}
 /*パスワード*/
 .input-password{
   width: 100%;
@@ -862,7 +863,187 @@ h3.input-item-title-first{
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
+/*-----------------------------------------
+  Q and Aのデザイン
+-----------------------------------------*/
 
+.user-agreement-sub-title{
+  margin-top: 20px;;
+}
+.qa-6 {
+    max-width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 5px;
+    border-bottom: 2px solid #d6dde3;
+}
+
+.qa-6 summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 1em 2em 1em 3em;
+    color: #5f6061;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.qa-6 summary::before,
+.qa-6 p::before {
+    position: absolute;
+    left: 1em;
+    font-weight: 600;
+    font-size: 1.3em;
+}
+
+.qa-6 summary::before {
+    color: #75bbff;
+    content: "Q";
+}
+
+.qa-6 summary::after {
+    transform: translateY(-25%) rotate(45deg);
+    width: 7px;
+    height: 7px;
+    margin-left: 10px;
+    border-bottom: 3px solid #5f6061b3;
+    border-right: 3px solid #5f6061b3;
+    content: '';
+    transition: transform .5s;
+}
+
+.qa-6[open] summary::after {
+    transform: rotate(225deg);
+}
+
+.qa-6 p {
+    position: relative;
+    transform: translateY(-10px);
+    opacity: 0;
+    margin: 0;
+    padding: .3em 3em 1.5em;
+    color: #333;
+    transition: transform .5s, opacity .5s;
+}
+
+.qa-6[open] p {
+    transform: none;
+    opacity: 1;
+}
+
+.qa-6 p::before {
+    color: #ff8d8d;
+    line-height: 1.2;
+    content: "A";
+}
+
+.toc-002 {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 30px;
+    border: 2px solid #828282;
+    border-radius: 3px;
+}
+
+.toc-002 div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 10px 0;
+    background-color: #828282;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.toc-002 div::before {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-right: 5px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 4H21V6H8V4ZM3 3.5H6V6.5H3V3.5ZM3 10.5H6V13.5H3V10.5ZM3 17.5H6V20.5H3V17.5ZM8 11H21V13H8V11ZM8 18H21V20H8V18Z' fill='%23fff'%3E%3C/path%3E%3C/svg%3E");
+    content: '';
+}
+
+.toc-002 ol {
+    list-style-type: disc;
+    margin: 0;
+    overflow: hidden;
+}
+
+.toc-002 > ol {
+    padding: 1em 1em 1em 3em;
+}
+
+.toc-002 ol ol {
+    margin-top: 5px;
+    padding-left: 1.1em;
+}
+
+.toc-002 li {
+    padding: 5px 0;
+    font-weight: 600;
+}
+
+.toc-002 ol ol li {
+    font-weight: 500;
+    font-size: .9em;
+}
+
+.toc-002 a {
+    color: rgb(95,96,97);
+    text-decoration: none;
+}
+
+/*-----------------------------------------
+  運営者情報のデザイン
+-----------------------------------------*/
+.profile-image{
+  width: 150px;
+  height: 140px;
+  border-radius: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  border:2px solid #cbcbcb;
+}
+.profile-subtitle{
+  text-align: center;
+  font-size: 20px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.profile-title{
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.profile-blog-link{
+  margin-top: 15px;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+  padding:auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap:8px;
+  font-size: 16px  ;
+  background-color: rgb(95,96,97);
+  color: #ffffff;
+  text-decoration: none;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 2px solid rgb(95,96,97);
+}
+.profile-blog-link:hover{
+  background-color: rgb(255, 255, 255);
+  color: rgb(95,96,97);
+  text-decoration: none;
+}
 @media screen and (min-width: 720px) {
   body {
     display: flex;
