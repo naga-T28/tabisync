@@ -533,6 +533,7 @@ h3.input-item-title-first{
 }
 .input-time-label{
   white-space: nowrap;
+  width: 80px;
 }
 .time-input{
   flex: 1; 
@@ -558,9 +559,11 @@ h3.input-item-title-first{
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 70px;
 }
 .date-input-in{
   flex: 1; 
+  width: 100%;
   height: auto;
   background-color: #ffffff;
   border-radius: 6px;
@@ -1008,7 +1011,7 @@ h3.input-item-title-first{
     text-decoration: none;
 }
 .input-date-flex-next{
-margin-top: 10px;;
+  margin-top: 10px;
 }
 
 /*-----------------------------------------
@@ -1082,10 +1085,25 @@ margin-top: 10px;;
 .textarea-required {
   position: relative;
   display: inline-block;
-  width: 100%;
+  flex: 1;
 }
 
 .textarea-required::after {
+  content: "★必須";
+  color: rgb(206, 0, 0);
+  font-size: 12px;
+  font-weight: bold;
+  position: absolute;
+  top: -17px;
+  right: 3px;
+}
+.textarea-required-title {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.textarea-required-title::after {
   content: "★必須";
   color: rgb(206, 0, 0);
   font-size: 12px;
