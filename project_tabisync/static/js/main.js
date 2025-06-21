@@ -33,17 +33,17 @@ document.addEventListener("DOMContentLoaded", function () {
               <p class="input-day-number input-date-delete-number">DAY${dateIndex+1}</p>
               <button type="button" class="delete-btn input-date-delete-btn"><i class="fa-solid fa-xmark"></i> 削除</button>
             </div>
-            <div class="input-date-flex input-date-flex-next">
-                <label class="input-date-label">日付：</label>
-                <div class="textarea-required"><input class="date-input-in textarea-required" type="date" name="dates[${dateIndex}][date]" required></div>
+            <div class="input-date-flex">
+                <label class="input-date-label textarea-required">日付：</label>
+                <input class="date-input-in" type="date" name="dates[${dateIndex}][date]" required>
             </div>
           </div>
           <div class="schedules-container">
             <div class="schedules-container-wrapper">
               <div class="schedule-block" data-schedule-index="0">
                 <div class="input-start-end-time">
-                  <label class="input-time-label">開始時刻：</label>
-                  <div class="textarea-required"><input type="time" class="time-input" name="dates[${dateIndex}][schedules][0][start_time]" required></div>
+                  <label class="input-time-label textarea-required">開始時刻：</label>
+                  <input type="time" class="time-input" name="dates[${dateIndex}][schedules][0][start_time]" required>
                 </div>
                 <div class="input-start-end-time">
                   <label class="input-time-label">終了時刻：</label>
@@ -80,8 +80,8 @@ document.addEventListener("DOMContentLoaded", function () {
           <div class="schedule-block schedule-block-next" data-schedule-index="${scheduleIdx}">
             <p class="next-arrow"><i class="fa-solid fa-angles-down"></i></p>
             <div class="input-start-end-time">
-              <label class="input-time-label">開始時刻：</label>
-              <div class="textarea-required"><input type="time" class="time-input" name="dates[${dateIdx}][schedules][${scheduleIdx}][start_time]" required></div>
+              <label class="input-time-label textarea-required">開始時刻：</label>
+              <input type="time" class="time-input" name="dates[${dateIdx}][schedules][${scheduleIdx}][start_time]" required>
             </div>
             <div class="input-start-end-time">
               <label class="input-time-label">終了時刻：</label>
