@@ -231,7 +231,7 @@ footer small {
 .main-visual {
     width: 100%;
     height: 500px;
-    background-image: url("../img/main-visu.jpg");
+    background-image: url("../img/main-visu.webp");
     background-size: cover;
     background-position: center;
     display: flex;
@@ -474,14 +474,13 @@ li.update-item{
   background-color: #cecece;
 
 }
-
 /*-----------------------------------------
   入力フォームのデザイン
 -----------------------------------------*/
 .create-title-wrapper{
   width: 100%;
   height: 400px;
-  background-image: url("../img/create-body.jpg");
+  background-image: url("../img/create-body.webp");
   background-size: cover;
   background-position: center;
 }
@@ -528,6 +527,20 @@ h3.input-item-title-first{
   display: flex;
   margin-bottom: 5px;
 }
+.input-start-end-time:first-child{
+  margin-top: 10px;
+  position: relative;
+}
+.input-start-end-time:first-child::after {
+  content: "※必須";
+  color: rgb(208, 0, 0);
+  font-size: 12px;
+  font-weight: bold;
+  position: absolute;
+  top: -17px;   /* ← 外側へ上に出す */
+  right: 3px; /* ← 外側へ右に出す */
+  pointer-events: none;
+}
 .input-time-label{
   white-space: nowrap;
 }
@@ -567,6 +580,19 @@ h3.input-item-title-first{
 }
 .input-date-flex{
   display:flex;
+  position: relative;
+  margin-top: 7px;
+}
+
+.input-date-flex::after {
+  content: "※必須";
+  color: rgb(208, 0, 0);
+  font-size: 12px;
+  font-weight: bold;
+  position: absolute;
+  top: -17px;   /* ← 外側へ上に出す */
+  right: 3px; /* ← 外側へ右に出す */
+  pointer-events: none;
 }
 /*グラデーション*/
 .date-block{
@@ -1068,26 +1094,27 @@ h3.input-item-title-first{
 
 /*-----------------------------------------
   必須の赤星
------------------------------------------*/
+
 .textarea-required {
   position: relative;
 }
 
 .textarea-required::after {
-  content: "★";
+  content: "※";
   color: rgb(208, 0, 0);
-  font-size: 12px;
+  font-size: 10px;
   position: absolute;
-  top: -5px;   /* ← 外側へ上に出す */
-  right: 8px; /* ← 外側へ右に出す */
+  top: -8px; 
+  right: 12px; 
   pointer-events: none;
 }
+-----------------------------------------*/
 .textarea-required-title {
   position: relative;
 }
 
 .textarea-required-title::after {
-  content: "★";
+  content: "※必須";
   color: rgb(208, 0, 0);
   font-size: 12px;
   position: absolute;
