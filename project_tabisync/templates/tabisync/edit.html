@@ -10,8 +10,8 @@
         <!-- Font Awesome CDN (最新版) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ファビコン -->
-        <link rel="icon" href="{% static 'img/icon-tabisync.png'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.png'%}">
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
         <!-- iPhone用のアイコンサイズを指定 -->
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,7 +24,7 @@
         <!-- OGP設定 -->
         <meta property="og:title" content="TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
-        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
@@ -32,7 +32,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
-        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
@@ -46,7 +46,7 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>
@@ -183,65 +183,6 @@
         </footer>
         <script src="{% static 'js/menu.js' %}"></script>
         <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            const sections = Array.from(document.querySelectorAll(".date-section"));
-            const label = document.getElementById("current-date-label");
-            let currentIndex = 0;
-
-            function showSection(index) {
-              sections.forEach((s, i) => s.style.display = i === index ? "block" : "none");
-              label.textContent = `Day ${index + 1}`;
-            }
-
-            document.getElementById("prev-date").addEventListener("click", () => {
-              currentIndex = (currentIndex - 1 + sections.length) % sections.length;
-              showSection(currentIndex);
-            });
-
-            document.getElementById("next-date").addEventListener("click", () => {
-              currentIndex = (currentIndex + 1) % sections.length;
-              showSection(currentIndex);
-            });
-
-            if (sections.length > 0) showSection(0);
-
-            // === 次の予定をハイライト ===
-            const now = new Date();
-            let nextSchedule = null;
-            let minDiff = Infinity;
-
-            document.querySelectorAll(".timeline-entry").forEach(entry => {
-              const datetimeStr = entry.dataset.startDatetime;
-              if (!datetimeStr) return;
-
-              const start = new Date(datetimeStr); // ここでエラーが出なくなる
-              const diff = start - now;
-
-              if (diff > 0 && diff < minDiff) {
-                minDiff = diff;
-                nextSchedule = entry;
-              }
-            });
-            if (nextSchedule) {
-              nextSchedule.classList.add('next-highlight');
-
-              const timeElem = nextSchedule.querySelector('.timeline-time');
-              const timeWrapper = nextSchedule.querySelector('.timeline-time-wrapper');
-              if (timeElem && timeWrapper) {
-
-                // nextの時間だけにクラス追加
-                timeWrapper.classList.add('highlight-next-time');
-              }
-
-              const parentSection = nextSchedule.closest(".date-section");
-              const index = sections.findIndex(s => s === parentSection);
-              if (index !== -1) {
-                currentIndex = index;
-                showSection(index);
-              }
-            }
-
-        });
         document.getElementById('share-button').addEventListener('click', function () {
           if (navigator.share) {
             navigator.share({
