@@ -10,8 +10,8 @@
         <!-- Font Awesome CDN (最新版) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ファビコン -->
-        <link rel="icon" href="{% static 'img/icon-tabisync.png'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.png'%}">
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
         <!-- iPhone用のアイコンサイズを指定 -->
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,7 +24,7 @@
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
-        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
@@ -32,7 +32,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
-        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
@@ -46,7 +46,7 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>
