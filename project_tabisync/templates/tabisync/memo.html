@@ -22,15 +22,15 @@
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!-- OGP設定 -->
-        <meta property="og:title" content="TabiSync">
+        <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
         <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
-        <!-- Twitterカード（任意）-->
+        <!-- Twitterカード -->
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:title" content="TabiSync">
+        <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
         <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.png' %}">
         <!---リセットcsss-->
