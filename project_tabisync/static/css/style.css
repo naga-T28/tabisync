@@ -255,9 +255,10 @@ footer small {
     color: #ffffff;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
+
 .main-visual-btn {
   position: relative;
-  overflow: hidden; /* 擬似要素がはみ出さないように */
+  overflow: hidden; 
   margin-top: 20px;
   width: 90%;
   font-size: 20px;
@@ -274,6 +275,7 @@ footer small {
 .demo-btn:hover{
   background-color: #ffffff88;
 }
+
 .demo-btn{
   position: relative;
   overflow: hidden; /* 擬似要素がはみ出さないように */
@@ -306,9 +308,8 @@ footer small {
   transform: rotate(25deg);
   animation: shine 2s infinite linear;
   z-index: 1;
-  pointer-events: none; /* ボタンのクリックなどに干渉しないように */
+  pointer-events: none; 
 }
-
 @keyframes shine {
   0% {
       transform: translateX(-100%) rotate(25deg);
@@ -1190,12 +1191,10 @@ h3.input-item-title-first{
   }
   .update-wrapper{
     flex:1;
-    height: 100%;
-  }
-  .contact-wrapper{
-    display: flex;
-    flex-direction: column;
-    align-content: space-between;
+    height: auto;
+    border-radius: 4px; /* 枠の丸み */
+    margin:1em; /* 枠外の余白 */
+    padding: 5px;
   }
   .page-header{
     width: 100%;
