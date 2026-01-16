@@ -967,6 +967,11 @@ h3.input-item-title-first{
   gap:5px;
 }
 
+url-content a{
+  color: rgb(144, 1, 146);
+  text-decoration: underline;
+}
+
 @media screen and (min-width: 960px) {
   body {
     display: flex;
@@ -1073,3 +1078,4 @@ h3.input-item-title-first{
  }
 
 }
+
