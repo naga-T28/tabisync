@@ -67,7 +67,7 @@
                 <div class="box5-6">
                     <h2 class="box-title">{{ memo.title }}</h2>
                     <div class="box-content"> 
-                    <p>{{ memo.content }}</p>
+                    <p class="url-content">{{ memo.content|linebreaksbr|urlize}}</p>
                     </div>
                 </div>
                 {% endfor %}
