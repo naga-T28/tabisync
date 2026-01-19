@@ -32,9 +32,78 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
         <!---リセットcsss-->
-        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <style>
+            /* Box sizing rules */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+
+            body,
+            h1,
+            h2,
+            h3,
+            h4,
+            p,
+            figure,
+            blockquote,
+            dl,
+            dd {
+                margin: 0;
+            }
+
+            ul[role="list"],
+            ol[role="list"] {
+                list-style: none;
+            }
+
+            html:focus-within {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                min-height: 100vh;
+                text-rendering: optimizeSpeed;
+                line-height: 1.5;
+            }
+
+            a:not([class]) {
+                text-decoration-skip-ink: auto;
+            }
+
+            img,
+            picture {
+                max-width: 100%;
+                display: block;
+            }
+
+            input,
+            button,
+            textarea,
+            select {
+                font: inherit;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                html:focus-within {
+                scroll-behavior: auto;
+                }
+                *,
+                *::before,
+                *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+                }
+            }
+        </style>
         <!--オリジナルCSS-->
-        <link rel="stylesheet" href="{% static 'css/style.css'%}?v=20260115">
+        <link rel="preload" href="{% static 'css/style.css' %}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript>
+            <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        </noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <!-- Google tag (gtag.js) -->
