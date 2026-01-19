@@ -61,6 +61,8 @@ if not DEBUG:
     STATICFILES_DIRS = [BASE_DIR / "static"]
     STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
     # データベース設定（例: PostgreSQL）
     DATABASES = {
         'default': {
@@ -132,6 +134,7 @@ INSTALLED_APPS = [
     'tabisync.apps.TabisyncConfig',  # add_2025.06.07
     'django.contrib.sites',
     'django.contrib.sitemaps',
+    "whitenoise.runserver_nostatic", # add_2026.01.19
 ]
 
 SITE_ID = 1
