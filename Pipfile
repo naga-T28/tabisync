@@ -9,6 +9,7 @@ django-ratelimit = "*"
 python-dotenv = "*"
 psycopg = "*"
 gunicorn = "*"
+whitenoise = "*"
 
 [dev-packages]
 
