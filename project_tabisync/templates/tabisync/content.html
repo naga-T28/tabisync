@@ -263,6 +263,27 @@
                 .then(() => console.log("Service Worker 登録成功"))
                 .catch(err => console.error("SW 登録失敗:", err));
             }
+
+          document.addEventListener("DOMContentLoaded", () => {
+            const MOBILE_MAX_WIDTH = 768; // スマホ判定幅(px)
+
+            // スマホ以外は何もしない
+            if (window.innerWidth > MOBILE_MAX_WIDTH) return;
+
+            document.querySelectorAll(".url-content a").forEach(link => {
+              try {
+                const url = new URL(link.href);
+
+                // 表示テキストをドメインのみに変更
+                link.textContent = url.hostname;
+
+                // 長押し・ホバー時にフルURLを確認できるように
+                link.title = link.href;
+              } catch (e) {
+                // URLとして解析できない場合は何もしない
+              }
+            });
+          });
         </script>
     </body>
 </html>
