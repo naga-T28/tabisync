@@ -188,8 +188,9 @@
                 .catch(err => console.error("SW 登録失敗:", err));
             }
 
+          // スマホ表示用リンク簡略化スクリプト
           document.addEventListener("DOMContentLoaded", () => {
-            const MOBILE_MAX_WIDTH = 768; // スマホ判定幅(px)
+            const MOBILE_MAX_WIDTH = 768;
 
             // スマホ以外は何もしない
             if (window.innerWidth > MOBILE_MAX_WIDTH) return;
@@ -198,11 +199,24 @@
               try {
                 const url = new URL(link.href);
 
-                // 表示テキストをドメインのみに変更
-                link.textContent = url.hostname;
+                // 表示テキストをドメインのみに
+                const domain = url.hostname.replace(/^www\./, "");
 
-                // 長押し・ホバー時にフルURLを確認できるように
+                // アイコン要素を作成
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-link";
+                icon.setAttribute("aria-hidden", "true");
+
+                // 既存テキストをクリア
+                link.textContent = "";
+
+                // アイコン + 半角スペース + ドメイン
+                link.appendChild(icon);
+                link.append(" " + domain);
+
+                // フルURLを確認できるように
                 link.title = link.href;
+
               } catch (e) {
                 // URLとして解析できない場合は何もしない
               }
