@@ -4,10 +4,9 @@
 {% block contents %}
 {% load static %}
 <main class="page-main">
-   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> 
+   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <form class="create-form" method="post">
         {% csrf_token %}
-      
         <!-- しおり基本情報 -->
         <div class="create-title-wrapper">
             <div class="create-title-wrapper-sub">
