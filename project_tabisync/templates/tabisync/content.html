@@ -51,7 +51,11 @@
                     </h1>
                 </div>
                 <!-- ハンバーガーアイコン -->
-                 <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
+                <div class="header-buttons">
+                <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
+                <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
+                
+                </div>
             </div>
         </header>
 
@@ -154,7 +158,7 @@
                 <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
                 <li><a class="footer-content" href="{% url 'tabisync:profile' %}">運営者プロフィール</a></li>
             </ul>
-            <small>Copyright &copy; 2024-2025 TabiSync All Rights Reserved.</small>
+            <small>Copyright &copy; 2024-2026 TabiSync All Rights Reserved.</small>
         </footer>
         <script src="{% static 'js/menu.js' %} defer"></script>
         <script>
