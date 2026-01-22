@@ -19,7 +19,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    padding-bottom: 60px;
+    padding-bottom: 75px;
 }
 .page-main {
   flex: 1;  /* メイン部分が残りの高さを取る */
@@ -73,6 +73,12 @@ article.privacy-policy,
   width: 100%;
   height: auto;
 }
+.header-buttons{
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
 /*----------------------------------------
   固定フッター
 ----------------------------------------*/
@@ -81,7 +87,8 @@ article.privacy-policy,
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60px;
+  height: 75px;
+  padding-bottom: 15px;
   background-color: #fff; /* 背景色を必要に応じて変更 */
   border-top: 1px solid #ccc;
   z-index: 1000;
@@ -597,6 +604,7 @@ input{
     font-size: 12px;
     margin-top: 5px;
     margin-right: 5%;
+    width: 30px;
 }
 #share-button i{
     font-size: 25px;

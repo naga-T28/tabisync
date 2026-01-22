@@ -42,35 +42,16 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>
                 <!-- ハンバーガーアイコン -->
-                <div id="btn08" class="btn-trigger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div class="header-buttons">
+                <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
+                <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
+                
                 </div>
-                <nav class="header-nav-wrapper" id="nav-menu">
-                    <ul class="header-nav">
-                        <li class="header-nav-item"><a href="{% url 'tabisync:home' %}">ホーム</a></li>
-                        <li class="header-nav-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">ブログ</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:create' %}">しおり作成</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:demo_content' %}">しおりサンプル</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
-                        <li class="header-nav-item"><a href="{% url 'tabisync:contact' %}">お問い合わせ</a></li>
-                    </ul>
-                </nav>
-                <nav class="header-nav-pc-wrapper">
-                    <ul class="header-nav-pc">
-                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:home' %}">HOME</a></li>
-                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:demo_content' %}">DEMO</a></li>
-                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:qa' %}"> FAQ</a></li>
-                        <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
-                        <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
-                    </ul>
-                </nav>
             </div>
         </header>
 
