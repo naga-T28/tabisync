@@ -3,7 +3,7 @@
 
 {% block contents %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfTtzJL_rYRRiSYH2F3Z0DjJHCNyf8lCE&libraries=places&callback=initPlaceSearch" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initPlaceSearch" async defer></script>
 
 <div class="schedule-editor">
   <div id="scheduleForm">

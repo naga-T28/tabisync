@@ -1,0 +1,246 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}リスト{% endblock %}
+
+{% block contents %}
+<div class="content-main">
+  <div class="checklist-page checklist-view-page">
+    <section class="checklist-header">
+      <div>
+        <h2>みんなのチェックリスト</h2>
+        <p>必要なものや確認事項を、リストごとにまとめて確認できます。</p>
+      </div>
+    </section>
+
+    <section id="checklistBoard" class="checklist-board">
+      {% if checklists %}
+        {% for checklist in checklists %}
+          <article class="checklist-card" data-list-id="{{ checklist.id }}">
+            <div class="box5-6 checklist-box">
+              <h3 class="checklist-tape checklist-tape-{% cycle '0' '1' '2' '3' %}">{{ checklist.title|default:"リスト" }}</h3>
+              <div class="box-content">
+                {% if checklist.items %}
+                  <ul class="checklist-items">
+                    {% for item in checklist.items %}
+                      <li class="checklist-item">
+                        <label class="checklist-label">
+                          <input
+                            type="checkbox"
+                            data-list-id="{{ checklist.id }}"
+                            data-item-id="{{ item.id }}"
+                          >
+                          <span>{{ item.text }}</span>
+                        </label>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="checklist-empty-text">このリストにはまだ項目がありません。</p>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="checklist-empty">
+          <p>まだリストがありません。</p>
+          <a class="checklist-edit-link" href="{% url 'tabisync:V2_list_edit' pk=itinerary.pk token=itinerary.token %}">編集ページで作成する</a>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<script id="checklists-data" type="application/json">{{ checklists_json|safe }}</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const statusEl = document.getElementById("checklist-status");
+  let lists = [];
+  const storagePrefix = "tabisync_checklist_state";
+
+  try {
+    lists = JSON.parse(document.getElementById("checklists-data").textContent || "[]");
+  } catch (error) {
+    lists = [];
+  }
+
+  function setStatus(status, text) {
+    if (!statusEl) return;
+
+    const iconMap = {
+      idle: "fa-circle-info",
+      saved: "fa-circle-check",
+    };
+
+    statusEl.dataset.status = status;
+    statusEl.querySelector("span").textContent = text;
+    statusEl.querySelector("i").className = `fa-solid ${iconMap[status] || iconMap.idle}`;
+  }
+
+  function getStorageKey(listId, itemId) {
+    return `${storagePrefix}_{{ itinerary.pk }}_{{ itinerary.token }}_${listId}_${itemId}`;
+  }
+
+  function restoreCheckboxStates() {
+    document.querySelectorAll('.checklist-label input[type="checkbox"]').forEach((checkbox) => {
+      const saved = localStorage.getItem(getStorageKey(checkbox.dataset.listId, checkbox.dataset.itemId));
+      if (saved === "true") {
+        checkbox.checked = true;
+      } else if (saved === "false") {
+        checkbox.checked = false;
+      }
+    });
+  }
+
+  document.querySelectorAll('.checklist-label input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener("change", function () {
+      localStorage.setItem(
+        getStorageKey(checkbox.dataset.listId, checkbox.dataset.itemId),
+        checkbox.checked ? "true" : "false"
+      );
+      setStatus("saved", "このブラウザに保存しました");
+    });
+  });
+
+  restoreCheckboxStates();
+});
+</script>
+
+<style>
+.checklist-page {
+  width: min(960px, calc(100% - 32px));
+  margin: 90px auto 120px;
+}
+
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.checklist-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 6px;
+}
+
+.checklist-header p {
+  color: #666;
+}
+
+.checklist-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #444;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.checklist-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #7b7b7b;
+  margin-bottom: 18px;
+}
+
+.checklist-status[data-status="saved"] { color: #50785a; }
+.checklist-board {
+  display: grid;
+  gap: 18px;
+}
+
+.checklist-box .box-content {
+  padding-top: 28px;
+}
+
+.checklist-box {
+  position: relative;
+}
+
+.checklist-tape {
+  background-color: rgb(255 255 255 / .1);
+  border-left: 2px dotted rgb(0 0 0 / .1);
+  border-right: 2px dotted rgb(0 0 0 / .1);
+  box-shadow: 0 0 5px rgb(0 0 0 / .12);
+  color: #666;
+  padding: 10px 20px;
+  line-height: 1;
+  position: absolute;
+  top: -0.8em;
+  left: 1em;
+  display: inline-block;
+  font-size: 0.9em;
+  width: auto;
+  max-width: calc(100% - 4em);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.checklist-tape-0 {
+  background-color: rgba(255, 246, 184, 0.55);
+  transform: rotate(-2deg);
+}
+
+.checklist-tape-1 {
+  background-color: rgba(255, 216, 204, 0.55);
+  transform: rotate(1.5deg);
+}
+
+.checklist-tape-2 {
+  background-color: rgba(215, 240, 255, 0.65);
+  transform: rotate(-1deg);
+}
+
+.checklist-tape-3 {
+  background-color: rgba(223, 245, 214, 0.65);
+  transform: rotate(2deg);
+}
+
+.checklist-items {
+  display: grid;
+  gap: 12px;
+}
+
+.checklist-item {
+  list-style: none;
+}
+
+.checklist-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.checklist-label input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.checklist-empty,
+.checklist-empty-text {
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .checklist-page {
+    width: calc(100% - 24px);
+    margin-top: 82px;
+  }
+
+  .checklist-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+{% endblock %}

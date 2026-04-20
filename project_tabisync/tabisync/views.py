@@ -1,47 +1,38 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.utils.decorators import method_decorator
-from django_ratelimit.decorators import ratelimit
-from django.urls import reverse
-from django.views.generic import TemplateView #add_2025.06.07
-from django.views import View
-from .models import Itinerary, TravelDate, Schedule, Memo, Item,MemoV2,ScheduleV2,WantToGo
-from django.db import transaction
-from collections import defaultdict
-from django.core.mail import send_mail
-from .forms import ContactForm
-import urllib.request
-import urllib.parse
 import json
 import os
+import urllib.parse
+import urllib.request
+
+from datetime import datetime, timedelta
+from uuid import uuid4
+
 from django.conf import settings
-from django.http import HttpResponse
-from django.views.decorators.http import require_POST
-# views.py
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
 from django.core import signing
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404, redirect
+from django.db import transaction
+from django.db.models import Case, IntegerField, Value, When
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.contrib import messages
-from .models import Itinerary  # あなたのモデルに合わせてインポート
+from django.utils.decorators import method_decorator
 from django.views import View
-from django.core import signing
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.http import Http404
-from .models import Itinerary
-from .models import WantToGo
-from django.contrib.auth.hashers import make_password
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.db.models import Case, When, Value, IntegerField
-from .forms import MemoV2Form
-from datetime import datetime, timedelta
+from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView  # add_2025.06.07
+from django_ratelimit.decorators import ratelimit
+
+from .forms import ContactForm
+from .models import ChecklistV2, Itinerary, Item, Memo, MemoV2, Schedule, ScheduleV2, TravelDate, WantToGo
 
 
+# =========================
+# 基本ユーティリティ
+# =========================
 def offline_view(request):
     return render(request, "offline.html")
 
-#クローラ対策
+# クローラ対策
 def robots_txt_view(request):
     lines = [
         "User-agent: *",
@@ -81,10 +72,9 @@ def verify_turnstile(request):
         print("Turnstile verify error:", e)
         return False
 
-# utils.py（または views.py の冒頭でも可）
-
-
-# ホーム画面を表示するビュー
+# =========================
+# 静的ページ・案内ページ
+# =========================
 class HomeView(TemplateView):
     template_name = "home.html"
     def get_context_data(self, **kwargs):
@@ -124,6 +114,9 @@ class UpdatesView(TemplateView):
         context = super().get_context_data(**kwargs)
         return context
 
+# =========================
+# デモページ
+# =========================
 class DemoContentView(TemplateView):
     template_name = "demo/content_demo.html"
     
@@ -151,7 +144,10 @@ class DemoListView(TemplateView):
         return context
 
 
-#しおり作成画面
+# =========================
+# しおり作成・閲覧（v2）
+# =========================
+# しおり作成画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class CreateView(View):
     template_name = "tabisync/create.html"
@@ -213,7 +209,7 @@ class CreateView(View):
             'token': itinerary.token
         }))
 
-#個別ページ
+# 公開用のしおり表示画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ItineraryDetailV2View(TemplateView):
     template_name = "tabisync/content/content.html"
@@ -260,7 +256,43 @@ class ItineraryDetailV2View(TemplateView):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
-#行きたい場所リスト表示
+# 行きたい場所の詳細入力値を空文字/数値に正規化する
+def parse_optional_float(value):
+    if value in (None, ""):
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_optional_int(value, default=None):
+    if value in (None, ""):
+        return default
+
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def apply_want_to_go_payload(place, data):
+    # Google Places 由来でも手入力でも同じ保存ロジックを使う
+    place.place_id = (data.get("place_id") or "").strip()
+    place.name = (data.get("name") or place.name).strip()
+    place.address = (data.get("address") or "").strip()
+    place.latitude = parse_optional_float(data.get("lat"))
+    place.longitude = parse_optional_float(data.get("lng"))
+    place.rating = parse_optional_float(data.get("rating"))
+    place.memo = data.get("memo", place.memo)
+    place.planned_day = parse_optional_int(data.get("day"), default=0)
+    place.stay_minutes = parse_optional_int(data.get("stay_minutes"))
+    place.priority = parse_optional_int(data.get("priority"), default=3)
+    place.tag = (data.get("tag") or "").strip()
+
+
+# 行きたい場所リスト表示
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class WantToGoMapView(TemplateView):
     template_name = "tabisync/content/want_list.html"
@@ -310,20 +342,9 @@ class WantToGoMapView(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
-            place = WantToGo.objects.create(
-                itinerary=itinerary,
-                place_id=data.get("place_id"),
-                name=data.get("name"),
-                address=data.get("address"),
-                latitude=data.get("lat"),
-                longitude=data.get("lng"),
-                rating=data.get("rating"),
-                memo=data.get("memo", ""),
-                planned_day=int(data.get("day", 0)),
-                stay_minutes=data.get("stay_minutes") or None,
-                priority=data.get("priority", 3),
-                tag=data.get("tag", ""),
-            )
+            place = WantToGo(itinerary=itinerary)
+            apply_want_to_go_payload(place, data)
+            place.save()
             return JsonResponse({
                 "status": "saved",
                 "id": place.id,
@@ -333,23 +354,7 @@ class WantToGoMapView(TemplateView):
 
         if action == "update_want_to_go":
             place = get_object_or_404(WantToGo, pk=data.get("id"), itinerary=itinerary)
-
-            # 基本情報も更新（Google候補で選び直した場合にも対応）
-            place.place_id = data.get("place_id") or place.place_id
-            place.name = data.get("name", place.name)
-            place.address = data.get("address", place.address)
-            place.latitude = data.get("lat", place.latitude)
-            place.longitude = data.get("lng", place.longitude)
-            place.rating = data.get("rating", place.rating)
-
-            # ユーザー入力
-            place.memo = data.get("memo", place.memo)
-            place.planned_day = int(data.get("day", place.planned_day or 0))
-
-            place.stay_minutes = data.get("stay_minutes") or place.stay_minutes
-            place.priority = data.get("priority", place.priority)
-            place.tag = data.get("tag", place.tag)
-
+            apply_want_to_go_payload(place, data)
             place.save()
             return JsonResponse({
                     "status": "updated",
@@ -365,11 +370,11 @@ class WantToGoMapView(TemplateView):
 
         return JsonResponse({"status": "error"})
 
-#行きたいとこリスト編集
+# 行きたい場所リスト編集
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class WantToGoV2View(TemplateView):
 
-    template_name = "tabisync/content/want_list_edit.html"
+    template_name = "tabisync/content/want_list.html"
 
     def dispatch(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
@@ -412,20 +417,9 @@ class WantToGoV2View(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
-            place = WantToGo.objects.create(
-                itinerary=itinerary,
-                place_id=data.get("place_id"),
-                name=data.get("name"),
-                address=data.get("address"),
-                latitude=data.get("lat"),
-                longitude=data.get("lng"),
-                rating=data.get("rating"),
-                memo=data.get("memo", ""),
-                planned_day=int(data.get("day", 0)),
-                stay_minutes=data.get("stay_minutes") or None,
-                priority=data.get("priority", 3),
-                tag=data.get("tag", ""),
-            )
+            place = WantToGo(itinerary=itinerary)
+            apply_want_to_go_payload(place, data)
+            place.save()
             return JsonResponse({
                 "status": "saved",
                 "id": place.id,
@@ -435,23 +429,7 @@ class WantToGoV2View(TemplateView):
 
         if action == "update_want_to_go":
             place = get_object_or_404(WantToGo, pk=data.get("id"), itinerary=itinerary)
-
-            # 基本情報も更新（Google候補で選び直した場合にも対応）
-            place.place_id = data.get("place_id") or place.place_id
-            place.name = data.get("name", place.name)
-            place.address = data.get("address", place.address)
-            place.latitude = data.get("lat", place.latitude)
-            place.longitude = data.get("lng", place.longitude)
-            place.rating = data.get("rating", place.rating)
-
-            # ユーザー入力
-            place.memo = data.get("memo", place.memo)
-            place.planned_day = int(data.get("day", place.planned_day or 0))
-
-            place.stay_minutes = data.get("stay_minutes") or place.stay_minutes
-            place.priority = data.get("priority", place.priority)
-            place.tag = data.get("tag", place.tag)
-
+            apply_want_to_go_payload(place, data)
             place.save()
             return JsonResponse({
                     "status": "updated",
@@ -467,8 +445,10 @@ class WantToGoV2View(TemplateView):
 
         return JsonResponse({"status": "error"})
 
-#version2のしおり内容編集
-# version2のしおり内容編集
+# =========================
+# v2スケジュール編集用ヘルパー
+# =========================
+# ScheduleV2 が持つ day_index と旧 date ベースの値を吸収する
 def get_schedule_day_index(itinerary, schedule):
     if schedule.day_index:
         return schedule.day_index
@@ -480,12 +460,14 @@ def get_schedule_day_index(itinerary, schedule):
 
 
 def get_schedule_display_date(itinerary, day_index):
+    # day_index から表示用の日付を逆算する
     if itinerary.start_date and day_index:
         return itinerary.start_date + timedelta(days=day_index - 1)
     return None
 
 
 def reorder_schedules_for_day(itinerary, day_index):
+    # 同じ Day 内の予定を開始時刻順に並び替えて order を振り直す
     if day_index is None:
         return
 
@@ -501,6 +483,7 @@ def reorder_schedules_for_day(itinerary, day_index):
 
 
 def build_day_choices(itinerary):
+    # テンプレートで使う Day 選択肢を組み立てる
     choices = []
 
     if itinerary.total_days:
@@ -519,8 +502,92 @@ def build_day_choices(itinerary):
     return []
 
 
+def normalize_memo_v2_notes(raw_content):
+    if not raw_content:
+        return []
+
+    try:
+        parsed = json.loads(raw_content)
+    except (TypeError, ValueError):
+        stripped = str(raw_content).strip()
+        return [{"content": stripped}] if stripped else []
+
+    if isinstance(parsed, dict):
+        parsed = parsed.get("notes", [])
+
+    if not isinstance(parsed, list):
+        return []
+
+    normalized_notes = []
+    for note in parsed:
+        if not isinstance(note, dict):
+            continue
+
+        content = str(note.get("content", "")).strip()
+        if not content:
+            continue
+
+        normalized_notes.append({"content": content})
+
+    return normalized_notes
+
+
+def normalize_checklist_v2_content(raw_content):
+    if not raw_content:
+        return []
+
+    try:
+        parsed = json.loads(raw_content)
+    except (TypeError, ValueError):
+        return []
+
+    if isinstance(parsed, dict):
+        parsed = parsed.get("lists", [])
+
+    if not isinstance(parsed, list):
+        return []
+
+    normalized_lists = []
+    for checklist in parsed:
+        if not isinstance(checklist, dict):
+            continue
+
+        title = str(checklist.get("title", "")).strip()
+        items = checklist.get("items", [])
+        if not isinstance(items, list):
+            items = []
+
+        normalized_items = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+
+            text = str(item.get("text", "")).strip()
+            if not text:
+                continue
+
+            normalized_items.append({
+                "id": str(item.get("id") or f"item-{uuid4().hex[:10]}"),
+                "text": text,
+                "checked": False,
+            })
+
+        if not title and not normalized_items:
+            continue
+
+        normalized_lists.append({
+            "id": str(checklist.get("id") or f"list-{uuid4().hex[:10]}"),
+            "title": title,
+            "items": normalized_items,
+        })
+
+    return normalized_lists
+
+# =========================
+# v2編集画面
+# =========================
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
-class EditContentV2View(View):
+class EditContentFormV2View(View):
     template_name = "tabisync/content/edit_content.html"
     password_template = "tabisync/edit_password.html"
 
@@ -564,7 +631,7 @@ class EditContentV2View(View):
             password = request.POST.get("password", "")
             if itinerary.check_edit_password(password):
                 request.session[session_key] = True
-                return redirect(reverse("tabisync:content_edit_v2", kwargs={"pk": pk, "token": token}))
+                return redirect(reverse("tabisync:content_edit_form_v2", kwargs={"pk": pk, "token": token}))
             response = render(request, self.password_template, {
                 "error": "パスワードが間違っています。",
                 "itinerary": itinerary,
@@ -745,9 +812,9 @@ class EditContentV2View(View):
 
         return redirect(reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 
-# version2の編集選択画面
+# version2の編集メニュー画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
-class EditContentV2View(View):
+class EditMenuV2View(View):
     template_name = "tabisync/content/edit_menu.html"
     password_template = "tabisync/edit_password.html"
 
@@ -774,8 +841,37 @@ class EditContentV2View(View):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
+    def get(self, request, pk, token, *args, **kwargs):
+        itinerary = self._get_itinerary(pk, token)
+        session_key = f"edit_auth_{itinerary.pk}"
 
+        if itinerary.edit_password and not request.session.get(session_key):
+            return self._render_password(request, itinerary, pk, token)
 
+        return self._render_form(request, itinerary)
+
+    def post(self, request, pk, token, *args, **kwargs):
+        itinerary = self._get_itinerary(pk, token)
+        session_key = f"edit_auth_{itinerary.pk}"
+
+        if itinerary.edit_password and not request.session.get(session_key):
+            password = request.POST.get("password", "")
+            if itinerary.check_edit_password(password):
+                request.session[session_key] = True
+                return redirect(reverse("tabisync:content_edit_v2", kwargs={"pk": pk, "token": token}))
+
+            response = render(request, self.password_template, {
+                "error": "パスワードが間違っています。",
+                "itinerary": itinerary,
+                "pk": pk,
+                "token": token,
+            })
+            response["X-Robots-Tag"] = "noindex, nofollow"
+            return response
+
+        return self._render_form(request, itinerary)
+
+# スケジュール本体の編集画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ScheduleV2EditView(View):
     template_name = "tabisync/content/schedule_edit.html"
@@ -820,8 +916,7 @@ class ScheduleV2EditView(View):
         })
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
-
-
+# ScheduleV2 の行を追加・更新する API
 @require_POST
 def schedule_v2_row_save(request, pk, token):
     itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -928,7 +1023,7 @@ def schedule_v2_row_save(request, pk, token):
         "place_name": schedule.place.name if schedule.place else "",
         "day_index": schedule.day_index,
     })
-
+# ScheduleV2 の行を削除する API
 @require_POST
 def schedule_v2_row_delete(request, pk, token):
     itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -956,9 +1051,7 @@ def schedule_v2_row_delete(request, pk, token):
     reorder_schedules_for_day(itinerary, target_day_index)
 
     return JsonResponse({"status": "deleted"})
-
-
-#version2のmemoページ
+# v2メモページ
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class MemoV2View(View):
     template_name = "tabisync/content/memo_v2.html"
@@ -977,21 +1070,117 @@ class MemoV2View(View):
 
     def get(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
-        form = MemoV2Form(instance=memo)
+        notes = normalize_memo_v2_notes(memo.content)
         return render(request, self.template_name, {
             "memo": memo,
-            "form": form,
+            "memo_notes_json": json.dumps(notes, ensure_ascii=False),
             "itinerary": self.itinerary,
         })
 
     def post(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
         data = json.loads(request.body)
-        memo.content = data.get("content", "")
-        memo.save()
-        return JsonResponse({"status": "ok"})
 
-#memoページ
+        if isinstance(data.get("notes"), list):
+            notes = normalize_memo_v2_notes(json.dumps(data.get("notes", []), ensure_ascii=False))
+        else:
+            notes = normalize_memo_v2_notes(data.get("content", ""))
+
+        memo.content = json.dumps(notes, ensure_ascii=False)
+        memo.save()
+        return JsonResponse({"status": "ok", "notes_count": len(notes)})
+
+
+# v2リスト表示ページ
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+class ChecklistV2View(View):
+    template_name = "tabisync/content/list_v2.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pk = kwargs.get("pk")
+        self.token = kwargs.get("token")
+        self.itinerary = get_object_or_404(Itinerary, pk=self.pk, token=self.token)
+
+        if self.itinerary.view_password and not request.session.get(f'view_auth_{self.pk}_{self.token}', False):
+            return redirect(reverse('tabisync:content_password', kwargs={'pk': self.pk, 'token': self.token}))
+
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+    def get(self, request, pk, token):
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+        lists = normalize_checklist_v2_content(checklist.content)
+        return render(request, self.template_name, {
+            "itinerary": self.itinerary,
+            "checklists": lists,
+            "checklists_json": json.dumps(lists, ensure_ascii=False),
+        })
+
+    def post(self, request, pk, token):
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+
+        try:
+            data = json.loads(request.body)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+
+        lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        checklist.content = json.dumps(lists, ensure_ascii=False)
+        checklist.save()
+        return JsonResponse({"status": "ok", "lists_count": len(lists)})
+
+
+# v2リスト編集ページ
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+class ChecklistV2EditView(View):
+    template_name = "tabisync/content/list_edit_v2.html"
+    password_template = "tabisync/edit_password.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pk = kwargs.get("pk")
+        self.token = kwargs.get("token")
+        self.itinerary = get_object_or_404(Itinerary, pk=self.pk, token=self.token)
+
+        session_key = f"edit_auth_{self.itinerary.pk}"
+        if self.itinerary.edit_password and not request.session.get(session_key):
+            response = render(request, self.password_template, {
+                "itinerary": self.itinerary,
+                "pk": self.pk,
+                "token": self.token,
+            })
+            response["X-Robots-Tag"] = "noindex, nofollow"
+            return response
+
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+    def get(self, request, pk, token):
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+        lists = normalize_checklist_v2_content(checklist.content)
+        return render(request, self.template_name, {
+            "itinerary": self.itinerary,
+            "checklists_json": json.dumps(lists, ensure_ascii=False),
+        })
+
+    def post(self, request, pk, token):
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+
+        try:
+            data = json.loads(request.body)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+
+        lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        checklist.content = json.dumps(lists, ensure_ascii=False)
+        checklist.save()
+        return JsonResponse({"status": "ok", "lists_count": len(lists)})
+
+# =========================
+# ver.1 閲覧ページ
+# =========================
+# memoページ
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class MemoDetailView(TemplateView):
     template_name = "tabisync/memo.html"
@@ -1019,30 +1208,23 @@ class MemoDetailView(TemplateView):
 
         travel_dates = itinerary.travel_dates.all().order_by('date')
 
-        if travel_dates.exists():
-            first_date = travel_dates.first().date
-            last_date = travel_dates.last().date
-            context["first_date_str"] = first_date.strftime('%Y.%m.%d')
-            context["last_date_str"] = last_date.strftime('%Y.%m.%d')
-        else:
-            context["first_date_str"] = None
-            context["last_date_str"] = None
-
         # タイトル・内容が両方空でないメモのみ表示
         memos = [
             memo for memo in itinerary.memos.all()
             if memo.title.strip() or memo.content.strip()
         ]
-        context["memos"] = memos
-        context["has_memos"] = len(memos) > 0
-
-        context["itinerary"] = itinerary
-        context["travel_dates"] = itinerary.travel_dates.all()
-        context["items"] = itinerary.items.all()
+        context.update(get_travel_date_range_context(travel_dates))
+        context.update({
+            "memos": memos,
+            "has_memos": len(memos) > 0,
+            "itinerary": itinerary,
+            "travel_dates": travel_dates,
+            "items": itinerary.items.all(),
+        })
 
         return context
 
-#listページ
+# listページ
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ListDetailView(TemplateView):
     template_name = "tabisync/list.html"
@@ -1069,20 +1251,12 @@ class ListDetailView(TemplateView):
 
         travel_dates = itinerary.travel_dates.all().order_by('date')
 
-        if travel_dates.exists():
-            first_date = travel_dates.first().date
-            last_date = travel_dates.last().date
-            context["first_date_str"] = first_date.strftime('%Y.%m.%d')
-            context["last_date_str"] = last_date.strftime('%Y.%m.%d')
-        else:
-            context["first_date_str"] = None
-            context["last_date_str"] = None
-
         context["itinerary"] = itinerary
         context["travel_dates"] = travel_dates
         context["memos"] = itinerary.memos.all()
         
         items = itinerary.items.all()
+        context.update(get_travel_date_range_context(travel_dates))
         context["items"] = items
 
         # 全てのアイテムの title と detail が空かをチェック
@@ -1092,8 +1266,11 @@ class ListDetailView(TemplateView):
 
         return context
 
-    
-#パスワード入力画面
+
+# =========================
+# 認証・問い合わせ
+# =========================
+# パスワード入力画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ItineraryPasswordView(View):
     template_name = 'tabisync/password.html'
@@ -1125,7 +1302,7 @@ class ItineraryPasswordView(View):
             return render(request, self.template_name, context)
         
 
-#form
+# 問い合わせフォーム
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ContactFormView(View):
     template_name = "contact/contact_form.html"
@@ -1183,10 +1360,10 @@ class ContactFormView(View):
 
         # バリデーションエラー時
         return render(request, self.template_name, {"form": form})
-    
-from datetime import datetime
-
-#編集画面
+# =========================
+# ver.1 編集・パスワード再設定
+# =========================
+# 編集画面
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class EditView(View):
     template_name = "tabisync/edit.html"
@@ -1400,8 +1577,7 @@ class EditView(View):
                 item.delete()
 
         return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
-
-
+# パスワード再設定リンク送信
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class SendResetLinkView(View):
     def post(self, request, pk, token, type):
@@ -1432,8 +1608,7 @@ class SendResetLinkView(View):
         # POST専用にしたい場合は405返すのがベター
         from django.http import HttpResponseNotAllowed
         return HttpResponseNotAllowed(['POST'])
-
-
+# 再設定リンクから新しいパスワードを保存
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ResetPasswordView(View):
     def get(self, request, signed_token):
@@ -1474,11 +1649,33 @@ class ResetPasswordView(View):
             return redirect("tabisync:edit", pk=data["pk"], token=data["token"])
         else:
             return redirect("tabisync:content", pk=data["pk"], token=data["token"])
+# =========================
+# ver.1 表示用ヘルパー
+# =========================
+def get_travel_date_range_context(travel_dates):
+    # テンプレート表示用に、旅程の開始日・終了日を同じ形式でまとめる
+    if not travel_dates.exists():
+        return {
+            "first_date_str": None,
+            "last_date_str": None,
+        }
 
-       
-#ver.1のもの↓
+    first_date = travel_dates.first().date
+    last_date = travel_dates.last().date
+    return {
+        "first_date_str": first_date.strftime('%Y.%m.%d'),
+        "last_date_str": last_date.strftime('%Y.%m.%d'),
+    }
+def prepare_travel_dates_with_schedules(itinerary):
+    # TravelDate ごとに開始時刻順の予定を付与する
+    travel_dates = itinerary.travel_dates.all().order_by('date')
 
-#個別ページ
+    for travel_date in travel_dates:
+        travel_date.sorted_schedules = travel_date.schedules.all().order_by('start_time')
+
+    return travel_dates
+
+# ver.1 の個別ページ
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ItineraryDetailView(TemplateView):
     template_name = "tabisync/content.html"
@@ -1498,24 +1695,15 @@ class ItineraryDetailView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        itinerary = self.itinerary  # dispatch() で取得したものを使用
-        travel_dates = itinerary.travel_dates.all().order_by('date')
+        itinerary = self.itinerary
+        travel_dates = prepare_travel_dates_with_schedules(itinerary)
 
-        for travel_date in travel_dates:
-            travel_date.sorted_schedules = travel_date.schedules.all().order_by('start_time')
-
-        if travel_dates.exists():
-            first_date = travel_dates.first().date
-            last_date = travel_dates.last().date
-            context["first_date_str"] = first_date.strftime('%Y.%m.%d')
-            context["last_date_str"] = last_date.strftime('%Y.%m.%d')
-        else:
-            context["first_date_str"] = None
-            context["last_date_str"] = None
-
-        context["itinerary"] = itinerary
-        context["travel_dates"] = travel_dates
-        context["memos"] = itinerary.memos.all()
-        context["items"] = itinerary.items.all()
+        context.update(get_travel_date_range_context(travel_dates))
+        context.update({
+            "itinerary": itinerary,
+            "travel_dates": travel_dates,
+            "memos": itinerary.memos.all(),
+            "items": itinerary.items.all(),
+        })
 
         return context

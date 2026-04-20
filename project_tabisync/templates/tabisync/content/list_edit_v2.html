@@ -1,0 +1,476 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}リスト編集{% endblock %}
+
+{% block contents %}
+<div class="content-main">
+  <div class="checklist-page checklist-edit-page">
+    <section class="checklist-header">
+      <div>
+        <h2>チェックリスト編集</h2>
+        <p>複数のリストを作成して、名前や項目を自由に編集できます。</p>
+      </div>
+      <a class="checklist-edit-link" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
+        <i class="fa-solid fa-eye"></i>
+        表示ページへ
+      </a>
+    </section>
+
+    <p id="checklist-status" class="checklist-status" data-status="idle">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <span>編集内容は自動保存されます</span>
+    </p>
+
+    <section id="checklistEditor" class="checklist-board"></section>
+  </div>
+
+  <button type="button" id="addListBtn" class="fab-add checklist-fab" aria-label="リストを追加">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+</div>
+
+<script id="checklists-data" type="application/json">{{ checklists_json|safe }}</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const editor = document.getElementById("checklistEditor");
+  const addListBtn = document.getElementById("addListBtn");
+  const statusEl = document.getElementById("checklist-status");
+  const dataEl = document.getElementById("checklists-data");
+  const csrfToken = getCookie("csrftoken");
+  let saveTimer = null;
+  let lists = [];
+
+  try {
+    lists = JSON.parse(dataEl.textContent || "[]");
+  } catch (error) {
+    lists = [];
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  }
+
+  function setStatus(status, text) {
+    if (!statusEl) return;
+
+    const iconMap = {
+      idle: "fa-circle-info",
+      saving: "fa-rotate fa-spin",
+      saved: "fa-circle-check",
+      error: "fa-circle-exclamation",
+      dirty: "fa-pen",
+    };
+
+    statusEl.dataset.status = status;
+    statusEl.querySelector("span").textContent = text;
+    statusEl.querySelector("i").className = `fa-solid ${iconMap[status] || iconMap.idle}`;
+  }
+
+  function createEmptyList() {
+    return {
+      id: createId("list"),
+      title: "",
+      items: [],
+    };
+  }
+
+  function createEmptyItem() {
+    return {
+      id: createId("item"),
+      text: "",
+    };
+  }
+
+  function renderEditor() {
+    if (!lists.length) {
+      editor.innerHTML = `
+        <div class="checklist-empty">
+          <p>まだリストがありません。</p>
+          <p>右下のプラスボタンから追加できます。</p>
+        </div>
+      `;
+      return;
+    }
+
+    editor.innerHTML = lists.map((list, listIndex) => `
+      <article class="box5-6 checklist-box checklist-edit-box" data-list-id="${list.id}">
+        <h3 class="checklist-tape checklist-tape-${listIndex % 4}">${escapeHtml(list.title || "リスト")}</h3>
+        <div class="checklist-edit-head">
+          <input
+            type="text"
+            class="checklist-title-input"
+            data-action="title"
+            data-list-id="${list.id}"
+            value="${escapeHtml(list.title || "")}"
+            placeholder="リスト名を入力"
+          >
+          <button type="button" class="checklist-delete-list" data-action="delete-list" data-list-id="${list.id}" aria-label="リストを削除する">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+        <div class="box-content">
+          <ul class="checklist-edit-items">
+            ${(list.items || []).map((item) => `
+              <li class="checklist-edit-item">
+                <label class="checklist-item-check">
+                  <input type="checkbox" disabled>
+                </label>
+                <input
+                  type="text"
+                  class="checklist-item-input"
+                  data-action="item-text"
+                  data-list-id="${list.id}"
+                  data-item-id="${item.id}"
+                  value="${escapeHtml(item.text || "")}"
+                  placeholder="項目を入力"
+                >
+                <button type="button" class="checklist-delete-item" data-action="delete-item" data-list-id="${list.id}" data-item-id="${item.id}" aria-label="項目を削除する">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </li>
+            `).join("")}
+          </ul>
+          <button type="button" class="checklist-add-item" data-action="add-item" data-list-id="${list.id}">
+            <i class="fa-solid fa-plus"></i>
+            項目を追加
+          </button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function sanitizeLists() {
+    lists = lists
+      .map((list) => ({
+        id: list.id || createId("list"),
+        title: String(list.title || "").trim(),
+        items: Array.isArray(list.items)
+          ? list.items
+              .map((item) => ({
+                id: item.id || createId("item"),
+                text: String(item.text || "").trim(),
+              }))
+              .filter((item) => item.text)
+          : [],
+      }))
+      .filter((list) => list.title || list.items.length);
+  }
+
+  async function saveLists() {
+    sanitizeLists();
+    renderEditor();
+    setStatus("saving", "保存中...");
+
+    try {
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({ lists }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      setStatus("saved", "保存済み");
+    } catch (error) {
+      console.error(error);
+      setStatus("error", "保存に失敗しました");
+    }
+  }
+
+  function queueSave() {
+    setStatus("dirty", "未保存の変更があります");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveLists, 500);
+  }
+
+  addListBtn.addEventListener("click", function () {
+    const newList = createEmptyList();
+    lists.unshift(newList);
+    renderEditor();
+    setStatus("dirty", "未保存の変更があります");
+
+    const input = editor.querySelector(`[data-list-id="${newList.id}"].checklist-title-input, .checklist-title-input[data-list-id="${newList.id}"]`);
+    if (input) {
+      input.focus();
+    }
+  });
+
+  editor.addEventListener("input", function (event) {
+    const target = event.target;
+
+    if (target.dataset.action === "title") {
+      const list = lists.find((entry) => entry.id === target.dataset.listId);
+      if (!list) return;
+      list.title = target.value;
+      queueSave();
+      return;
+    }
+
+    if (target.dataset.action === "item-text") {
+      const list = lists.find((entry) => entry.id === target.dataset.listId);
+      if (!list) return;
+
+      const item = (list.items || []).find((entry) => entry.id === target.dataset.itemId);
+      if (!item) return;
+
+      item.text = target.value;
+      queueSave();
+    }
+  });
+
+  editor.addEventListener("click", function (event) {
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+
+    const { action, listId, itemId } = actionButton.dataset;
+    const list = lists.find((entry) => entry.id === listId);
+
+    if (action === "add-item") {
+      if (!list) return;
+      list.items = list.items || [];
+      const newItem = createEmptyItem();
+      list.items.push(newItem);
+      renderEditor();
+      setStatus("dirty", "未保存の変更があります");
+
+      const input = editor.querySelector(`.checklist-item-input[data-item-id="${newItem.id}"]`);
+      if (input) {
+        input.focus();
+      }
+      return;
+    }
+
+    if (action === "delete-item") {
+      if (!list) return;
+      list.items = (list.items || []).filter((entry) => entry.id !== itemId);
+      renderEditor();
+      queueSave();
+      return;
+    }
+
+    if (action === "delete-list") {
+      lists = lists.filter((entry) => entry.id !== listId);
+      renderEditor();
+      queueSave();
+    }
+  });
+
+  renderEditor();
+});
+</script>
+
+<style>
+.checklist-page {
+  width: min(980px, calc(100% - 32px));
+  margin: 90px auto 120px;
+}
+
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.checklist-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 6px;
+}
+
+.checklist-header p {
+  color: #666;
+}
+
+.checklist-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #444;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.checklist-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #7b7b7b;
+  margin-bottom: 18px;
+}
+
+.checklist-status[data-status="saved"] { color: #50785a; }
+.checklist-status[data-status="saving"] { color: #8a7051; }
+.checklist-status[data-status="error"] { color: #b14b4b; }
+.checklist-status[data-status="dirty"] { color: #8b6a2f; }
+
+.checklist-board {
+  display: grid;
+  gap: 18px;
+}
+
+.checklist-box {
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.checklist-edit-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 18px 0;
+}
+
+.checklist-tape {
+  background-color: rgb(255 255 255 / .1);
+  border-left: 2px dotted rgb(0 0 0 / .1);
+  border-right: 2px dotted rgb(0 0 0 / .1);
+  box-shadow: 0 0 5px rgb(0 0 0 / .12);
+  color: #666;
+  padding: 10px 20px;
+  line-height: 1;
+  position: absolute;
+  top: -0.8em;
+  left: 1em;
+  display: inline-block;
+  font-size: 0.9em;
+  width: auto;
+  max-width: calc(100% - 4em);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.checklist-tape-0 {
+  background-color: rgba(255, 246, 184, 0.55);
+  transform: rotate(-2deg);
+}
+
+.checklist-tape-1 {
+  background-color: rgba(255, 216, 204, 0.55);
+  transform: rotate(1.5deg);
+}
+
+.checklist-tape-2 {
+  background-color: rgba(215, 240, 255, 0.65);
+  transform: rotate(-1deg);
+}
+
+.checklist-tape-3 {
+  background-color: rgba(223, 245, 214, 0.65);
+  transform: rotate(2deg);
+}
+
+.checklist-title-input,
+.checklist-item-input {
+  width: 100%;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+  background: #fff;
+  color: #333;
+}
+
+.checklist-title-input {
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.checklist-edit-items {
+  display: grid;
+  gap: 12px;
+}
+
+.checklist-edit-item {
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.checklist-item-input {
+  padding: 10px 12px;
+}
+
+.checklist-delete-item,
+.checklist-delete-list {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: #efefef;
+  color: #666;
+}
+
+.checklist-add-item {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f2f2f2;
+  color: #444;
+}
+
+.checklist-empty {
+  background: #fff;
+  border: 1px dashed #ccc;
+  border-radius: 18px;
+  padding: 24px 18px;
+  text-align: center;
+  color: #666;
+}
+
+.checklist-fab {
+  bottom: 96px;
+}
+
+@media (max-width: 768px) {
+  .checklist-page {
+    width: calc(100% - 24px);
+    margin-top: 82px;
+  }
+
+  .checklist-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .checklist-edit-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .checklist-delete-item {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+</style>
+{% endblock %}

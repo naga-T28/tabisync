@@ -75,8 +75,8 @@
                             <div>地図</div>
                         </a>
                     </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_list' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:content_list' pk=itinerary.pk token=itinerary.token %}">
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_list' or request.resolver_match.url_name == 'V2_list_edit' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-list-check"></i>
                             <div>リスト</div>
                         </a>
@@ -87,6 +87,7 @@
                             <div>メモ</div>
                         </a>
                     </li>
+                    <!---
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'edit' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-wallet"></i>
@@ -99,6 +100,7 @@
                             <div>AI提案</div>
                         </a>
                     </li>
+                    -->
                 </ul>
             </nav>
             <ul>

@@ -4,7 +4,7 @@
 {% block contents %}
 {% load static %}
 <main class="content-main">
-  <form class="create-form" method="post" action="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+  <form class="create-form" method="post" action="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}">
     {% csrf_token %}
     <div class="input-first-wrapper">
       <div class="schedules-container">
