@@ -5,24 +5,33 @@
 {% load static %}
 <main class="content-main">
     <div class="edit-menu">
-        <h2 class="edit-menu-title">{{ itinerary.title }}しおり内容の編集</h2>
+        <h2 class="edit-menu-title">しおり内容の編集</h2>
         <p class="edit-menu-description">作成時に入力した内容のうち、パスワード設定以外を編集できます。</p>
         <div class="edit-menu-buttons">
-        <a href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
-            <i class="fa-solid fa-pen-to-square"></i>
-            <p>内容編集</p>
-            <p>タイトル、サブタイトル、旅行日数の変更、概要が編集できます</p>
-        </a>
-        <a href="{% url 'tabisync:date_edit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
-            <i class="fa-solid fa-calendar-days"></i>
-            <p>日程設定</p>
-            <p>予定を追加・削除・編集することができます</p>
-        </a>
-        <a href="{% url 'tabisync:place_edit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
-            <i class="fa-solid fa-location-dot"></i>
-            <p>メモ編集</p>
-            <p>メモを追加・削除・編集することができます</p>
-        </a>
+            <a class="edit-menu-button" href="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <div class="edit-menu-text">
+                    <p class="edit-menu-text-title">内容編集</p>
+                    <p class="edit-menu-text-description">タイトル、サブタイトル、旅行日数の変更、概要が編集できます</p>
+                </div>
+                <p>〉</p>
+            </a>
+            <a class="edit-menu-button" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
+                <i class="fa-solid fa-calendar-days"></i>
+                <div class="edit-menu-text">
+                    <p class="edit-menu-text-title">旅程表編集</p>
+                    <p class="edit-menu-text-description">予定を追加・削除・編集することができます</p>
+                </div>
+                <p>〉</p>
+            </a>
+            <a class="edit-menu-button" href="{% url 'tabisync:V2_list_edit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
+                <i class="fa-solid fa-list-check"></i>
+                <div class="edit-menu-text">
+                    <p class="edit-menu-text-title">リスト編集</p>
+                    <p class="edit-menu-text-description">複数のリスト作成、名称変更、項目の追加・削除・チェックができます</p>
+                </div>
+                <p>〉</p>
+            </a>
         </div>
     </div>
 </main>

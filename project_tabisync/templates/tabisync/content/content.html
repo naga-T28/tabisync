@@ -3,7 +3,7 @@
 
 {% block contents %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key=&libraries=places" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places" async defer></script>
 
 <div class="content-main">
 <div class="schedule-view-page">
