@@ -109,6 +109,14 @@ class MemoV2(models.Model):
         return f"Memo for {self.itinerary}"
 
 
+class ChecklistV2(models.Model):
+    itinerary = models.OneToOneField(Itinerary, on_delete=models.CASCADE, related_name="checklist_v2")
+    content = models.TextField(blank=True, default="[]")
+
+    def __str__(self):
+        return f"Checklist for {self.itinerary}"
+
+
 class TravelDate(models.Model):
     """旅程の日付"""
     itinerary = models.ForeignKey(Itinerary, on_delete=models.CASCADE, related_name='travel_dates')
