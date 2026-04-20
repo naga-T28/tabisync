@@ -40,7 +40,7 @@
           <div class="day-heading-nav">
             <button type="button" class="day-move-btn" onclick="moveDay(-1)">＜</button>
             <h2 class="day-heading">
-              {{ group.choice.label }}
+              {{ group.choice.label }}<br>
               {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
             </h2>
             <button type="button" class="day-move-btn" onclick="moveDay(1)">＞</button>
