@@ -24,6 +24,13 @@ urlpatterns = [
     path('content/<int:pk>/<uuid:token>/list/', views.ListDetailView.as_view(), name='content_list'),
     path("reset-link/<int:pk>/<uuid:token>/<str:type>/",views.SendResetLinkView.as_view(),name="send_reset_link"),
     path("reset/<str:signed_token>/", views.ResetPasswordView.as_view(), name="reset_password"),
-    path('content/<int:pk>/<uuid:token>/password/', views.ItineraryPasswordView.as_view(), name='content_password'),
+    path('content/<int:pk>/<uuid:token>/password/', views.ItineraryPasswordView.as_view(), name='content_password'),#下からv2
+    path('content/v2/<int:pk>/<uuid:token>/', views.ItineraryDetailV2View.as_view(), name='content_v2'),
+    path('content/v2/<int:pk>/<uuid:token>/edit/', views.EditContentV2View.as_view(), name='content_edit_v2'),
+    path('content/v2/<int:pk>/<uuid:token>/schedule/edit/', views.ScheduleV2EditView.as_view(), name='Scheduleedit'),
+    path('content/v2/<int:pk>/<uuid:token>/want-to/edit/', views.WantToGoV2View.as_view(), name='Wantedit'),
+    path('content/v2/<int:pk>/<uuid:token>/want-to/', views.WantToGoMapView.as_view(), name='Wantto'),
+    path('content/v2/<int:pk>/<uuid:token>/memo/', views.MemoV2View.as_view(), name='V2_memo'),
+    path("content/v2/<int:pk>/<uuid:token>/schedule/row-save/",views.schedule_v2_row_save,name="schedule_v2_row_save"),
+    path("content/v2/<int:pk>/<uuid:token>/schedule/row-delete/",views.schedule_v2_row_delete,name="schedule_v2_row_delete"),
 ]
-

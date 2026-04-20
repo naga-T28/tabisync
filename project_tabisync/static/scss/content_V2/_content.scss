@@ -1,0 +1,342 @@
+.content-main{
+    width: 100%;
+    margin: 0; /* 外側の余白（上下と中央配置） */
+    background-image: repeating-linear-gradient(
+        -45deg,           /* ストライプの角度 */
+        #f2f3f7 0,        /* ストライプの色（薄いグレー） */
+        #f2f3f7 3px,      /* ストライプの太さ（3pxの間隔） */
+        transparent 3px,  /* 透明部分 */
+        transparent 6px   /* 透明部分（3pxから6pxまで） */
+    );
+}
+.schedule-view-page {
+  width: 95%;
+  max-width: 750px;
+  margin: 0 auto;
+  margin-top: 50px;
+  padding: 16px 16px 40px;
+}
+
+.title-visual{
+    margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
+    position: relative; /* 相対位置指定 */
+    background-color: #fff;
+}
+.title-visual:before{
+    border-bottom: 30px solid transparent; /* 上側に透明の三角形 */
+    border-left: 30px solid #aba7b0; /* 左側の三角形（色は#c6d4c6） */
+    content: ''; /* 擬似要素にコンテンツなし */
+    display: block; /* ブロック要素として表示 */
+    position: absolute; /* 絶対位置指定 */
+    top: 0px; /* 上から0px */
+    left: 0px; /* 左から0px */
+}
+.title-visual:after{
+    border-left: 30px solid transparent; /* 右側に透明の三角形 */
+    border-bottom: 30px solid #aba7b0; /* 下側の三角形（色は#c6d4c6） */
+    content: ''; /* 擬似要素にコンテンツなし */
+    display: block; /* ブロック要素として表示 */
+    position: absolute; /* 絶対位置指定 */
+    bottom: 0px; /* 下から0px */
+    right: 0px; /* 右から0px */
+}
+.siori-title{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 40px;
+    margin:0;
+    padding:0;
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-top: 30px;
+}
+.siori-sub-title{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 20px;
+    margin-top: -10px;
+}
+.siori-title-date{
+    font-family: 'Yusei Magic', sans-serif;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 30px;
+    padding-bottom: 10px;
+}
+#scheduleView{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.box5-6 {
+    position: relative; /* タイトルをボックス内の左上に配置するための基準 */
+    margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
+    background-color: #ffffff; /* ボックス背景色 */
+}
+
+.box5-6 .box-title {
+    background-color: rgb(255 255 255 / .1); /* テープ背景色と透過 */
+    border-left: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ左 */
+    border-right: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ右 */
+    box-shadow: 0 0 5px rgb(0 0 0 / .12); /* テープ影 */
+    transform: rotate(-2deg); /* テープの傾き */
+    color: #666; /* タイトル文字色 */
+    padding: 10px 20px; /* タイトルの余白 */
+    line-height: 1; /* タイトルの行の高さ */
+    position: absolute; /* 親要素の左上に固定 */
+    top: -1em; /* 上端に配置 */
+    left: 1em; /* 左端に配置 */
+    display: inline-block; /* タイトルの幅を内容に合わせる */
+    font-size: 0.9em; /* タイトルのフォントサイズ */
+    width: auto; /* タイトル幅を内容に応じて可変にする */
+    max-width: calc(100% - 2em); /* 左右の余白を考慮して最大幅を調整 */
+    white-space: nowrap; /* タイトルを1行に固定 */
+    overflow: hidden; /* はみ出した部分を非表示 */
+    text-overflow: ellipsis; /* 省略記号（...）を表示 */
+}
+.box5-6 .box-content {
+    padding: 2.5em 1em 1em; /* コンテンツ内の余白 */
+}
+.box-content {
+  width: 100%;
+}
+
+.day-panel {
+  display: none;
+}
+
+.day-panel.is-active {
+  display: block;
+  width: 95%;
+}
+
+.day-heading-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.day-heading {
+  margin: 0;
+}
+
+.day-move-btn {
+  border: none;
+  background: #787878;
+  color:#fff;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.schedule-row {
+  border-bottom: 1px solid #c4c4c4;
+  padding: 14px 0;
+}
+.schedule-row:first-child {
+  border-top: 1px solid #c4c4c4;
+}
+.schedule-row:last-child {
+  border-bottom: none;
+}
+.schedule-row.is-next-schedule {
+  background: #fff6bf;
+  border-radius: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.schedule-row.is-next-schedule + .schedule-row {
+  margin-top: 6px;
+}
+
+/* ===== レイアウト ===== */
+.row-display {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  align-items: stretch;
+}
+
+/* ===== 時間エリア ===== */
+.row-time-text {
+  width: 55px;
+  height: 100%;
+  font-weight: 600;
+  padding-top: 2px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  position: relative;
+}
+
+/* ===== 時間バッジ ===== */
+.row-time-text span {
+  background-color: #666;
+  color: #fff;
+  padding: 2px 4px;
+  border-radius: 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 24px;              /* ←安定させる */
+  font-size: 12px;
+
+  z-index: 1;                /* ←線より前に出す */
+  background-clip: padding-box;
+}
+
+/* ===== デフォルト：線なし ===== */
+.row-time-text::before {
+  content: none;
+}
+
+/* ===== 終了時間があるときだけ線表示 ===== */
+.row-time-text.has-end-time::before {
+  content: "";
+  position: absolute;
+
+  top: 12px;    /* 上のバッジ中央 */
+  bottom: 12px; /* 下のバッジ中央 */
+
+  left: 50%;
+  transform: translateX(-50%);
+
+  border-left: 2px dashed #5e5e5e;
+  z-index: 0;
+}
+
+/* ===== 本文 ===== */
+.row-main-text {
+  min-width: calc(100% - 84px);
+}
+
+.display-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.display-place-line {
+  padding-left: 0;
+  margin-top: 0;
+}
+
+.display-description {
+  margin-top: 6px;
+  color: #666;
+  white-space: pre-wrap;
+  gap:8px;
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.row-place-line {
+  margin-top: 6px;
+  margin-left: 16px;
+}
+
+.place-open-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.place-open-btn:hover .place-name-text {
+  text-decoration: underline;
+}
+
+.empty-day-message {
+  color: #666;
+  padding: 20px 0;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 3000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.modal-content h3 {
+  margin: 0 32px 16px 0;
+}
+
+.modal-memo,
+.modal-adress,
+.modal-date {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.modal-actions {
+  margin-top: 18px;
+}
+
+#copy-url-box{
+  width: 95%;
+  height: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
+  border: 2px solid #cecece;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;       /* テキストを1行に固定 */
+  overflow: hidden;          /* はみ出た部分を隠す */
+  text-overflow: ellipsis;   /* 末尾に「…」を表示（省略記号）*/
+  padding: 5px 10px;         /* 内側の余白（必要に応じて）*/
+  box-sizing: border-box; 
+  gap:5px;
+}
+
+
+@media (max-width: 640px) {
+  .row-display {
+    grid-template-columns: 72px 1fr;
+  }
+}

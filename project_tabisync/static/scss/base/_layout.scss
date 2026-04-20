@@ -1,0 +1,39 @@
+@use "variables";
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-main {
+  flex: 1;
+  margin-top: 40px;
+  margin-bottom: 100px;
+}
+
+article.user-agreement,
+article.privacy-policy,
+.updates-article {
+  width: 90%;
+  margin: 0 auto;
+  padding-top: 20px;
+}
+
+.updates-article {
+  margin-bottom: 600px;
+}
+
+.header-nav-pc-wrapper {
+  display: none;
+}
+
+.img-404 {
+  width: 100%;
+  height: auto;
+  margin-bottom: 600px;
+}
+
+section.update-section {
+  width: 100%;
+}
