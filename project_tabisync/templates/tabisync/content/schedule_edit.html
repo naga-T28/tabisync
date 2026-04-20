@@ -1,0 +1,736 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}スケジュール編集{% endblock %}
+
+{% block contents %}
+{% load static %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfTtzJL_rYRRiSYH2F3Z0DjJHCNyf8lCE&libraries=places&callback=initPlaceSearch" async defer></script>
+
+<div class="schedule-editor">
+  <div id="scheduleForm">
+    {% csrf_token %}
+    {% for group in grouped_days %}
+      <section class="day-panel {% if forloop.first %}is-active{% endif %}"
+               id="day-{{ forloop.counter0 }}"
+               data-day-key="{{ group.choice.value }}"
+               data-calendar-date="{{ group.choice.calendar_date }}">
+        <div class="day-heading-nav">
+          <button type="button" class="day-move-btn" onclick="moveDay(-1)">←</button>
+          <h2 class="day-heading">
+            {{ group.choice.label }}
+            {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
+          </h2>
+          <button type="button" class="day-move-btn" onclick="moveDay(1)">→</button>
+        </div>
+
+        <div class="schedule-list">
+          {% for s in group.schedules %}
+            <div class="schedule-row" data-row onclick="openEditScheduleModal(this)">
+              <input type="hidden" value="{{ s.id }}" class="row-id-input">
+              <input type="hidden"
+                     value="day-{% if s.day_index %}{{ s.day_index }}{% else %}{{ group.choice.day_num }}{% endif %}"
+                     class="row-date-input">
+              <input type="hidden" value="{% if s.place %}{{ s.place.id }}{% endif %}" class="place-id-input">
+
+              <input type="hidden" value="{{ s.start_time|time:'H:i' }}" class="row-start-time">
+              <input type="hidden" value="{% if s.end_time %}{{ s.end_time|time:'H:i' }}{% endif %}" class="row-end-time">
+              <input type="hidden" value="{{ s.title }}" class="row-title-input">
+              <input type="hidden" value="{{ s.description|default:'' }}" class="row-description-input">
+
+              <button
+                type="button"
+                class="row-delete-icon"
+                onclick="event.stopPropagation(); deleteScheduleRow(this)"
+                aria-label="この予定を削除"
+              >&times;</button>
+
+              <div class="row-display">
+                <div class="row-time-text">
+                  <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
+                  <span class="time-separator">{% if s.end_time %}〜{% endif %}</span>
+                  <span class="display-end-time">{% if s.end_time %}{{ s.end_time|time:'H:i' }}{% endif %}</span>
+                </div>
+
+                <div class="row-main-text">
+                  <div class="display-title">{{ s.title }}</div>
+                  <div class="row-place-line display-place-line">
+                    <button type="button" class="place-open-btn" disabled>
+                      📍<span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
+                    </button>
+                  </div>
+                  <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+
+  <button type="button" class="fab" id="addRowBtn">＋</button>
+</div>
+
+<div id="addScheduleModal" class="edit-modal">
+  <div class="edit-modal-content" onclick="event.stopPropagation();">
+    <div class="edit-modal-header">
+      <h3>予定を追加</h3>
+      <button type="button" class="edit-modal-close" onclick="closeAddScheduleModal()">&times;</button>
+    </div>
+
+    <select id="newDate">
+      {% for choice in day_choices %}
+        <option value="{{ choice.value }}" {% if forloop.first %}selected{% endif %}>
+          {{ choice.label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <input id="newStartTime" type="time" placeholder="開始時間">
+    <input id="newEndTime" type="time" placeholder="終了時間">
+    <input id="newTitle" type="text" maxlength="30" placeholder="タイトル">
+    <textarea id="newDescription" maxlength="100" placeholder="詳細メモ"></textarea>
+
+    <div class="row-place-line modal-place-line">
+      <button type="button" class="place-open-btn" onclick="openPlaceModalForNewSchedule()">
+        📍<span id="newPlaceNameText">場所を追加</span>
+      </button>
+      <input type="hidden" id="newPlaceId" value="">
+    </div>
+
+    <div class="edit-modal-footer">
+      <button type="button" class="btn-primary" onclick="createScheduleFromModal()">追加</button>
+    </div>
+  </div>
+</div>
+
+<div id="editScheduleModal" class="edit-modal">
+  <div class="edit-modal-content" onclick="event.stopPropagation();">
+    <div class="edit-modal-header">
+      <h3>予定を編集</h3>
+      <button type="button" class="edit-modal-close" onclick="closeEditScheduleModal()">&times;</button>
+    </div>
+
+    <input type="hidden" id="editRowId">
+    <input type="hidden" id="editPlaceId">
+
+    <select id="editDate">
+      {% for choice in day_choices %}
+        <option value="{{ choice.value }}">
+          {{ choice.label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <input id="editStartTime" type="time" placeholder="開始時間">
+    <input id="editEndTime" type="time" placeholder="終了時間">
+    <input id="editTitle" type="text" maxlength="30" placeholder="タイトル">
+    <textarea id="editDescription" maxlength="100" placeholder="詳細メモ"></textarea>
+
+    <div class="row-place-line modal-place-line">
+      <button type="button" class="place-open-btn" onclick="openPlaceModalForEditSchedule()">
+        📍<span id="editPlaceNameText">場所を追加</span>
+      </button>
+    </div>
+
+    <div class="edit-modal-footer">
+      <button type="button" class="btn-primary" onclick="saveEditScheduleModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="placeEditModal" class="edit-modal">
+  <div class="edit-modal-content" onclick="event.stopPropagation();">
+    <div class="edit-modal-header">
+      <h3>場所を追加</h3>
+      <button type="button" class="edit-modal-close" onclick="closePlaceEditModal()">&times;</button>
+    </div>
+
+    <div class="search-wrapper">
+      <input id="searchInput" type="text" placeholder="場所を検索">
+      <button id="searchBtn" type="button">検索</button>
+    </div>
+
+    <div id="suggestions" class="suggestions-box"></div>
+
+    <div class="existing-place-section">
+      <h4>行きたいとこリストから選ぶ</h4>
+      <div class="existing-place-list">
+        {% for place in want_to_go_places %}
+          <button
+            type="button"
+            class="existing-place-item"
+            data-place-id="{{ place.id }}"
+            data-place-name="{{ place.name }}"
+            data-place-address="{{ place.address }}"
+            onclick="selectExistingPlace(this)"
+          >
+            <strong>{{ place.name }}</strong>
+            {% if place.address %}
+              <div class="existing-place-address">{{ place.address }}</div>
+            {% endif %}
+            {% if place.planned_day %}
+              <div class="existing-place-day">Day {{ place.planned_day }}</div>
+            {% endif %}
+          </button>
+        {% empty %}
+          <div class="existing-place-empty">行きたいとこリストに場所がありません</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <input id="placeName" placeholder="場所名">
+    <input id="placeAddress" placeholder="住所">
+    <textarea id="memoInput" placeholder="メモ"></textarea>
+
+    <div class="edit-modal-footer">
+      <button type="button" class="btn-primary" onclick="savePlaceForSchedule()">この場所を使う</button>
+    </div>
+  </div>
+</div>
+
+<template id="scheduleRowTemplate">
+  <div class="schedule-row" data-row onclick="openEditScheduleModal(this)">
+    <input type="hidden" value="" class="row-id-input">
+    <input type="hidden" value="__DATE__" class="row-date-input">
+    <input type="hidden" value="" class="place-id-input">
+
+    <input type="hidden" value="" class="row-start-time">
+    <input type="hidden" value="" class="row-end-time">
+    <input type="hidden" value="" class="row-title-input">
+    <input type="hidden" value="" class="row-description-input">
+
+    <button
+      type="button"
+      class="row-delete-icon"
+      onclick="event.stopPropagation(); deleteScheduleRow(this)"
+      aria-label="この予定を削除"
+    >&times;</button>
+
+    <div class="row-display">
+      <div class="row-time-text">
+        <span class="display-start-time"></span>
+        <span class="time-separator"></span>
+        <span class="display-end-time"></span>
+      </div>
+
+      <div class="row-main-text">
+        <div class="display-title"></div>
+        <div class="row-place-line display-place-line">
+          <button type="button" class="place-open-btn" disabled>
+            📍<span class="place-name-text">場所未設定</span>
+          </button>
+        </div>
+        <div class="display-description"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+const dayChoicesMap = {
+  {% for choice in day_choices %}
+    "{{ choice.value }}": {{ choice.day_num }}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+
+let rowIndex = 1000;
+let activeScheduleRow = null;
+let selectedPlace = null;
+let placesService = null;
+let autocompleteService = null;
+let placeTargetMode = "row";
+let editingRow = null;
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+function initPlaceSearch() {
+  const dummyMapEl = document.createElement("div");
+  const dummyMap = new google.maps.Map(dummyMapEl, {
+    center: { lat: 35.681236, lng: 139.767125 },
+    zoom: 4
+  });
+
+  placesService = new google.maps.places.PlacesService(dummyMap);
+  if (google.maps.places && google.maps.places.AutocompleteService) {
+    autocompleteService = new google.maps.places.AutocompleteService();
+  }
+}
+
+function getPanels() {
+  return [...document.querySelectorAll('.day-panel')];
+}
+
+function moveDay(direction) {
+  const panels = getPanels();
+  const activeIndex = panels.findIndex(panel => panel.classList.contains('is-active'));
+  if (activeIndex === -1) return;
+
+  const nextIndex = activeIndex + direction;
+  if (nextIndex < 0 || nextIndex >= panels.length) return;
+
+  panels.forEach(p => p.classList.remove('is-active'));
+  panels[nextIndex].classList.add('is-active');
+}
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  openAddScheduleModal();
+});
+
+function openAddScheduleModal() {
+  const activePanel = document.querySelector('.day-panel.is-active');
+
+  document.getElementById("newDate").value = activePanel?.dataset.dayKey || "{{ day_choices.0.value|default:'' }}";
+  document.getElementById("newStartTime").value = "";
+  document.getElementById("newEndTime").value = "";
+  document.getElementById("newTitle").value = "";
+  document.getElementById("newDescription").value = "";
+  document.getElementById("newPlaceId").value = "";
+  document.getElementById("newPlaceNameText").textContent = "場所を追加";
+  selectedPlace = null;
+  document.getElementById("addScheduleModal").classList.add("active");
+}
+
+function closeAddScheduleModal() {
+  document.getElementById("addScheduleModal").classList.remove("active");
+}
+
+function sortRowsByStartTime(panel) {
+  const list = panel.querySelector('.schedule-list');
+  const rows = [...list.querySelectorAll('.schedule-row')];
+
+  rows.sort((a, b) => {
+    const aVal = a.querySelector('.row-start-time').value || '99:99';
+    const bVal = b.querySelector('.row-start-time').value || '99:99';
+    return aVal.localeCompare(bVal);
+  });
+
+  rows.forEach(row => list.appendChild(row));
+}
+
+document.querySelectorAll('.day-panel').forEach(panel => sortRowsByStartTime(panel));
+
+async function saveScheduleRow(payload) {
+  const csrfToken = getCookie("csrftoken");
+
+  try {
+    const res = await fetch("{% url 'tabisync:schedule_v2_row_save' pk=itinerary.pk token=itinerary.token %}", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "保存に失敗しました");
+      return null;
+    }
+
+    return data;
+  } catch (e) {
+    console.error(e);
+    alert("通信エラーが発生しました");
+    return null;
+  }
+}
+
+function applyResultToRow(row, data) {
+  row.querySelector(".row-id-input").value = data.id || "";
+  row.querySelector(".row-date-input").value = data.date || "";
+  row.querySelector(".row-start-time").value = data.start_time || "";
+  row.querySelector(".row-end-time").value = data.end_time || "";
+  row.querySelector(".row-title-input").value = data.title || "";
+  row.querySelector(".row-description-input").value = data.description || "";
+  row.querySelector(".place-id-input").value = data.place_id || "";
+
+  row.querySelector(".display-start-time").textContent = data.start_time || "";
+  row.querySelector(".display-end-time").textContent = data.end_time || "";
+  row.querySelector(".time-separator").textContent = data.end_time ? "〜" : "";
+  row.querySelector(".display-title").textContent = data.title || "";
+  row.querySelector(".display-description").textContent = data.description || "";
+  row.querySelector(".place-name-text").textContent = data.place_name || "場所未設定";
+}
+
+function appendSavedRow(panel, data) {
+  const html = document.getElementById('scheduleRowTemplate').innerHTML
+    .replaceAll('__DATE__', data.date);
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const row = wrapper.firstElementChild;
+
+  applyResultToRow(row, data);
+  panel.querySelector('.schedule-list').appendChild(row);
+  rowIndex++;
+}
+
+async function createScheduleFromModal() {
+  const payload = {
+    id: "",
+    date: document.getElementById("newDate").value,
+    start_time: document.getElementById("newStartTime").value,
+    end_time: document.getElementById("newEndTime").value,
+    title: document.getElementById("newTitle").value.trim(),
+    description: document.getElementById("newDescription").value.trim(),
+    place_id: document.getElementById("newPlaceId").value || ""
+  };
+
+  if (!payload.title || !payload.start_time || !payload.date) {
+    alert("日付・開始時間・タイトルは必須です。");
+    return;
+  }
+
+  const result = await saveScheduleRow(payload);
+  if (!result || result.status !== "saved") return;
+
+  const targetPanel = document.querySelector(`.day-panel[data-day-key="${result.date}"]`);
+  if (targetPanel) {
+    appendSavedRow(targetPanel, result);
+    sortRowsByStartTime(targetPanel);
+  }
+
+  closeAddScheduleModal();
+}
+
+function openEditScheduleModal(target) {
+  const row = target.closest ? target.closest(".schedule-row") : target;
+  if (!row) return;
+
+  editingRow = row;
+
+  document.getElementById("editRowId").value = row.querySelector(".row-id-input").value || "";
+  document.getElementById("editDate").value = row.querySelector(".row-date-input").value || "";
+  document.getElementById("editStartTime").value = row.querySelector(".row-start-time").value || "";
+  document.getElementById("editEndTime").value = row.querySelector(".row-end-time").value || "";
+  document.getElementById("editTitle").value = row.querySelector(".row-title-input").value || "";
+  document.getElementById("editDescription").value = row.querySelector(".row-description-input").value || "";
+  document.getElementById("editPlaceId").value = row.querySelector(".place-id-input").value || "";
+  document.getElementById("editPlaceNameText").textContent =
+    row.querySelector(".place-name-text")?.textContent?.trim() || "場所を追加";
+
+  document.getElementById("editScheduleModal").classList.add("active");
+}
+
+function closeEditScheduleModal() {
+  document.getElementById("editScheduleModal").classList.remove("active");
+  editingRow = null;
+}
+
+async function saveEditScheduleModal() {
+  if (!editingRow) return;
+
+  const payload = {
+    id: document.getElementById("editRowId").value || "",
+    date: document.getElementById("editDate").value || "",
+    start_time: document.getElementById("editStartTime").value || "",
+    end_time: document.getElementById("editEndTime").value || "",
+    title: document.getElementById("editTitle").value.trim(),
+    description: document.getElementById("editDescription").value.trim(),
+    place_id: document.getElementById("editPlaceId").value || ""
+  };
+
+  if (!payload.title || !payload.start_time || !payload.date) {
+    alert("日付・開始時間・タイトルは必須です。");
+    return;
+  }
+
+  const oldPanel = editingRow.closest(".day-panel");
+  const result = await saveScheduleRow(payload);
+  if (!result || result.status !== "saved") return;
+
+  applyResultToRow(editingRow, result);
+
+  const newPanel = document.querySelector(`.day-panel[data-day-key="${result.date}"]`);
+  if (newPanel && oldPanel && newPanel !== oldPanel) {
+    newPanel.querySelector(".schedule-list").appendChild(editingRow);
+  }
+
+  if (oldPanel) sortRowsByStartTime(oldPanel);
+  if (newPanel) sortRowsByStartTime(newPanel);
+
+  closeEditScheduleModal();
+}
+
+async function deleteScheduleRow(btn) {
+  const row = btn.closest('.schedule-row');
+  const rowId = row.querySelector('.row-id-input')?.value;
+
+  if (!rowId) {
+    row.remove();
+    return;
+  }
+
+  const csrfToken = getCookie("csrftoken");
+
+  try {
+    const res = await fetch("{% url 'tabisync:schedule_v2_row_delete' pk=itinerary.pk token=itinerary.token %}", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+      },
+      body: JSON.stringify({ id: rowId })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.status !== "deleted") {
+      alert(data.message || "削除に失敗しました");
+      return;
+    }
+
+    const panel = row.closest('.day-panel');
+    row.remove();
+    if (panel) sortRowsByStartTime(panel);
+  } catch (e) {
+    console.error(e);
+    alert("通信エラーが発生しました");
+  }
+}
+
+function openPlaceModalFromSchedule(btn) {
+  placeTargetMode = "row";
+  activeScheduleRow = btn.closest(".schedule-row");
+  selectedPlace = null;
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("placeName").value = "";
+  document.getElementById("placeAddress").value = "";
+  document.getElementById("memoInput").value = "";
+  document.getElementById("suggestions").innerHTML = "";
+
+  document.getElementById("placeEditModal").classList.add("active");
+}
+
+function openPlaceModalForNewSchedule() {
+  placeTargetMode = "new";
+  activeScheduleRow = null;
+  selectedPlace = null;
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("placeName").value = "";
+  document.getElementById("placeAddress").value = "";
+  document.getElementById("memoInput").value = "";
+  document.getElementById("suggestions").innerHTML = "";
+
+  document.getElementById("placeEditModal").classList.add("active");
+}
+
+function openPlaceModalForEditSchedule() {
+  placeTargetMode = "edit";
+  activeScheduleRow = null;
+  selectedPlace = null;
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("placeName").value = "";
+  document.getElementById("placeAddress").value = "";
+  document.getElementById("memoInput").value = "";
+  document.getElementById("suggestions").innerHTML = "";
+
+  document.getElementById("placeEditModal").classList.add("active");
+}
+
+function closePlaceEditModal() {
+  document.getElementById("placeEditModal").classList.remove("active");
+  activeScheduleRow = null;
+  selectedPlace = null;
+}
+
+document.getElementById("placeEditModal").addEventListener("click", () => closePlaceEditModal());
+
+function renderSuggestions(items) {
+  const box = document.getElementById("suggestions");
+  box.innerHTML = "";
+  if (!items || items.length === 0) return;
+
+  items.forEach(it => {
+    const div = document.createElement("div");
+    div.className = "suggestion-item";
+    div.textContent = it.description || it.name || "";
+    div.addEventListener("click", () => selectSuggestion(it));
+    box.appendChild(div);
+  });
+}
+
+function selectSuggestion(pred) {
+  const placeId = pred.place_id || pred.placeId;
+  if (!placeId || !placesService) return;
+
+  placesService.getDetails({
+    placeId,
+    fields: ["place_id", "name", "formatted_address", "geometry", "rating"]
+  }, (place, status) => {
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !place) return;
+
+    selectedPlace = place;
+    document.getElementById("searchInput").value = place.name || "";
+    document.getElementById("placeName").value = place.name || "";
+    document.getElementById("placeAddress").value = place.formatted_address || "";
+    document.getElementById("suggestions").innerHTML = "";
+  });
+}
+
+function selectExistingPlace(btn) {
+  selectedPlace = null;
+
+  const placeId = btn.dataset.placeId;
+  const placeName = btn.dataset.placeName || "";
+  const placeAddress = btn.dataset.placeAddress || "";
+
+  document.getElementById("placeName").value = placeName;
+  document.getElementById("placeAddress").value = placeAddress;
+  document.getElementById("searchInput").value = placeName;
+  document.getElementById("suggestions").innerHTML = "";
+
+  if (placeTargetMode === "row" && activeScheduleRow) {
+    activeScheduleRow.querySelector(".place-id-input").value = placeId;
+    activeScheduleRow.querySelector(".place-name-text").textContent = placeName;
+    closePlaceEditModal();
+    return;
+  }
+
+  if (placeTargetMode === "new") {
+    document.getElementById("newPlaceId").value = placeId;
+    document.getElementById("newPlaceNameText").textContent = placeName;
+    closePlaceEditModal();
+    return;
+  }
+
+  if (placeTargetMode === "edit") {
+    document.getElementById("editPlaceId").value = placeId;
+    document.getElementById("editPlaceNameText").textContent = placeName;
+    closePlaceEditModal();
+  }
+}
+
+function doSearch() {
+  const q = document.getElementById("searchInput").value.trim();
+  if (!q) return;
+
+  if (autocompleteService) {
+    autocompleteService.getPlacePredictions({ input: q }, (preds, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+        renderSuggestions([]);
+        return;
+      }
+      renderSuggestions(preds.slice(0, 8));
+    });
+    return;
+  }
+
+  if (placesService) {
+    placesService.textSearch({ query: q }, (results, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
+        renderSuggestions([]);
+        return;
+      }
+      const items = results.slice(0, 8).map(r => ({ description: r.name, place_id: r.place_id }));
+      renderSuggestions(items);
+    });
+  }
+}
+
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    doSearch();
+  }
+});
+
+function getPlannedDayFromCurrentTarget() {
+  let dateValue = "";
+
+  if (placeTargetMode === "new") {
+    dateValue = document.getElementById("newDate")?.value || "";
+  } else if (placeTargetMode === "edit") {
+    dateValue = document.getElementById("editDate")?.value || "";
+  } else if (placeTargetMode === "row" && activeScheduleRow) {
+    dateValue = activeScheduleRow.querySelector(".row-date-input")?.value || "";
+  }
+
+  return dayChoicesMap[dateValue] || 0;
+}
+
+async function savePlaceForSchedule() {
+  const csrfToken = getCookie("csrftoken");
+  const name = document.getElementById("placeName").value.trim();
+  const address = document.getElementById("placeAddress").value.trim();
+  const memo = document.getElementById("memoInput").value.trim();
+  const plannedDay = getPlannedDayFromCurrentTarget();
+
+  if (!selectedPlace || !selectedPlace.place_id) {
+    alert("検索して候補から場所を選択してください。");
+    return;
+  }
+
+  const payload = {
+    action: "save_want_to_go",
+    place_id: selectedPlace.place_id,
+    name: name || selectedPlace.name || "",
+    address: address || selectedPlace.formatted_address || "",
+    lat: selectedPlace.geometry?.location?.lat?.() ?? null,
+    lng: selectedPlace.geometry?.location?.lng?.() ?? null,
+    rating: selectedPlace.rating ?? null,
+    memo: memo,
+    day: plannedDay
+  };
+
+  try {
+    const res = await fetch("{% url 'tabisync:Wantedit' pk=itinerary.pk token=itinerary.token %}", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.status !== "saved") {
+      alert("場所の保存に失敗しました");
+      return;
+    }
+
+    if (placeTargetMode === "new") {
+      document.getElementById("newPlaceId").value = data.id;
+      document.getElementById("newPlaceNameText").textContent = data.name || payload.name;
+      closePlaceEditModal();
+      return;
+    }
+
+    if (placeTargetMode === "edit") {
+      document.getElementById("editPlaceId").value = data.id;
+      document.getElementById("editPlaceNameText").textContent = data.name || payload.name;
+      closePlaceEditModal();
+      return;
+    }
+
+    if (placeTargetMode === "row" && activeScheduleRow) {
+      activeScheduleRow.querySelector(".place-id-input").value = data.id;
+      activeScheduleRow.querySelector(".place-name-text").textContent = data.name || payload.name;
+      closePlaceEditModal();
+    }
+  } catch (e) {
+    console.error(e);
+    alert("通信エラーが発生しました");
+  }
+}
+</script>
+
+<style>
+
+</style>
+{% endblock %}

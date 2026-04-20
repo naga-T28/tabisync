@@ -10,6 +10,8 @@ python-dotenv = "*"
 psycopg = "*"
 gunicorn = "*"
 whitenoise = "*"
+django-ckeditor-5 = "*"
+django-sass-processor = "*"
 
 [dev-packages]
 

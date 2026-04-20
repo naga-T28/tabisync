@@ -1,0 +1,122 @@
+@use "../base/variables" as variables;
+
+.main-visual {
+  width: 100%;
+  height: 500px;
+  background-image: url("../img/main-visu.webp");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: center;
+  padding-top: 100px;
+}
+
+.main-visual-wrapper {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-visual-subtitle {
+  font-weight: 400;
+  font-size: 18px;
+  color: variables.$white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.about-tabisync {
+  margin-bottom: 100px;
+}
+
+.about-tabisync-title {
+  text-align: center;
+  font-size: 30px;
+}
+
+.notable-point-pc-wrapper,
+.notable-point-pc-wrapper-btn {
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.notable-point-wrapper {
+  width: 100%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.notable-point-title,
+.notable-point-description {
+  width: 100%;
+  text-align: left;
+}
+
+.notable-point-img {
+  width: 100%;
+  height: auto;
+}
+
+.update-wrapper {
+  position: relative;
+  border: 2px solid variables.$text-main;
+  border-radius: variables.$radius-sm;
+  margin: 1.8em 1em;
+  padding: 5px 15px;
+}
+
+.update-title {
+  position: absolute;
+  padding: 0 0.5em;
+  left: 20px;
+  top: -15px;
+  font-weight: bold;
+  font-size: 20px;
+  background-color: variables.$white;
+
+  a {
+    text-decoration: none;
+    color: variables.$text-main;
+  }
+}
+
+.update-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding-left: 0;
+
+  li:not(:last-child) {
+    border-bottom: 1px dotted variables.$text-main;
+  }
+}
+
+li.update-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.update-version-date {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 5px;
+}
+
+.update-version,
+.update-date {
+  font-size: 0.8em;
+  color: variables.$text-sub;
+}
+
+.update-content {
+  font-size: 0.9em;
+  padding-bottom: 8px;
+}

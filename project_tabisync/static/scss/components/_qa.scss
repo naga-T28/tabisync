@@ -1,0 +1,71 @@
+@use "../base/variables" as variables;
+
+.qa-6 {
+  max-width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 5px;
+  border-bottom: 2px solid #d6dde3;
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 1em 2em 1em 3em;
+    color: variables.$text-main;
+    font-weight: 600;
+    cursor: pointer;
+
+    &::before {
+      position: absolute;
+      left: 1em;
+      font-weight: 600;
+      font-size: 1.3em;
+      color: #75bbff;
+      content: "Q";
+    }
+
+    &::after {
+      transform: translateY(-25%) rotate(45deg);
+      width: 7px;
+      height: 7px;
+      margin-left: 10px;
+      border-bottom: 3px solid #5f6061b3;
+      border-right: 3px solid #5f6061b3;
+      content: "";
+      transition: transform 0.5s;
+    }
+  }
+
+  p {
+    position: relative;
+    transform: translateY(-10px);
+    opacity: 0;
+    margin: 0;
+    padding: 0.3em 3em 1.5em;
+    color: #333;
+    transition: transform 0.5s, opacity 0.5s;
+
+    &::before {
+      position: absolute;
+      left: 1em;
+      font-weight: 600;
+      font-size: 1.3em;
+      color: #ff8d8d;
+      line-height: 1.2;
+      content: "A";
+    }
+  }
+
+  &[open] {
+    summary::after {
+      transform: rotate(225deg);
+    }
+
+    p {
+      transform: none;
+      opacity: 1;
+    }
+  }
+}
