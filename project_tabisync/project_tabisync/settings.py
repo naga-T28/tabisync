@@ -15,6 +15,7 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 # Turnstile keys（Cloudflare管理画面から取得）
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
 TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
 USE_HTTPS = os.environ.get("USE_HTTPS", "True") == "True"
@@ -107,7 +108,7 @@ else:
 
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
-    CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1","https://staging.tabisync.com"]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1","https://staging.tabisync.com", "http://192.168.0.238"]
 
     STATIC_URL = '/static/'
     STATICFILES_DIRS = [BASE_DIR / "static"]
@@ -135,7 +136,25 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     "whitenoise.runserver_nostatic", # add_2026.01.19
+    "django_ckeditor_5",
 ]
+
+CKEDITOR_5_CONFIGS = {
+    "default": {
+        "toolbar": [
+            "heading", "|",
+            "bold", "italic", "underline",
+            "link",
+            "bulletedList", "numberedList",
+            "|",
+            "undo", "redo",
+        ],
+        "removePlugins": [
+            "Image", "ImageUpload", "ImageToolbar", "ImageCaption", "ImageStyle"
+        ],
+    }
+}
+
 
 SITE_ID = 1
 

@@ -1,0 +1,51 @@
+@use "../base/variables" as variables;
+
+.contact-wrapper,
+.contact-form-content,
+.contact-thanks-wrapper,
+.reset-link-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-wrapper {
+  align-content: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.contact-form-wrapper,
+.contact-thanks-wrapper {
+  width: 90%;
+  margin: 0 auto;
+}
+
+.contact-form-description {
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.contact-form-content,
+.contact-thanks-wrapper {
+  justify-content: left;
+}
+
+.contact-thanks-wrapper {
+  margin-top: 150px;
+}
+
+.reset-link-container {
+  padding: 16px;
+  width: 100%;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 500px;
+
+  p {
+    font-size: 12px;
+    color: variables.$text-main;
+    text-align: left;
+  }
+}

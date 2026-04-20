@@ -1,0 +1,97 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}しおり作成画面{% endblock %}
+
+{% block contents %}
+{% load static %}
+        <main class="content-main">
+          <div class="main-wrapper">
+            <div class="title-visual">
+              <h1 class="siori-title">{{ itinerary.title }}</h1>
+              {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+              {% if first_date_str and last_date_str %}
+                <p class="siori-title-date">
+                  {{ first_date_str }} ～ {{ last_date_str }}
+                </p>
+              {% endif %}
+            </div>
+              {% if itinerary.description %}
+                <div class="box5-6">
+                  <h2 class="box-title">概要</h2>
+                  <div class="box-content"> 
+                    <p>{{ itinerary.description }}</p>
+                  </div>
+                </div>
+              {% endif %}
+            <div class="box5-6">
+            <h2 class="box-title">日程表</h2>
+            <div class="box-content"> 
+              <div class="tab-navigation">
+                <button id="prev-date">&#x25C0;</button>
+                <span id="current-date-label"></span>
+                <button id="next-date">&#x25B6;</button>
+              </div>
+
+              <div id="date-tabs" style="display: none;">
+                {% for travel_date in travel_dates %}
+                  <button class="date-tab" data-date-id="date-{{ travel_date.id }}">
+                     {{ travel_date.date }}
+                  </button>
+                {% endfor %}
+              </div>
+
+              {% for travel_date in travel_dates %}
+                <div class="date-section" id="date-{{ travel_date.id }}" style="display: none;">
+                  <h3 class="plan-title">{{ travel_date.date }}</h3>
+                  <div class="schedule-timeline">
+                    {% for schedule in travel_date.schedules.all|dictsort:"start_time" %}
+                        <div class="timeline-entry"
+                            id="schedule-{{ schedule.id }}"
+                            data-start-datetime="{{ travel_date.date|date:'Y-m-d' }}T{{ schedule.start_time|time:'H:i:s' }}"
+                        >
+
+                        <div class="timeline-entry-wrapper {% if not forloop.last %} with-connector{% endif %}">
+                          <div class="timeline-time-wrapper">
+                            <div class="timeline-time">{{ schedule.start_time|time:"H:i" }}</div>
+                              {% if not forloop.last %}
+                                <div class="timeline-blank"></div>
+                              {% endif %}
+                          </div>
+                          <div class="timeline-details">
+                            <div class="timeline-title">{{ schedule.title }}</div>
+                            {% if schedule.location %}
+                              <div class="timeline-location">
+                                {% if schedule.location_url %}
+                                  <a class="location-url" href="{{ schedule.location_url }}" target="_blank"><i class="fa-solid fa-location-dot"></i> {{ schedule.location }}</a>
+                                {% else %}
+                                  <p class="location-url"><i class="fa-solid fa-location-dot"></i> {{ schedule.location }}</p>
+                                {% endif %}
+                              </div>
+                            {% endif %}
+                            {% if schedule.description %}
+                              <div class="timeline-description url-content">{{ schedule.description|linebreaksbr|urlize }}</div>
+                            {% endif %}
+                            <div class="blank"></div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+
+            </div>
+            </div>
+            <div class="box5-6">
+              <h2 class="box-title">しおりを共有</h2>
+              <div class="box-content">
+                <p class="copy-url-note">右上の「共有」ボタンをクリックするか、以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます</p>
+                <p id="copy-url-box" class="copy-url-box">
+                  <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ request.build_absolute_uri }}</span>
+                </p>
+              </div>
+            </div>
+        </main>
+<script src="{% static 'js/menu.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/create.js' %}"></script>
+{% endblock %}
