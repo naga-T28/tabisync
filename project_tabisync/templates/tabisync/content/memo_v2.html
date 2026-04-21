@@ -28,7 +28,7 @@
   </button>
 </div>
 
-<script id="memo-notes-data" type="application/json">{{ memo_notes_json|safe }}</script>
+{{ memo_notes|json_script:"memo-notes-data" }}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const memoBoard = document.getElementById("memoBoard");

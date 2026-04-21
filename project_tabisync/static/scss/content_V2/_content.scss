@@ -334,6 +334,28 @@
   gap:5px;
 }
 
+.share-qr-wrapper{
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.share-qr-note{
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.share-qr-image{
+  width: min(220px, 70vw);
+  height: auto;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+}
+
 
 @media (max-width: 640px) {
   .row-display {

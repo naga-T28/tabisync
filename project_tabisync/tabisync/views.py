@@ -72,6 +72,12 @@ def verify_turnstile(request):
         print("Turnstile verify error:", e)
         return False
 
+
+def build_public_absolute_uri(request, path=None):
+    target_path = path or request.get_full_path()
+    scheme = "https" if getattr(settings, "USE_HTTPS", False) else request.scheme
+    return f"{scheme}://{request.get_host()}{target_path}"
+
 # =========================
 # 静的ページ・案内ページ
 # =========================
@@ -246,12 +252,23 @@ class ItineraryDetailV2View(TemplateView):
             first_date_str = itinerary.start_date.strftime("%Y.%m.%d")
             last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
+        share_url = build_public_absolute_uri(
+            request,
+            reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token})
+        )
+        qr_code_url = (
+            "https://api.qrserver.com/v1/create-qr-code/"
+            f"?size=220x220&data={urllib.parse.quote(share_url, safe='')}"
+        )
+
         response = render(request, self.template_name, {
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
             "first_date_str": first_date_str,
             "last_date_str": last_date_str,
+            "share_url": share_url,
+            "qr_code_url": qr_code_url,
         })
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
@@ -582,6 +599,14 @@ def normalize_checklist_v2_content(raw_content):
         })
 
     return normalized_lists
+
+
+def build_default_checklist_v2_lists():
+    return [{
+        "id": f"list-{uuid4().hex[:10]}",
+        "title": "持ち物リスト",
+        "items": [],
+    }]
 
 # =========================
 # v2編集画面
@@ -1073,13 +1098,16 @@ class MemoV2View(View):
         notes = normalize_memo_v2_notes(memo.content)
         return render(request, self.template_name, {
             "memo": memo,
-            "memo_notes_json": json.dumps(notes, ensure_ascii=False),
+            "memo_notes": notes,
             "itinerary": self.itinerary,
         })
 
     def post(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
 
         if isinstance(data.get("notes"), list):
             notes = normalize_memo_v2_notes(json.dumps(data.get("notes", []), ensure_ascii=False))
@@ -1111,6 +1139,10 @@ class ChecklistV2View(View):
     def get(self, request, pk, token):
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
         lists = normalize_checklist_v2_content(checklist.content)
+        if not lists:
+            lists = build_default_checklist_v2_lists()
+            checklist.content = json.dumps(lists, ensure_ascii=False)
+            checklist.save(update_fields=["content"])
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
             "checklists": lists,
@@ -1159,6 +1191,10 @@ class ChecklistV2EditView(View):
     def get(self, request, pk, token):
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
         lists = normalize_checklist_v2_content(checklist.content)
+        if not lists:
+            lists = build_default_checklist_v2_lists()
+            checklist.content = json.dumps(lists, ensure_ascii=False)
+            checklist.save(update_fields=["content"])
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
             "checklists_json": json.dumps(lists, ensure_ascii=False),
@@ -1291,7 +1327,7 @@ class ItineraryPasswordView(View):
 
         if itinerary.check_view_password(input_password):
             request.session[f'view_auth_{pk}_{token}'] = True
-            return redirect(reverse('tabisync:content', kwargs={'pk': pk, 'token': token}))
+            return redirect(reverse('tabisync:content_v2', kwargs={'pk': pk, 'token': token}))
         else:
             context = {
                 'error': 'パスワードが違います',
@@ -1396,7 +1432,7 @@ class EditView(View):
             password = request.POST.get("password", "")
             if itinerary.check_edit_password(password):
                 request.session[session_key] = True
-                return redirect(reverse("tabisync:edit", kwargs={"pk": pk, "token": token}))
+                return redirect(reverse("tabisync:content_edit_v2", kwargs={"pk": pk, "token": token}))
             else:
                 return render(request, self.password_template, {
                     "error": "パスワードが間違っています。",
