@@ -100,8 +100,12 @@
     <div class="box-content">
       <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます）</p>
       <p id="copy-url-box" class="copy-url-box">
-        <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ request.build_absolute_uri }}</span>
+        <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ share_url }}</span>
       </p>
+      <div class="share-qr-wrapper">
+        <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
+        <img class="share-qr-image" src="{{ qr_code_url }}" alt="しおり共有用QRコード" width="220" height="220" loading="lazy">
+      </div>
     </div>
   </div>
 </div>
