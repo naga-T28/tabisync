@@ -52,8 +52,8 @@
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
-                    <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
-                    <a href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}" id="share-button"><i class="fa-solid fa-pen-to-square"></i>編集</a>
+                    <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button>
+                    <a href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}" id="share-button"><i class="fa-solid fa-pen-to-square"></i></a>
                 </div>
             </div>
         </header>
@@ -66,25 +66,25 @@
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-house"></i>
-                            <div>旅程表</div>
+                            <!--<div>旅程表</div>-->
                         </a>
                     </li>
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'Wantto' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:Wantto' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-map-location-dot"></i>
-                            <div>地図</div>
+                            <!--<div>地図</div>-->
                         </a>
                     </li>
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_list' or request.resolver_match.url_name == 'V2_list_edit' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-list-check"></i>
-                            <div>リスト</div>
+                            <!--<div>リスト</div>-->
                         </a>
                     </li>
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-clipboard"></i>
-                            <div>メモ</div>
+                            <!--<div>メモ</div> -->
                         </a>
                     </li>
                     <!---
