@@ -12,6 +12,9 @@
             <div class="schedules-container">
                 <h3 class="input-item-title input-item-title-first">しおりの作成</h3>
                 <div class="input-description-wrapper">
+                    {% if error %}
+                    <p class="input-item-description" style="color: #c0392b;">{{ error }}</p>
+                    {% endif %}
                     <div class="textarea-required-title"><input class="input-title" type="text" name="title" placeholder="タイトル（例：沖縄旅行）" required></div>
                     <input class="input-title" type="text" name="subtitle" placeholder="サブタイトル（例：2泊3日の卒業旅行）">
                     <textarea class="input-description" name="description" placeholder="概要（例：卒業旅行で沖縄に行きます！首里城や美ら海水族館を訪問予定！）" rows="20"></textarea>
@@ -21,27 +24,10 @@
             <div class="schedules-container">
             <!-- 日付 + スケジュール -->
                 <h3 class="input-item-title"><i class="fa-solid fa-calendar-days"></i> 日程設定</h3>
-                <!-- 日付指定エリア -->
-                <div id="dateInputs">
-                    <div class="input-group">
-                        <label class="input-date-flex">日程</label>
-                        <div class="input-date">
-                            <input type="date" name="start_date" id="startDate">~<input type="date" name="end_date" id="endDate">
-                        </div>
-                    </div>
-                </div>
-                <div class="date-header">
-                    <label>
-                    <input type="checkbox" id="undecidedCheck" >
-                    日程は未定（日数を決めて作成する）
-                    </label>
-                </div>
-
-                <!-- 日数入力（初期は非表示） -->
-                <div id="daysInput" style="display: none;">
-                    <div class="input-group">
-                        <label>旅行日数：</label>
-                        <div><input type="number" id="totalDays" min="1" value="1"><p>日間</p></div>
+                <div class="input-group">
+                    <label class="input-date-flex">日程</label>
+                    <div class="input-date">
+                        <input type="date" name="start_date" id="startDate" required>~<input type="date" name="end_date" id="endDate" required>
                     </div>
                 </div>
             </div>
@@ -71,5 +57,3 @@
 </main>
 <script src="{% static 'js/create.js' %}" defer></script>
 {% endblock %}
-
-
