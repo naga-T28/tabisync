@@ -173,18 +173,25 @@ class CreateView(View):
         # =====================
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        total_days = request.POST.get('total_days')
         design_number = request.POST.get('design_number', 1)
 
-        # 文字列 → date型へ変換
-        start_date_obj = None
-        end_date_obj = None
+        if not start_date or not end_date:
+            return render(request, self.template_name, {
+                "error": "開始日と終了日を入力してください。",
+            }, status=400)
 
-        if start_date:
+        try:
             start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
-
-        if end_date:
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            return render(request, self.template_name, {
+                "error": "日付の形式が正しくありません。",
+            }, status=400)
+
+        if end_date_obj < start_date_obj:
+            return render(request, self.template_name, {
+                "error": "終了日は開始日以降を指定してください。",
+            }, status=400)
 
         # =====================
         # しおり作成
@@ -198,10 +205,6 @@ class CreateView(View):
             end_date=end_date_obj,
             design_number=int(design_number)
         )
-
-        # 日程未定モードなら total_days をセット
-        if not start_date_obj and total_days:
-            itinerary.total_days = int(total_days)
 
         itinerary.set_passwords(
             view_pw=request.POST.get('view_password', ''),
@@ -631,7 +634,6 @@ class EditContentFormV2View(View):
     def _render_form(self, request, itinerary, extra_context=None, status=200):
         context = {
             "itinerary": itinerary,
-            "is_undecided": bool(itinerary.total_days and not itinerary.start_date and not itinerary.end_date),
         }
         if extra_context:
             context.update(extra_context)
@@ -671,8 +673,6 @@ class EditContentFormV2View(View):
         description = (request.POST.get("description") or "").strip()
         start_date_str = (request.POST.get("start_date") or "").strip()
         end_date_str = (request.POST.get("end_date") or "").strip()
-        total_days_str = (request.POST.get("total_days") or "").strip()
-        is_undecided = request.POST.get("is_undecided") == "1"
 
         if not title:
             itinerary.title = title
@@ -681,79 +681,55 @@ class EditContentFormV2View(View):
             return self._render_form(
                 request,
                 itinerary,
-                {"error": "タイトルを入力してください。", "is_undecided": is_undecided},
+                {"error": "タイトルを入力してください。"},
                 status=400,
             )
 
         new_start_date = None
         new_end_date = None
-        new_total_days = None
         old_start_date = itinerary.start_date
 
-        if is_undecided:
-            try:
-                new_total_days = int(total_days_str)
-            except (TypeError, ValueError):
-                new_total_days = 0
+        if not start_date_str or not end_date_str:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = start_date_str or None
+            itinerary.end_date = end_date_str or None
+            return self._render_form(
+                request,
+                itinerary,
+                {"error": "開始日と終了日を入力してください。"},
+                status=400,
+            )
 
-            if new_total_days < 1:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.total_days = new_total_days or None
-                itinerary.start_date = None
-                itinerary.end_date = None
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {"error": "旅行日数は1日以上で入力してください。", "is_undecided": True},
-                    status=400,
-                )
-        else:
-            if not start_date_str or not end_date_str:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.start_date = start_date_str or None
-                itinerary.end_date = end_date_str or None
-                itinerary.total_days = None
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {"error": "開始日と終了日を入力してください。", "is_undecided": False},
-                    status=400,
-                )
+        try:
+            new_start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            new_end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = start_date_str or None
+            itinerary.end_date = end_date_str or None
+            return self._render_form(
+                request,
+                itinerary,
+                {"error": "日付の形式が正しくありません。"},
+                status=400,
+            )
 
-            try:
-                new_start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-                new_end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-            except ValueError:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.start_date = start_date_str or None
-                itinerary.end_date = end_date_str or None
-                itinerary.total_days = None
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {"error": "日付の形式が正しくありません。", "is_undecided": False},
-                    status=400,
-                )
-
-            if new_end_date < new_start_date:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.start_date = new_start_date
-                itinerary.end_date = new_end_date
-                itinerary.total_days = None
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {"error": "終了日は開始日以降を指定してください。", "is_undecided": False},
-                    status=400,
-                )
+        if new_end_date < new_start_date:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = new_start_date
+            itinerary.end_date = new_end_date
+            return self._render_form(
+                request,
+                itinerary,
+                {"error": "終了日は開始日以降を指定してください。"},
+                status=400,
+            )
 
         schedule_max_day = 0
         for schedule in itinerary.schedules.all():
@@ -768,23 +744,6 @@ class EditContentFormV2View(View):
 
         existing_max_day = max(schedule_max_day, place_max_day)
 
-        if is_undecided and new_total_days and existing_max_day > new_total_days:
-            itinerary.title = title
-            itinerary.subtitle = subtitle
-            itinerary.description = description
-            itinerary.start_date = None
-            itinerary.end_date = None
-            itinerary.total_days = new_total_days
-            return self._render_form(
-                request,
-                itinerary,
-                {
-                    "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、{new_total_days}日にはできません。",
-                    "is_undecided": True,
-                },
-                status=400,
-            )
-
         if new_start_date and new_end_date:
             new_span_days = (new_end_date - new_start_date).days + 1
             if existing_max_day > new_span_days:
@@ -793,29 +752,31 @@ class EditContentFormV2View(View):
                 itinerary.description = description
                 itinerary.start_date = new_start_date
                 itinerary.end_date = new_end_date
-                itinerary.total_days = None
                 return self._render_form(
                     request,
                     itinerary,
                     {
                         "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、この日程には収まりません。",
-                        "is_undecided": False,
                     },
                     status=400,
                 )
+
+        schedules = list(itinerary.schedules.all())
+        existing_schedule_day_indexes = {
+            schedule.id: get_schedule_day_index(itinerary, schedule)
+            for schedule in schedules
+        }
 
         itinerary.title = title
         itinerary.subtitle = subtitle
         itinerary.description = description
         itinerary.start_date = new_start_date
         itinerary.end_date = new_end_date
-        itinerary.total_days = new_total_days
         itinerary.save()
 
-        schedules = itinerary.schedules.all()
         fallback_base_date = itinerary.created_at.date()
         for schedule in schedules:
-            day_index = get_schedule_day_index(itinerary, schedule)
+            day_index = existing_schedule_day_indexes.get(schedule.id)
             if not day_index:
                 continue
 

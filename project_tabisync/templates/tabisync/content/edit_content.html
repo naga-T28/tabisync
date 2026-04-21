@@ -24,42 +24,22 @@
 
       <div class="schedules-container">
         <h3 class="input-item-title"><i class="fa-solid fa-calendar-days"></i> 日程設定</h3>
-        <div id="dateInputs" {% if is_undecided %}style="opacity: 0.5;"{% endif %}>
-          <div class="input-group">
-            <label class="input-date-flex">日程</label>
-            <div class="input-date">
-              <input
-                type="date"
-                name="start_date"
-                id="startDate"
-                value="{% if itinerary.start_date %}{{ itinerary.start_date|date:'Y-m-d' }}{% endif %}"
-                {% if is_undecided %}disabled{% endif %}
-              >~<input
-                type="date"
-                name="end_date"
-                id="endDate"
-                value="{% if itinerary.end_date %}{{ itinerary.end_date|date:'Y-m-d' }}{% endif %}"
-                {% if is_undecided %}disabled{% endif %}
-              >
-            </div>
-          </div>
-        </div>
-        <div class="date-header">
-          <label>
-            <input type="checkbox" id="undecidedCheck" {% if is_undecided %}checked{% endif %}>
-            日程は未定（日数を決めて作成する）
-          </label>
-        </div>
-
-        <input type="hidden" name="is_undecided" id="isUndecidedInput" value="{% if is_undecided %}1{% else %}0{% endif %}">
-
-        <div id="daysInput" {% if not is_undecided %}style="display: none;"{% endif %}>
-          <div class="input-group">
-            <label>旅行日数：</label>
-            <div>
-              <input type="number" id="totalDays" name="total_days" min="1" value="{{ itinerary.total_days|default:1 }}">
-              <p>日間</p>
-            </div>
+        <div class="input-group">
+          <label class="input-date-flex">日程</label>
+          <div class="input-date">
+            <input
+              type="date"
+              name="start_date"
+              id="startDate"
+              value="{% if itinerary.start_date %}{{ itinerary.start_date|date:'Y-m-d' }}{% endif %}"
+              required
+            >~<input
+              type="date"
+              name="end_date"
+              id="endDate"
+              value="{% if itinerary.end_date %}{{ itinerary.end_date|date:'Y-m-d' }}{% endif %}"
+              required
+            >
           </div>
         </div>
       </div>
@@ -76,34 +56,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const undecidedCheck = document.getElementById("undecidedCheck");
-  const hiddenInput = document.getElementById("isUndecidedInput");
-  const dateInputs = document.getElementById("dateInputs");
-  const daysInput = document.getElementById("daysInput");
   const startDate = document.getElementById("startDate");
   const endDate = document.getElementById("endDate");
 
-  if (!undecidedCheck || !hiddenInput || !dateInputs || !daysInput || !startDate || !endDate) return;
-
-  const syncUndecidedValue = () => {
-    hiddenInput.value = undecidedCheck.checked ? "1" : "0";
-
-    if (undecidedCheck.checked) {
-      dateInputs.style.opacity = "0.5";
-      startDate.disabled = true;
-      endDate.disabled = true;
-      daysInput.style.display = "block";
-      return;
-    }
-
-    dateInputs.style.opacity = "1";
-    startDate.disabled = false;
-    endDate.disabled = false;
-    daysInput.style.display = "none";
-  };
-
-  syncUndecidedValue();
-  undecidedCheck.addEventListener("change", syncUndecidedValue);
+  if (!startDate || !endDate) return;
 
   startDate.addEventListener("input", function () {
     if (!this.value) return;
