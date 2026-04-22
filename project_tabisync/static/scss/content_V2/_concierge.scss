@@ -178,17 +178,38 @@
 .concierge-chat-shell {
   display: flex;
   flex-direction: column;
+  height: min(720px, calc(100dvh - 220px));
   min-height: 620px;
   padding: 16px;
 }
 
 .concierge-messages {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
   padding: 6px 4px 16px;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+  scrollbar-gutter: stable;
+}
+
+.concierge-messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.concierge-messages::-webkit-scrollbar-thumb {
+  background: #d8dbe2;
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+.concierge-messages::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .concierge-message {
@@ -274,6 +295,7 @@
   }
 
   .concierge-chat-shell {
+    height: min(640px, calc(100dvh - 200px));
     min-height: 520px;
   }
 }
@@ -293,6 +315,11 @@
   .concierge-chat-shell,
   .concierge-panel {
     border-radius: 22px;
+  }
+
+  .concierge-chat-shell {
+    height: calc(100dvh - 190px);
+    min-height: 460px;
   }
 
   .concierge-form {

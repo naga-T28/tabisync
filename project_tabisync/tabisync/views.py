@@ -4,7 +4,7 @@ import urllib.parse
 import urllib.request
 
 from datetime import datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.contrib import messages
@@ -17,13 +17,16 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import strip_tags
+from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView  # add_2025.06.07
 from django_ratelimit.decorators import ratelimit
 
 from .forms import ContactForm
-from .models import ChecklistV2, Itinerary, Item, Memo, MemoV2, Schedule, ScheduleV2, TravelDate, WantToGo
+from .openai_concierge import OpenAIConciergeError, run_answer, run_data_selection, run_moderation
+from .models import ChecklistV2, ConciergeChatLog, Itinerary, Item, Memo, MemoV2, Schedule, ScheduleV2, TravelDate, WantToGo
 
 
 # =========================
@@ -1141,35 +1144,6 @@ class ConciergeV2View(View):
         return response
 
     def get(self, request, pk, token):
-        schedules = list(
-            self.itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id")
-        )
-        places = list(
-            self.itinerary.want_to_go_list.all().order_by("-priority", "planned_day", "id")
-        )
-
-        schedule_payload = []
-        for schedule in schedules:
-            schedule_payload.append({
-                "day_index": get_schedule_day_index(self.itinerary, schedule) or schedule.day_index or 0,
-                "date_label": schedule.date.strftime("%Y-%m-%d") if schedule.date else "",
-                "title": schedule.title,
-                "start_time": schedule.start_time.strftime("%H:%M") if schedule.start_time else "",
-                "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
-                "description": schedule.description or "",
-                "place_name": schedule.place.name if schedule.place else "",
-            })
-
-        place_payload = []
-        for place in places:
-            place_payload.append({
-                "name": place.name,
-                "planned_day": place.planned_day or 0,
-                "priority": place.priority or 3,
-                "memo": place.memo or "",
-                "address": place.address or "",
-            })
-
         first_date_str = None
         last_date_str = None
         if self.itinerary.start_date and self.itinerary.end_date:
@@ -1180,9 +1154,211 @@ class ConciergeV2View(View):
             "itinerary": self.itinerary,
             "first_date_str": first_date_str,
             "last_date_str": last_date_str,
-            "concierge_schedule_json": json.dumps(schedule_payload, ensure_ascii=False),
-            "concierge_places_json": json.dumps(place_payload, ensure_ascii=False),
         })
+
+    def post(self, request, pk, token):
+        try:
+            body = json.loads(request.body.decode("utf-8"))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです。"}, status=400)
+
+        user_message = str(body.get("message") or "").strip()
+        if not user_message:
+            return JsonResponse({"status": "error", "message": "メッセージを入力してください。"}, status=400)
+
+        raw_conversation_id = str(body.get("conversation_id") or "").strip()
+        conversation_id = self._parse_conversation_id(raw_conversation_id)
+        history = self._normalize_history(body.get("history"))
+        turn_index = len([item for item in history if item.get("role") == "user"]) + 1
+        daily_limit = self.itinerary.get_concierge_daily_limit()
+        today_count = self._get_today_usage_count()
+
+        if today_count >= daily_limit:
+            return JsonResponse({
+                "status": "limit_exceeded",
+                "message": f"このしおりのAIコンシェルジュは1日{daily_limit}回までです。日付が変わってから再度お試しください。",
+                "conversation_id": str(conversation_id),
+                "daily_limit": daily_limit,
+                "remaining_count": 0,
+            }, status=429)
+
+        try:
+            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message)
+        except OpenAIConciergeError as exc:
+            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+
+        if not moderation_result.get("allowed", False):
+            assistant_message = moderation_result.get("reason") or "この内容には対応できません。"
+            self._save_chat_log(
+                conversation_id=conversation_id,
+                turn_index=turn_index,
+                user_message=user_message,
+                moderation_prompt=self._merge_prompt_and_payload(moderation_prompt, moderation_payload),
+                moderation_result=moderation_result,
+                assistant_message=assistant_message,
+            )
+            return JsonResponse({
+                "status": "blocked",
+                "conversation_id": str(conversation_id),
+                "reply": assistant_message,
+                "daily_limit": daily_limit,
+                "remaining_count": max(daily_limit - (today_count + 1), 0),
+            })
+
+        try:
+            selection_prompt, selection_payload, selection_result = run_data_selection(user_message, history)
+        except OpenAIConciergeError as exc:
+            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+
+        required_data = selection_result.get("required_data", [])
+        selected_context = self._build_selected_context(required_data)
+
+        try:
+            answer_prompt, answer_payload, assistant_message = run_answer(history, user_message, selected_context)
+        except OpenAIConciergeError as exc:
+            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+
+        self._save_chat_log(
+            conversation_id=conversation_id,
+            turn_index=turn_index,
+            user_message=user_message,
+            moderation_prompt=self._merge_prompt_and_payload(moderation_prompt, moderation_payload),
+            moderation_result=moderation_result,
+            data_selection_prompt=self._merge_prompt_and_payload(selection_prompt, selection_payload),
+            data_selection_result=selection_result,
+            answer_prompt=self._merge_prompt_and_payload(answer_prompt, answer_payload),
+            answer_context=selected_context,
+            assistant_message=assistant_message,
+        )
+
+        return JsonResponse({
+            "status": "ok",
+            "conversation_id": str(conversation_id),
+            "reply": assistant_message,
+            "required_data": required_data,
+            "daily_limit": daily_limit,
+            "remaining_count": max(daily_limit - (today_count + 1), 0),
+        })
+
+    def _parse_conversation_id(self, raw_value):
+        try:
+            return UUID(raw_value)
+        except (ValueError, TypeError, AttributeError):
+            return uuid4()
+
+    def _normalize_history(self, raw_history):
+        if not isinstance(raw_history, list):
+            return []
+
+        normalized_history = []
+        for item in raw_history[-12:]:
+            if not isinstance(item, dict):
+                continue
+            role = str(item.get("role") or "").strip()
+            content = str(item.get("content") or "").strip()
+            if role not in {"user", "assistant"} or not content:
+                continue
+            normalized_history.append({
+                "role": role,
+                "content": content[:4000],
+            })
+        return normalized_history
+
+    def _get_today_usage_count(self):
+        return ConciergeChatLog.objects.filter(
+            itinerary=self.itinerary,
+            created_at__date=timezone.localdate(),
+        ).count()
+
+    def _build_selected_context(self, required_data):
+        context = {
+            "itinerary": {
+                "title": self.itinerary.title,
+                "subtitle": self.itinerary.subtitle or "",
+                "description": self.itinerary.description or "",
+                "start_date": self.itinerary.start_date.strftime("%Y-%m-%d") if self.itinerary.start_date else "",
+                "end_date": self.itinerary.end_date.strftime("%Y-%m-%d") if self.itinerary.end_date else "",
+                "total_days": self.itinerary.total_days or 0,
+            }
+        }
+
+        requested = set(required_data)
+
+        if "schedule" in requested:
+            schedules = list(
+                self.itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id")
+            )
+            context["schedule"] = [{
+                "day_index": get_schedule_day_index(self.itinerary, schedule) or schedule.day_index or 0,
+                "date": schedule.date.strftime("%Y-%m-%d") if schedule.date else "",
+                "title": schedule.title,
+                "start_time": schedule.start_time.strftime("%H:%M") if schedule.start_time else "",
+                "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
+                "description": schedule.description or "",
+                "place_name": schedule.place.name if schedule.place else "",
+            } for schedule in schedules]
+
+        if "want_to_go" in requested:
+            places = list(self.itinerary.want_to_go_list.all().order_by("-priority", "planned_day", "id"))
+            context["want_to_go"] = [{
+                "name": place.name,
+                "planned_day": place.planned_day or 0,
+                "priority": place.priority or 3,
+                "memo": place.memo or "",
+                "address": place.address or "",
+            } for place in places]
+
+        if "items" in requested:
+            checklist = getattr(self.itinerary, "checklist_v2", None)
+            checklist_lists = normalize_checklist_v2_content(getattr(checklist, "content", ""))
+            if checklist_lists:
+                context["items"] = checklist_lists
+            else:
+                items = list(self.itinerary.items.all().order_by("id"))
+                context["items"] = [{
+                    "title": item.title,
+                    "detail": item.detail or "",
+                    "is_checked": item.is_checked,
+                } for item in items]
+
+        if "memo" in requested:
+            memo = getattr(self.itinerary, "memo_v2", None)
+            memo_notes = normalize_memo_v2_notes(getattr(memo, "content", ""))
+            context["memo"] = [{
+                "content": strip_tags(note.get("content", "")).strip()
+            } for note in memo_notes if strip_tags(note.get("content", "")).strip()]
+
+        return context
+
+    def _merge_prompt_and_payload(self, prompt_text, payload):
+        return f"{prompt_text}\n\n--- REQUEST PAYLOAD ---\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+
+    def _save_chat_log(
+        self,
+        conversation_id,
+        turn_index,
+        user_message,
+        moderation_prompt="",
+        moderation_result=None,
+        data_selection_prompt="",
+        data_selection_result=None,
+        answer_prompt="",
+        answer_context=None,
+        assistant_message="",
+    ):
+        ConciergeChatLog.objects.create(
+            itinerary=self.itinerary,
+            conversation_id=conversation_id,
+            turn_index=turn_index,
+            user_message=user_message,
+            moderation_prompt=moderation_prompt,
+            moderation_result=moderation_result or {},
+            data_selection_prompt=data_selection_prompt,
+            data_selection_result=data_selection_result or {},
+            answer_prompt=answer_prompt,
+            answer_context=answer_context or {},
+            assistant_message=assistant_message,
+        )
 
 
 # v2リスト編集ページ
