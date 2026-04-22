@@ -75,26 +75,16 @@
   </div>
 </div>
 
-<script id="concierge-schedules-data" type="application/json">{{ concierge_schedule_json|safe }}</script>
-<script id="concierge-places-data" type="application/json">{{ concierge_places_json|safe }}</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const messagesEl = document.getElementById("conciergeMessages");
   const formEl = document.getElementById("conciergeForm");
   const inputEl = document.getElementById("conciergeInput");
-  const itineraryTitle = "{{ itinerary.title|escapejs }}";
-  const itinerarySubtitle = "{{ itinerary.subtitle|default:''|escapejs }}";
-  const scheduleData = JSON.parse(document.getElementById("concierge-schedules-data").textContent || "[]");
-  const placeData = JSON.parse(document.getElementById("concierge-places-data").textContent || "[]");
-
-  const scheduleByDay = new Map();
-  scheduleData.forEach((item) => {
-    const day = Number(item.day_index || 0);
-    if (!scheduleByDay.has(day)) {
-      scheduleByDay.set(day, []);
-    }
-    scheduleByDay.get(day).push(item);
-  });
+  const sendButtonEl = formEl.querySelector(".concierge-send-btn");
+  const storageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
+  const historyKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
+  let conversationId = window.sessionStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
+  let chatHistory = [];
 
   function addMessage(role, text) {
     const article = document.createElement("article");
@@ -114,138 +104,95 @@ document.addEventListener("DOMContentLoaded", function () {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
-  function extractDayNumber(text) {
-    const normalized = text.replace(/\s+/g, "");
-    const dayMatch = normalized.match(/day(\d{1,2})/i);
-    if (dayMatch) return Number(dayMatch[1]);
-
-    const japaneseMatch = normalized.match(/(\d{1,2})日目/);
-    if (japaneseMatch) return Number(japaneseMatch[1]);
-
-    return null;
+  function persistHistory() {
+    window.sessionStorage.setItem(storageKey, conversationId);
+    window.sessionStorage.setItem(historyKey, JSON.stringify(chatHistory));
   }
 
-  function formatScheduleLine(item) {
-    const timeRange = item.end_time ? `${item.start_time} - ${item.end_time}` : item.start_time;
-    const placeText = item.place_name ? ` / ${item.place_name}` : "";
-    return `${timeRange} ${item.title}${placeText}`;
+  function restoreHistory() {
+    try {
+      const rawHistory = window.sessionStorage.getItem(historyKey);
+      const parsed = JSON.parse(rawHistory || "[]");
+      if (!Array.isArray(parsed) || !parsed.length) return false;
+      chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
+      chatHistory.forEach((item) => addMessage(item.role, item.content));
+      return chatHistory.length > 0;
+    } catch (error) {
+      return false;
+    }
   }
 
-  function buildDaySummary(dayNumber) {
-    const schedules = scheduleByDay.get(dayNumber) || [];
-    if (!schedules.length) {
-      return `Day ${dayNumber} はまだ大きな予定が入っていません。移動の余白を確保したり、行きたい場所を追加するのに向いています。`;
-    }
-
-    const lines = schedules.slice(0, 5).map(formatScheduleLine);
-    const intro = `Day ${dayNumber} の予定は ${schedules.length} 件あります。`;
-    return `${intro}\n${lines.join("\n")}`;
+  function setSending(isSending) {
+    sendButtonEl.disabled = isSending;
+    inputEl.disabled = isSending;
+    sendButtonEl.textContent = isSending ? "送信中..." : "送信";
   }
 
-  function buildRecommendation() {
-    if (!placeData.length) {
-      return "まだ行きたい場所が登録されていないので、まずは地図タブから候補を追加すると提案しやすくなります。";
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop().split(";").shift();
     }
-
-    const picks = [...placeData]
-      .sort((a, b) => (b.priority || 3) - (a.priority || 3) || (a.planned_day || 0) - (b.planned_day || 0))
-      .slice(0, 3);
-
-    const body = picks.map((place, index) => {
-      const dayLabel = place.planned_day ? `Day ${place.planned_day}` : "未定";
-      const memo = place.memo ? `。メモ: ${place.memo}` : "";
-      return `${index + 1}. ${place.name} (${dayLabel}, 行きたい度 ${place.priority || 3}/5)${memo}`;
-    }).join("\n");
-
-    return `今の候補から優先して見たい場所を3つ選ぶと、こんな順番がおすすめです。\n${body}`;
+    return "";
   }
 
-  function buildFreeDayHint() {
-    const dayNumbers = [...scheduleByDay.keys()].filter((day) => day > 0).sort((a, b) => a - b);
-    const counts = dayNumbers.map((day) => ({ day, count: (scheduleByDay.get(day) || []).length }));
-
-    if (!counts.length) {
-      return "まだ旅程表がほとんど入っていないので、どの日も柔軟に組めます。まずは行きたい場所から埋めていくのがおすすめです。";
-    }
-
-    const quietDay = [...counts].sort((a, b) => a.count - b.count)[0];
-    if (quietDay.count === 0) {
-      return `Day ${quietDay.day} は予定が入っていないので、自由時間や予備日にしやすい日です。`;
-    }
-
-    return `いちばん余白があるのは Day ${quietDay.day} です。今は ${quietDay.count} 件だけなので、人気スポットや移動時間を入れやすいです。`;
-  }
-
-  function buildPackingAdvice() {
-    const keywords = `${itineraryTitle} ${itinerarySubtitle}`;
-    const items = ["充電器", "モバイルバッテリー", "常備薬", "飲み物", "財布・身分証"];
-
-    if (/海|沖縄|ビーチ|島|マリン/.test(keywords)) {
-      items.push("日焼け止め", "サンダル", "薄手の着替え");
-    }
-    if (/温泉|冬|雪|北海道|スキー/.test(keywords)) {
-      items.push("防寒着", "乾きやすいインナー", "保湿アイテム");
-    }
-    if (/ライブ|推し|フェス|イベント/.test(keywords)) {
-      items.push("チケット確認", "双眼鏡", "グッズ用バッグ");
-    }
-
-    return `この旅なら、まずは ${items.slice(0, 7).join("、")} を優先すると安心です。必要なら次に「1泊2日向けに絞って」みたいに続けて相談できます。`;
-  }
-
-  function buildOverview() {
-    const totalSchedules = scheduleData.length;
-    const totalPlaces = placeData.length;
-    return `${itineraryTitle} のデータを見ています。今は予定が ${totalSchedules} 件、行きたい場所が ${totalPlaces} 件あります。Dayごとの確認、おすすめ提案、持ち物相談などに対応できます。`;
-  }
-
-  function buildResponse(text) {
-    const normalized = text.trim();
-    const lowerText = normalized.toLowerCase();
-    const dayNumber = extractDayNumber(lowerText);
-
-    if (!normalized) {
-      return "相談内容を入力してもらえると、旅程表や行きたい場所をもとに提案できます。";
-    }
-
-    if (dayNumber) {
-      return buildDaySummary(dayNumber);
-    }
-
-    if (/(おすすめ|オススメ|提案|どこ行く|どこいく)/.test(normalized)) {
-      return buildRecommendation();
-    }
-
-    if (/(空いて|余白|暇|ゆるい|詰まってない)/.test(normalized)) {
-      return buildFreeDayHint();
-    }
-
-    if (/(持ち物|荷物|準備|必要なもの)/.test(normalized)) {
-      return buildPackingAdvice();
-    }
-
-    if (/(全体|概要|まとめ|どんな旅)/.test(normalized)) {
-      return buildOverview();
-    }
-
-    return `${buildOverview()}\nたとえば「Day2の予定を教えて」「おすすめの場所ある？」「持ち物を考えて」のように聞いてもらえると、もっと具体的に返せます。`;
-  }
-
-  function submitPrompt(prompt) {
-    const userText = prompt.trim();
+  async function submitPrompt(prompt) {
+    const userText = String(prompt || "").trim();
     if (!userText) return;
 
     addMessage("user", userText);
-    window.setTimeout(() => {
-      addMessage("assistant", buildResponse(userText));
-    }, 180);
+    chatHistory.push({ role: "user", content: userText });
+    persistHistory();
+    inputEl.value = "";
+    setSending(true);
+
+    try {
+      const response = await fetch("{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+          message: userText,
+          conversation_id: conversationId,
+          history: chatHistory.slice(0, -1),
+        }),
+      });
+
+      const responseText = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`サーバーがJSON以外を返しました: ${responseText.slice(0, 120)}`);
+      }
+
+      if (!response.ok || data.status === "error" || data.status === "limit_exceeded") {
+        throw new Error(data.message || "AIコンシェルジュに接続できませんでした。");
+      }
+
+      if (data.conversation_id) {
+        conversationId = data.conversation_id;
+      }
+
+      addMessage("assistant", data.reply || "返答を生成できませんでした。");
+      chatHistory.push({ role: "assistant", content: data.reply || "" });
+      persistHistory();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "エラーが発生しました。";
+      addMessage("assistant", message);
+      chatHistory.push({ role: "assistant", content: message });
+      persistHistory();
+    } finally {
+      setSending(false);
+    }
   }
 
   formEl.addEventListener("submit", function (event) {
     event.preventDefault();
-    const text = inputEl.value;
-    inputEl.value = "";
-    submitPrompt(text);
+    submitPrompt(inputEl.value);
   });
 
   document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
@@ -254,7 +201,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  addMessage("assistant", `${buildOverview()}\nまずは気になることを自然な言葉で聞いてください。`);
+  if (!restoreHistory()) {
+    addMessage("assistant", "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。まずは自然な言葉で相談してください。");
+  }
 });
 </script>
 {% endblock %}

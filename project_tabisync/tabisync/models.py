@@ -20,6 +20,7 @@ class Itinerary(models.Model):
     end_date = models.DateField(blank=True, null=True)
     total_days = models.PositiveIntegerField(blank=True, null=True)
     design_number = models.PositiveIntegerField(default=1)
+    concierge_daily_limit = models.PositiveIntegerField(default=5)
 
     def set_passwords(self, view_pw: str, edit_pw: str):
         self.view_password = make_password(view_pw) if view_pw else ''
@@ -42,6 +43,9 @@ class Itinerary(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_concierge_daily_limit(self):
+        return self.concierge_daily_limit or 5
 
 #version2のスケジュールデータ
 # models.py
@@ -168,3 +172,24 @@ class Item(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ConciergeChatLog(models.Model):
+    itinerary = models.ForeignKey(Itinerary, on_delete=models.CASCADE, related_name="concierge_logs")
+    conversation_id = models.UUIDField(default=uuid.uuid4, db_index=True)
+    turn_index = models.PositiveIntegerField(default=1)
+    user_message = models.TextField()
+    moderation_prompt = models.TextField(blank=True)
+    moderation_result = models.JSONField(default=dict, blank=True)
+    data_selection_prompt = models.TextField(blank=True)
+    data_selection_result = models.JSONField(default=dict, blank=True)
+    answer_prompt = models.TextField(blank=True)
+    answer_context = models.JSONField(default=dict, blank=True)
+    assistant_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["conversation_id", "turn_index", "id"]
+
+    def __str__(self):
+        return f"Concierge log {self.itinerary_id} #{self.turn_index}"
