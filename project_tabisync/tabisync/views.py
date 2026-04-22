@@ -21,6 +21,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.utils import timezone
 from django.views import View
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView  # add_2025.06.07
 from django_ratelimit.decorators import ratelimit
@@ -1163,6 +1164,7 @@ class ConciergeV2View(View):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         first_date_str = None
         last_date_str = None
