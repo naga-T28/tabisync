@@ -163,8 +163,8 @@
                 <input id="placePriorityInput" type="hidden" value="3">
             </div>
 
-            <details class="place-detail-settings">
-                <summary>➕詳細設定</summary>
+            <details class="place-detail-settings" id="placeDetailSettings">
+                <summary><span id="placeDetailToggleIcon">＋</span>詳細設定</summary>
                 <p class="place-detail-note">Google検索で場所を選ぶと自動入力されます。必要に応じて手動で編集できます。</p>
                 <div class="place-detail-grid">
                     <label class="place-detail-field">
@@ -333,6 +333,13 @@ function setPriorityStars(value) {
 
 function getPriorityValue() {
     return parseInt(document.getElementById("placePriorityInput").value || "3", 10) || 3;
+}
+
+function syncPlaceDetailToggle() {
+    const details = document.getElementById("placeDetailSettings");
+    const icon = document.getElementById("placeDetailToggleIcon");
+    if (!details || !icon) return;
+    icon.textContent = details.open ? "➖" : "➕";
 }
 
 function initMap() {
@@ -566,6 +573,8 @@ function openAddModal(){
   setPriorityStars(3);
   setPlaceDetailFields();
   document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("placeDetailSettings").open = false;
+  syncPlaceDetailToggle();
 
   document.getElementById("editModal").classList.add("active");
 }
@@ -592,6 +601,8 @@ function openEditModalFromView(){
     lng: place.lng ?? ""
   });
   document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("placeDetailSettings").open = false;
+  syncPlaceDetailToggle();
 
   selectedPlace = {
     place_id: place.place_id || "",
@@ -693,10 +704,12 @@ document.getElementById("searchBtn").addEventListener("click", doSearch);
 document.getElementById("searchInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); doSearch(); }
 });
+document.getElementById("placeDetailSettings").addEventListener("toggle", syncPlaceDetailToggle);
 document.querySelectorAll(".priority-star").forEach((star) => {
   star.addEventListener("click", () => setPriorityStars(star.dataset.value));
 });
 setPriorityStars(3);
+syncPlaceDetailToggle();
 
 /* ===============================
    保存 / 削除（WanteditへPOST）

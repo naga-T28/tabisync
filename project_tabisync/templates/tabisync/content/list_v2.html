@@ -3,13 +3,14 @@
 
 {% block contents %}
 <div class="content-main">
-  <div class="checklist-page checklist-view-page">
-    <section class="checklist-header">
-      <div>
-        <h2>みんなのチェックリスト</h2>
-        <p>必要なものや確認事項を、リストごとにまとめて確認できます。</p>
+  <div class="checklist-view-page">
+
+    <div class="title-wrapper">
+      <div class="title-visual --miniMargin">
+        <p class="siori-sub-title">{{ itinerary.title }}</p>
+        <h1 class="siori-title --noMargin">チェックリスト</h1>
       </div>
-    </section>
+    </div>
 
     <section id="checklistBoard" class="checklist-board">
       {% if checklists %}

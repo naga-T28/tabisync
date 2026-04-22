@@ -1124,6 +1124,67 @@ class ChecklistV2View(View):
         return JsonResponse({"status": "ok", "lists_count": len(lists)})
 
 
+@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+class ConciergeV2View(View):
+    template_name = "tabisync/content/concierge_v2.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pk = kwargs.get("pk")
+        self.token = kwargs.get("token")
+        self.itinerary = get_object_or_404(Itinerary, pk=self.pk, token=self.token)
+
+        if self.itinerary.view_password and not request.session.get(f'view_auth_{self.pk}_{self.token}', False):
+            return redirect(reverse('tabisync:content_password', kwargs={'pk': self.pk, 'token': self.token}))
+
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+    def get(self, request, pk, token):
+        schedules = list(
+            self.itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id")
+        )
+        places = list(
+            self.itinerary.want_to_go_list.all().order_by("-priority", "planned_day", "id")
+        )
+
+        schedule_payload = []
+        for schedule in schedules:
+            schedule_payload.append({
+                "day_index": get_schedule_day_index(self.itinerary, schedule) or schedule.day_index or 0,
+                "date_label": schedule.date.strftime("%Y-%m-%d") if schedule.date else "",
+                "title": schedule.title,
+                "start_time": schedule.start_time.strftime("%H:%M") if schedule.start_time else "",
+                "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
+                "description": schedule.description or "",
+                "place_name": schedule.place.name if schedule.place else "",
+            })
+
+        place_payload = []
+        for place in places:
+            place_payload.append({
+                "name": place.name,
+                "planned_day": place.planned_day or 0,
+                "priority": place.priority or 3,
+                "memo": place.memo or "",
+                "address": place.address or "",
+            })
+
+        first_date_str = None
+        last_date_str = None
+        if self.itinerary.start_date and self.itinerary.end_date:
+            first_date_str = self.itinerary.start_date.strftime("%Y.%m.%d")
+            last_date_str = self.itinerary.end_date.strftime("%Y.%m.%d")
+
+        return render(request, self.template_name, {
+            "itinerary": self.itinerary,
+            "first_date_str": first_date_str,
+            "last_date_str": last_date_str,
+            "concierge_schedule_json": json.dumps(schedule_payload, ensure_ascii=False),
+            "concierge_places_json": json.dumps(place_payload, ensure_ascii=False),
+        })
+
+
 # v2リスト編集ページ
 @method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
 class ChecklistV2EditView(View):
