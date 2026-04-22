@@ -1222,6 +1222,11 @@ class ConciergeV2View(View):
         try:
             moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message)
         except OpenAIConciergeError as exc:
+            logger.warning(
+                "Concierge moderation failed for itinerary_id=%s: %s",
+                self.itinerary.pk,
+                exc,
+            )
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
         except Exception:
             logger.exception("Unexpected moderation failure for itinerary_id=%s", self.itinerary.pk)
@@ -1248,6 +1253,11 @@ class ConciergeV2View(View):
         try:
             selection_prompt, selection_payload, selection_result = run_data_selection(user_message, history)
         except OpenAIConciergeError as exc:
+            logger.warning(
+                "Concierge data selection failed for itinerary_id=%s: %s",
+                self.itinerary.pk,
+                exc,
+            )
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
         except Exception:
             logger.exception("Unexpected data-selection failure for itinerary_id=%s", self.itinerary.pk)
@@ -1263,6 +1273,11 @@ class ConciergeV2View(View):
         try:
             answer_prompt, answer_payload, assistant_message = run_answer(history, user_message, selected_context)
         except OpenAIConciergeError as exc:
+            logger.warning(
+                "Concierge answer generation failed for itinerary_id=%s: %s",
+                self.itinerary.pk,
+                exc,
+            )
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
         except Exception:
             logger.exception("Unexpected answer generation failure for itinerary_id=%s", self.itinerary.pk)
