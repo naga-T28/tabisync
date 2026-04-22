@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Itinerary, TravelDate, Schedule, Memo, Item,WantToGo,MemoV2,ScheduleV2
+from .models import Itinerary, TravelDate, Schedule, Memo, Item,WantToGo,MemoV2,ScheduleV2,ConciergeChatLog
 
 admin.site.register(Itinerary)
 admin.site.register(TravelDate)
@@ -9,3 +9,4 @@ admin.site.register(Memo)
 admin.site.register(Item)
 admin.site.register(WantToGo)
 admin.site.register(MemoV2)
+admin.site.register(ConciergeChatLog)
