@@ -202,6 +202,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  window.tabisyncConciergePing = function () {
+    return submitPrompt("__ping__");
+  };
+
   if (!restoreHistory()) {
     addMessage("assistant", "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。まずは自然な言葉で相談してください。");
   }

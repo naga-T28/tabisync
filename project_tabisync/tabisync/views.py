@@ -1186,6 +1186,16 @@ class ConciergeV2View(View):
         if not user_message:
             return JsonResponse({"status": "error", "message": "メッセージを入力してください。"}, status=400)
 
+        if user_message == "__ping__":
+            return JsonResponse({
+                "status": "ok",
+                "reply": "concierge ping ok",
+                "debug": {
+                    "view": "ConciergeV2View.post",
+                    "itinerary_id": self.itinerary.pk,
+                },
+            })
+
         raw_conversation_id = str(body.get("conversation_id") or "").strip()
         conversation_id = self._parse_conversation_id(raw_conversation_id)
         history = self._normalize_history(body.get("history"))
