@@ -5,6 +5,16 @@
 {% load static %}
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initPlaceSearch" async defer></script>
 
+<div class="content-main">
+<div class="schedule-edit-page">
+  <section class="schedule-edit-header">
+    <div class="schedule-edit-header-copy">
+      <p class="schedule-edit-eyebrow">SCHEDULE EDITOR</p>
+      <h1>旅程表を編集</h1>
+      <p>Dayごとに予定を追加・編集・削除できます。時間や場所もこの画面からまとめて整えられます。</p>
+    </div>
+  </section>
+
 <div class="schedule-editor">
   <div id="scheduleForm">
     {% csrf_token %}
@@ -14,12 +24,12 @@
                data-day-key="{{ group.choice.value }}"
                data-calendar-date="{{ group.choice.calendar_date }}">
         <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">←</button>
+          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
           <h2 class="day-heading">
             {{ group.choice.label }}
             {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
           </h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">→</button>
+          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
         </div>
 
         <div class="schedule-list">
@@ -67,7 +77,9 @@
     {% endfor %}
   </div>
 
-  <button type="button" class="fab" id="addRowBtn">＋</button>
+  <button type="button" class="fab-add" id="addRowBtn">＋</button>
+</div>
+</div>
 </div>
 
 <div id="addScheduleModal" class="edit-modal">

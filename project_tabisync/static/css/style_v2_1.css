@@ -1782,19 +1782,109 @@ article.privacy-policy,
     padding: 5%;
   }
 }
+.edit-content-page,
 .edit-menu {
-  padding-top: 100px;
+  width: min(920px, 100% - 24px);
+  padding-top: 82px;
+  padding-bottom: 120px;
   min-height: 100vh;
-  width: 80%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.edit-content-form {
+  width: 100%;
+}
+
+.edit-content-page .input-first-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.edit-content-page .schedules-container {
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px 18px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+.edit-content-page .input-description-wrapper,
+.edit-content-page .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.edit-content-page .input-item-title {
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+  color: #2f3747;
+}
+.edit-content-page .input-item-title-first {
+  font-size: 1.3rem;
+}
+.edit-content-page .input-item-description {
+  margin-bottom: 12px;
+  color: #666;
+  line-height: 1.7;
+}
+.edit-content-page .input-title,
+.edit-content-page .input-description,
+.edit-content-page .input-date input {
+  width: 100%;
+  border: 1px solid #d8dde6;
+  border-radius: 16px;
+  background: #fff;
+  color: #2f3747;
+  font-size: 16px;
+}
+.edit-content-page .input-title,
+.edit-content-page .input-date input {
+  height: 52px;
+  padding: 0 14px;
+}
+.edit-content-page .input-description {
+  min-height: 180px;
+  padding: 14px;
+  resize: vertical;
+}
+.edit-content-page .input-date-flex {
+  color: #666;
+  font-weight: 700;
+}
+.edit-content-page .input-date {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.edit-content-page .enter-input-btn {
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: #2f3747;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(47, 55, 71, 0.18);
+}
+
+.edit-menu {
+  background: transparent;
 }
 .edit-menu .edit-menu-title {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  font-size: 1.45rem;
+  color: #2f3747;
 }
 .edit-menu .edit-menu-description {
-  text-align: left;
+  text-align: center;
   margin-bottom: 2rem;
+  color: #666;
+  line-height: 1.7;
 }
 
 .edit-menu-buttons {
@@ -1810,40 +1900,698 @@ article.privacy-policy,
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 15px;
+  border: 1px solid #e6e6e6;
+  border-radius: 22px;
   text-decoration: none;
   color: #333;
+  min-height: 88px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
 }
 .edit-menu-buttons .edit-menu-button i {
-  width: 10%;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  border-radius: 999px;
+  background: #f5f6f8;
 }
 .edit-menu-buttons .edit-menu-button .edit-menu-text {
-  width: 80%;
+  flex: 1;
+}
+.edit-menu-buttons .edit-menu-button .edit-menu-text .edit-menu-text-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #2f3747;
 }
 .edit-menu-buttons .edit-menu-button .edit-menu-text .edit-menu-text-description {
   font-size: 0.8rem;
   color: #666;
+  line-height: 1.6;
 }
 
 @media screen and (min-width: 720px) {
-  .edit-menu {
-    max-width: 700px;
+  .edit-menu,
+  .edit-content-page {
+    max-width: 780px;
   }
 }
+@media (max-width: 640px) {
+  .edit-content-page .input-date {
+    grid-template-columns: 1fr;
+  }
+  .edit-menu-buttons .edit-menu-button {
+    align-items: flex-start;
+  }
+}
+.schedule-edit-page {
+  width: min(920px, 100% - 24px);
+  margin: 0 auto;
+  padding: 78px 0 110px;
+}
+
+.schedule-edit-header {
+  margin-bottom: 18px;
+  padding: 22px 20px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.schedule-edit-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  background: #2f3747;
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.schedule-edit-header h1 {
+  margin-bottom: 8px;
+  font-size: 1.6rem;
+  color: #2f3747;
+}
+
+.schedule-edit-header p {
+  color: #666;
+  line-height: 1.7;
+}
+
+.schedule-editor {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 16px 88px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.day-panel {
+  display: none;
+}
+
+.day-panel.is-active {
+  display: block;
+}
+
+.day-heading-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 18px;
+}
+
+.day-heading {
+  margin: 0;
+  text-align: center;
+  color: #2f3747;
+}
+
+.day-move-btn {
+  border: none;
+  background: #787878;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.schedule-row {
+  position: relative;
+  border-bottom: 1px solid #eef1f5;
+  padding: 16px 0;
+  cursor: pointer;
+  border-radius: 18px;
+}
+
+.schedule-row:hover {
+  background: #fafbfd;
+}
+
+.row-delete-icon {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 999px;
+  z-index: 2;
+}
+
+.row-delete-icon:hover {
+  background: #f3f3f3;
+  color: #222;
+}
+
+.row-display {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding-right: 40px;
+}
+
+.row-time-text {
+  font-weight: 600;
+  padding-top: 2px;
+  color: #5f6061;
+}
+
+.row-main-text {
+  min-width: 0;
+}
+
+.display-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #2f3747;
+}
+
+.display-place-line {
+  padding-left: 0;
+  margin-top: 0;
+}
+
+.display-description {
+  margin-top: 6px;
+  color: #666;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+.row-place-line,
+.row-description-line,
+.row-bottom {
+  padding-left: 94px;
+  margin-top: 6px;
+}
+
+.modal-place-line {
+  padding-left: 0;
+  margin-top: 12px;
+}
+
+.time-input,
+.title-input,
+.description-input,
+#newDate,
+#newStartTime,
+#newEndTime,
+#newTitle,
+#newDescription,
+#editDate,
+#editStartTime,
+#editEndTime,
+#editTitle,
+#editDescription,
+#placeName,
+#placeAddress,
+#memoInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d8dde6;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.description-input,
+#newDescription,
+#editDescription,
+#memoInput {
+  min-height: 56px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.place-open-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: #4e6078;
+}
+
+.place-open-btn[disabled] {
+  opacity: 1;
+  cursor: default;
+  pointer-events: none;
+}
+
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  border: none;
+  font-size: 28px;
+  z-index: 2000;
+  background: #2f3747;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+}
+
+.edit-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 3000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.edit-modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-modal-content {
+  width: min(720px, 100%);
+  height: min(80vh, 720px);
+  background: #fff;
+  border-radius: 24px;
+  padding: 18px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.edit-modal-header,
+.search-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-wrapper {
+  margin: 12px 0;
+}
+
+#searchInput {
+  flex: 1;
+}
+
+.suggestions-box {
+  margin-bottom: 12px;
+}
+
+.suggestion-item {
+  padding: 10px 12px;
+  border: 1px solid #e9edf2;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.existing-place-section {
+  margin: 16px 0 12px;
+}
+
+.existing-place-section h4 {
+  margin: 0 0 8px;
+}
+
+.existing-place-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #e9edf2;
+  border-radius: 12px;
+  padding: 8px;
+  background: #fafafa;
+}
+
+.existing-place-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.existing-place-item:last-child {
+  margin-bottom: 0;
+}
+
+.existing-place-address,
+.existing-place-day,
+.existing-place-empty {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.btn-primary,
+.edit-modal-close {
+  border: none;
+  background: #f4f6f8;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  min-width: 96px;
+  background: #2f3747;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .schedule-edit-page {
+    width: calc(100% - 20px);
+    padding-top: 70px;
+  }
+  .row-display {
+    grid-template-columns: 72px 1fr;
+    padding-right: 36px;
+  }
+  .row-place-line,
+  .row-description-line,
+  .row-bottom {
+    padding-left: 82px;
+  }
+  .row-delete-icon {
+    top: 8px;
+    right: -4px;
+  }
+}
+.checklist-view-page,
+.checklist-page {
+  width: min(920px, 100% - 24px);
+  margin: 0 auto;
+  padding: 82px 0 120px;
+}
+
 .checklist-view-page {
-  width: 90%;
-  margin-top: 90px;
-  margin-left: auto;
-  margin-right: auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  padding-bottom: 120px;
+  gap: 18px;
 }
 
+.checklist-edit-page {
+  min-height: 100vh;
+}
+
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 22px 20px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.checklist-header h2 {
+  margin-bottom: 6px;
+  color: #2f3747;
+  font-size: 1.55rem;
+}
+
+.checklist-header p {
+  color: #666;
+  line-height: 1.7;
+}
+
+.checklist-edit-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #2f3747;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 10px 20px rgba(47, 55, 71, 0.18);
+}
+
+.checklist-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #7b7b7b;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+}
+
+.checklist-status[data-status=saved] {
+  color: #50785a;
+}
+
+.checklist-status[data-status=saving] {
+  color: #8a7051;
+}
+
+.checklist-status[data-status=error] {
+  color: #b14b4b;
+}
+
+.checklist-status[data-status=dirty] {
+  color: #8b6a2f;
+}
+
+.checklist-board {
+  display: grid;
+  gap: 18px;
+}
+
+.checklist-card {
+  display: block;
+}
+
+.checklist-box {
+  position: relative;
+  margin-bottom: 0;
+  border-radius: 24px;
+  overflow: visible;
+}
+
+.checklist-box .box-content {
+  padding-top: 30px;
+}
+
+.checklist-edit-box {
+  padding-bottom: 18px;
+}
+
+.checklist-tape {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-left: 2px dotted rgba(0, 0, 0, 0.1);
+  border-right: 2px dotted rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.12);
+  color: #666;
+  padding: 10px 20px;
+  line-height: 1;
+  position: absolute;
+  top: -0.8em;
+  left: 1em;
+  display: inline-block;
+  font-size: 0.9em;
+  width: auto;
+  max-width: calc(100% - 4em);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.checklist-tape-0 {
+  background-color: rgba(255, 246, 184, 0.65);
+  transform: rotate(-2deg);
+}
+
+.checklist-tape-1 {
+  background-color: rgba(255, 216, 204, 0.6);
+  transform: rotate(1.5deg);
+}
+
+.checklist-tape-2 {
+  background-color: rgba(215, 240, 255, 0.72);
+  transform: rotate(-1deg);
+}
+
+.checklist-tape-3 {
+  background-color: rgba(223, 245, 214, 0.72);
+  transform: rotate(2deg);
+}
+
+.checklist-items,
+.checklist-edit-items {
+  display: grid;
+  gap: 12px;
+}
+
+.checklist-item,
+.checklist-edit-item {
+  list-style: none;
+}
+
+.checklist-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #2f3747;
+}
+
+.checklist-label input,
+.checklist-item-check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.checklist-edit-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 18px 0;
+}
+
+.checklist-item-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checklist-edit-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.checklist-title-input,
+.checklist-item-input {
+  width: 100%;
+  border: 1px solid #d8dde6;
+  border-radius: 14px;
+  background: #fff;
+  color: #2f3747;
+}
+
+.checklist-title-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.checklist-item-input {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.checklist-delete-item,
+.checklist-delete-list {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: #eef1f4;
+  color: #5f6670;
+  cursor: pointer;
+}
+
+.checklist-add-item {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #f4f6f8;
+  color: #445064;
+  cursor: pointer;
+}
+
+.checklist-empty,
+.checklist-empty-text {
+  color: #666;
+}
+
+.checklist-empty {
+  padding: 28px 18px;
+  border-radius: 24px;
+  border: 1px dashed #d7dce3;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: center;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.04);
+}
+
+.checklist-empty p + p {
+  margin-top: 6px;
+}
+
+.checklist-fab {
+  bottom: 96px;
+}
+
+@media screen and (min-width: 720px) {
+  .checklist-view-page,
+  .checklist-page {
+    max-width: 780px;
+  }
+}
+@media (max-width: 768px) {
+  .checklist-view-page,
+  .checklist-page {
+    width: calc(100% - 20px);
+    padding-top: 72px;
+  }
+  .checklist-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .checklist-edit-link {
+    width: 100%;
+  }
+  .checklist-edit-item {
+    grid-template-columns: auto 1fr;
+  }
+  .checklist-delete-item {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
 .concierge-main {
   min-height: 100vh;
 }

@@ -28,7 +28,7 @@
     {% endif %}
   </div>
 
-  <div class="schedule-editor box5-6">
+  <div class="box5-6">
     <h2 class="box-title">日程表</h2>
     <div id="scheduleView" class="box-content">
       {% for group in grouped_days %}
@@ -38,12 +38,12 @@
                  data-calendar-date="{{ group.choice.calendar_date }}"
                  data-day-num="{{ group.choice.day_num }}">
           <div class="day-heading-nav">
-            <button type="button" class="day-move-btn" onclick="moveDay(-1)">＜</button>
+            <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
             <h2 class="day-heading">
               {{ group.choice.label }}<br>
               {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
             </h2>
-            <button type="button" class="day-move-btn" onclick="moveDay(1)">＞</button>
+            <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
           </div>
 
           <div class="schedule-list">
