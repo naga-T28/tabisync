@@ -724,9 +724,10 @@
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  border: 1px solid #e0e0e0;
   background: #fff;
   font-size: 22px;
+  border:none;
+  color:#333;
   cursor: pointer;
 }
 
@@ -734,24 +735,27 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
   overflow: hidden;
   background: #fff;
   margin-bottom: 10px;
 }
-.search-wrapper input{
-  flex: 1;
-  padding: 5px;
-  border: 1px solid #969696;
-  border-radius: 4px 0 0 4px;
-}
-.search-wrapper button{
-  width: 20%;
-  padding: 5px;
-  border: 1px solid #3e3e3e;
-  background: #3e3e3e;
-  color: #fff;
-  border-radius: 0 4px 4px 0;
+.search-wrapper{
+  input{
+    flex: 1;
+    width: 80%;
+    padding: 5px;
+    border: 1px solid #969696;
+    border-radius: 10px 0 0 10px;
+    padding-left: 10px;
+  }
+  button{
+    width: 20%;
+    padding: 5px;
+    border: 1px solid #3e3e3e;
+    background: #3e3e3e;
+    color: #fff;
+    border-radius: 0 10px 10px 0;
+  }
 }
 
 #placeName,
@@ -760,22 +764,24 @@
 .edit-modal-content textarea,
 .edit-modal-content select{
   width: 100%;
-  padding: 10px 12px;
+  padding: 5px;
+  padding-left: 10px;
   border-radius: 12px;
-  border: 1px solid #d0d0d0;
+  border: 1px solid #969696;
   font-size: 16px;
 }
 
 .place-detail-settings{
-  border: 1px solid #e2e2e2;
+  margin-top: 10px;
   border-radius: 12px;
-  background: #fafafa;
-  padding: 12px;
 
   summary{
     cursor: pointer;
     font-weight: 700;
     list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   summary::-webkit-details-marker{
@@ -799,7 +805,7 @@
 .place-priority-label{
   font-size: 0.95rem;
   font-weight: 700;
-  color: #333;
+  color: #5F6061;
 }
 
 .place-priority-stars{
@@ -855,9 +861,10 @@
   margin-top: 4px;
 }
 .btn-primary{
+  width: 100%;
   border: 0;
   border-radius: 12px;
-  background: #2f2f2f;
+  background: rgb(175, 41, 187);
   color: #fff;
   font-weight: 800;
   padding: 10px 14px;
