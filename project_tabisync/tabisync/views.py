@@ -81,6 +81,22 @@ def build_public_absolute_uri(request, path=None):
     scheme = "https" if getattr(settings, "USE_HTTPS", False) else request.scheme
     return f"{scheme}://{request.get_host()}{target_path}"
 
+
+def get_client_ip(request):
+    cf_connecting_ip = request.META.get("HTTP_CF_CONNECTING_IP")
+    if cf_connecting_ip:
+        return cf_connecting_ip.strip()
+
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0].strip()
+
+    return (request.META.get("REMOTE_ADDR") or "").strip()
+
+
+def ratelimit_client_ip(_group, request):
+    return get_client_ip(request)
+
 # =========================
 # 静的ページ・案内ページ
 # =========================
@@ -157,7 +173,7 @@ class DemoListView(TemplateView):
 # しおり作成・閲覧（v2）
 # =========================
 # しおり作成画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class CreateView(View):
     template_name = "tabisync/create.html"
 
@@ -222,7 +238,7 @@ class CreateView(View):
         }))
 
 # 公開用のしおり表示画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ItineraryDetailV2View(TemplateView):
     template_name = "tabisync/content/content.html"
 
@@ -316,7 +332,7 @@ def apply_want_to_go_payload(place, data):
 
 
 # 行きたい場所リスト表示
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class WantToGoMapView(TemplateView):
     template_name = "tabisync/content/want_list.html"
 
@@ -394,7 +410,7 @@ class WantToGoMapView(TemplateView):
         return JsonResponse({"status": "error"})
 
 # 行きたい場所リスト編集
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class WantToGoV2View(TemplateView):
 
     template_name = "tabisync/content/want_list.html"
@@ -617,7 +633,7 @@ def build_default_checklist_v2_lists():
 # =========================
 # v2編集画面
 # =========================
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class EditContentFormV2View(View):
     template_name = "tabisync/content/edit_content.html"
     password_template = "tabisync/edit_password.html"
@@ -802,7 +818,7 @@ class EditContentFormV2View(View):
         return redirect(reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 
 # version2の編集メニュー画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class EditMenuV2View(View):
     template_name = "tabisync/content/edit_menu.html"
     password_template = "tabisync/edit_password.html"
@@ -861,7 +877,7 @@ class EditMenuV2View(View):
         return self._render_form(request, itinerary)
 
 # スケジュール本体の編集画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ScheduleV2EditView(View):
     template_name = "tabisync/content/schedule_edit.html"
     password_template = "tabisync/edit_password.html"
@@ -1041,7 +1057,7 @@ def schedule_v2_row_delete(request, pk, token):
 
     return JsonResponse({"status": "deleted"})
 # v2メモページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class MemoV2View(View):
     template_name = "tabisync/content/memo_v2.html"
 
@@ -1084,7 +1100,7 @@ class MemoV2View(View):
 
 
 # v2リスト表示ページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ChecklistV2View(View):
     template_name = "tabisync/content/list_v2.html"
 
@@ -1127,7 +1143,7 @@ class ChecklistV2View(View):
         return JsonResponse({"status": "ok", "lists_count": len(lists)})
 
 
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ConciergeV2View(View):
     template_name = "tabisync/content/concierge_v2.html"
 
@@ -1362,7 +1378,7 @@ class ConciergeV2View(View):
 
 
 # v2リスト編集ページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ChecklistV2EditView(View):
     template_name = "tabisync/content/list_edit_v2.html"
     password_template = "tabisync/edit_password.html"
@@ -1415,7 +1431,7 @@ class ChecklistV2EditView(View):
 # ver.1 閲覧ページ
 # =========================
 # memoページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class MemoDetailView(TemplateView):
     template_name = "tabisync/memo.html"
 
@@ -1459,7 +1475,7 @@ class MemoDetailView(TemplateView):
         return context
 
 # listページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ListDetailView(TemplateView):
     template_name = "tabisync/list.html"
 
@@ -1505,7 +1521,7 @@ class ListDetailView(TemplateView):
 # 認証・問い合わせ
 # =========================
 # パスワード入力画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ItineraryPasswordView(View):
     template_name = 'tabisync/password.html'
 
@@ -1537,7 +1553,7 @@ class ItineraryPasswordView(View):
         
 
 # 問い合わせフォーム
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ContactFormView(View):
     template_name = "contact/contact_form.html"
     success_template_name = "contact/thanks.html"
@@ -1598,7 +1614,7 @@ class ContactFormView(View):
 # ver.1 編集・パスワード再設定
 # =========================
 # 編集画面
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class EditView(View):
     template_name = "tabisync/edit.html"
     password_template = "tabisync/edit_password.html"
@@ -1812,7 +1828,7 @@ class EditView(View):
 
         return redirect(reverse("tabisync:content", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 # パスワード再設定リンク送信
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class SendResetLinkView(View):
     def post(self, request, pk, token, type):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
@@ -1843,7 +1859,7 @@ class SendResetLinkView(View):
         from django.http import HttpResponseNotAllowed
         return HttpResponseNotAllowed(['POST'])
 # 再設定リンクから新しいパスワードを保存
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ResetPasswordView(View):
     def get(self, request, signed_token):
         try:
@@ -1910,7 +1926,7 @@ def prepare_travel_dates_with_schedules(itinerary):
     return travel_dates
 
 # ver.1 の個別ページ
-@method_decorator(ratelimit(key='ip', rate='20/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ItineraryDetailView(TemplateView):
     template_name = "tabisync/content.html"
 
