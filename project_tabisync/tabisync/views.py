@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import urllib.parse
 import urllib.request
@@ -27,6 +28,9 @@ from django_ratelimit.decorators import ratelimit
 from .forms import ContactForm
 from .openai_concierge import OpenAIConciergeError, run_answer, run_data_selection, run_moderation
 from .models import ChecklistV2, ConciergeChatLog, Itinerary, Item, Memo, MemoV2, Schedule, ScheduleV2, TravelDate, WantToGo
+
+
+logger = logging.getLogger(__name__)
 
 
 # =========================
@@ -1187,7 +1191,14 @@ class ConciergeV2View(View):
         history = self._normalize_history(body.get("history"))
         turn_index = len([item for item in history if item.get("role") == "user"]) + 1
         daily_limit = self.itinerary.get_concierge_daily_limit()
-        today_count = self._get_today_usage_count()
+        try:
+            today_count = self._get_today_usage_count()
+        except Exception:
+            logger.exception("Failed to load concierge usage count for itinerary_id=%s", self.itinerary.pk)
+            return JsonResponse({
+                "status": "error",
+                "message": "AIコンシェルジュの利用状況を確認できませんでした。staging のDB設定または migration を確認してください。",
+            }, status=500)
 
         if today_count >= daily_limit:
             return JsonResponse({
@@ -1202,10 +1213,13 @@ class ConciergeV2View(View):
             moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message)
         except OpenAIConciergeError as exc:
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+        except Exception:
+            logger.exception("Unexpected moderation failure for itinerary_id=%s", self.itinerary.pk)
+            return JsonResponse({"status": "error", "message": "AIコンシェルジュの安全判定で予期しないエラーが発生しました。"}, status=500)
 
         if not moderation_result.get("allowed", False):
             assistant_message = moderation_result.get("reason") or "この内容には対応できません。"
-            self._save_chat_log(
+            self._save_chat_log_safely(
                 conversation_id=conversation_id,
                 turn_index=turn_index,
                 user_message=user_message,
@@ -1225,16 +1239,26 @@ class ConciergeV2View(View):
             selection_prompt, selection_payload, selection_result = run_data_selection(user_message, history)
         except OpenAIConciergeError as exc:
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+        except Exception:
+            logger.exception("Unexpected data-selection failure for itinerary_id=%s", self.itinerary.pk)
+            return JsonResponse({"status": "error", "message": "AIコンシェルジュの文脈選択で予期しないエラーが発生しました。"}, status=500)
 
         required_data = selection_result.get("required_data", [])
-        selected_context = self._build_selected_context(required_data)
+        try:
+            selected_context = self._build_selected_context(required_data)
+        except Exception:
+            logger.exception("Failed to build concierge context for itinerary_id=%s", self.itinerary.pk)
+            return JsonResponse({"status": "error", "message": "AIコンシェルジュ用の旅程データを組み立てられませんでした。"}, status=500)
 
         try:
             answer_prompt, answer_payload, assistant_message = run_answer(history, user_message, selected_context)
         except OpenAIConciergeError as exc:
             return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+        except Exception:
+            logger.exception("Unexpected answer generation failure for itinerary_id=%s", self.itinerary.pk)
+            return JsonResponse({"status": "error", "message": "AIコンシェルジュの回答生成で予期しないエラーが発生しました。"}, status=500)
 
-        self._save_chat_log(
+        self._save_chat_log_safely(
             conversation_id=conversation_id,
             turn_index=turn_index,
             user_message=user_message,
@@ -1375,6 +1399,12 @@ class ConciergeV2View(View):
             answer_context=answer_context or {},
             assistant_message=assistant_message,
         )
+
+    def _save_chat_log_safely(self, **kwargs):
+        try:
+            self._save_chat_log(**kwargs)
+        except Exception:
+            logger.exception("Failed to save concierge chat log for itinerary_id=%s", self.itinerary.pk)
 
 
 # v2リスト編集ページ

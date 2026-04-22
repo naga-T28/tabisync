@@ -2059,9 +2059,8 @@ article.privacy-policy,
 .row-display {
   display: grid;
   grid-template-columns: 84px 1fr;
-  gap: 14px;
+  gap: 0px;
   align-items: start;
-  padding-right: 40px;
 }
 
 .row-time-text {
@@ -2092,7 +2091,6 @@ article.privacy-policy,
   line-height: 1.7;
 }
 
-.row-place-line,
 .row-description-line,
 .row-bottom {
   padding-left: 94px;
@@ -2289,12 +2287,11 @@ article.privacy-policy,
   }
   .row-display {
     grid-template-columns: 72px 1fr;
-    padding-right: 36px;
   }
   .row-place-line,
   .row-description-line,
   .row-bottom {
-    padding-left: 82px;
+    /* padding-left: 82px; */
   }
   .row-delete-icon {
     top: 8px;
