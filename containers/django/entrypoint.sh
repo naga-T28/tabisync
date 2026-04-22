@@ -21,5 +21,9 @@ python3 manage.py migrate --noinput
 echo "[entrypoint] migrate completed."
 
 echo "[entrypoint] Starting gunicorn..."
-exec gunicorn project_tabisync.wsgi:application --bind 0.0.0.0:8000
-
+GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-60}"
+GUNICORN_GRACEFUL_TIMEOUT="${GUNICORN_GRACEFUL_TIMEOUT:-10}"
+exec gunicorn project_tabisync.wsgi:application \
+  --bind 0.0.0.0:8000 \
+  --timeout "${GUNICORN_TIMEOUT}" \
+  --graceful-timeout "${GUNICORN_GRACEFUL_TIMEOUT}"
