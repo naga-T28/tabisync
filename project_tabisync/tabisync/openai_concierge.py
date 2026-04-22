@@ -1,5 +1,6 @@
 import json
 import os
+import socket
 import urllib.error
 import urllib.request
 
@@ -7,6 +8,7 @@ import urllib.request
 OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 OPENAI_LIGHT_MODEL = os.getenv("OPENAI_LIGHT_MODEL", "gpt-5-nano")
 OPENAI_ANSWER_MODEL = os.getenv("OPENAI_ANSWER_MODEL", "gpt-5-mini")
+OPENAI_API_TIMEOUT_SECONDS = float(os.getenv("OPENAI_API_TIMEOUT_SECONDS", "8"))
 
 DEFAULT_MODERATION_PROMPT = """あなたは旅行計画サービス TabiSync の安全審査担当です。
 ユーザーの入力が、旅行計画の相談として扱ってよい内容かを判定してください。
@@ -139,13 +141,17 @@ def call_openai_responses_api(prompt_text, schema=None, model=None, max_output_t
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=OPENAI_API_TIMEOUT_SECONDS) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="ignore")
         raise OpenAIConciergeError(f"OpenAI API error ({exc.code}): {detail}") from exc
     except urllib.error.URLError as exc:
         raise OpenAIConciergeError(f"OpenAI API connection error: {exc}") from exc
+    except socket.timeout as exc:
+        raise OpenAIConciergeError(
+            f"OpenAI API timeout after {OPENAI_API_TIMEOUT_SECONDS:g}s"
+        ) from exc
 
     try:
         parsed = json.loads(raw)
