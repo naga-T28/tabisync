@@ -9,6 +9,9 @@ OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 OPENAI_LIGHT_MODEL = os.getenv("OPENAI_LIGHT_MODEL", "gpt-5-nano")
 OPENAI_ANSWER_MODEL = os.getenv("OPENAI_ANSWER_MODEL", "gpt-5-mini")
 OPENAI_API_TIMEOUT_SECONDS = float(os.getenv("OPENAI_API_TIMEOUT_SECONDS", "8"))
+OPENAI_SELECTION_TIMEOUT_SECONDS = float(
+    os.getenv("OPENAI_SELECTION_TIMEOUT_SECONDS", str(max(OPENAI_API_TIMEOUT_SECONDS, 12)))
+)
 OPENAI_ANSWER_TIMEOUT_SECONDS = float(
     os.getenv("OPENAI_ANSWER_TIMEOUT_SECONDS", str(max(OPENAI_API_TIMEOUT_SECONDS, 20)))
 )
@@ -232,6 +235,7 @@ def run_data_selection(user_message, history=None):
         schema=schema,
         model=OPENAI_LIGHT_MODEL,
         max_output_tokens=250,
+        timeout_seconds=OPENAI_SELECTION_TIMEOUT_SECONDS,
     )
     result = json.loads(text)
     unique_required = []
