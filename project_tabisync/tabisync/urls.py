@@ -33,6 +33,7 @@ urlpatterns = [
     path('content/v2/<int:pk>/<uuid:token>/want-to/', views.WantToGoMapView.as_view(), name='Wantto'),
     path('content/v2/<int:pk>/<uuid:token>/memo/', views.MemoV2View.as_view(), name='V2_memo'),
     path('content/v2/<int:pk>/<uuid:token>/list/', views.ChecklistV2View.as_view(), name='V2_list'),
+    path('content/v2/<int:pk>/<uuid:token>/concierge/', views.ConciergeV2View.as_view(), name='V2_concierge'),
     path('content/v2/<int:pk>/<uuid:token>/list/edit/', views.ChecklistV2EditView.as_view(), name='V2_list_edit'),
     path("content/v2/<int:pk>/<uuid:token>/schedule/row-save/",views.schedule_v2_row_save,name="schedule_v2_row_save"),
     path("content/v2/<int:pk>/<uuid:token>/schedule/row-delete/",views.schedule_v2_row_delete,name="schedule_v2_row_delete"),

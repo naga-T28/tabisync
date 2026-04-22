@@ -197,7 +197,8 @@ article.privacy-policy,
   height: 50px;
   padding-bottom: 15px;
   background-color: #fff; /* 背景色を必要に応じて変更 */
-  border-top: 1px solid #ccc;
+  /*border-top: 1px solid #ccc;*/
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   align-items: flex-start;
@@ -220,9 +221,12 @@ article.privacy-policy,
   flex: 1; 
   padding-top: 5px;
 } 
+.footer-nav-li.--home{
+  padding-top: 0;
+}
 .footer-nav-a{
   text-decoration: none;
-  color: rgb(120, 120, 120);;
+  color: rgb(120, 120, 120);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -231,15 +235,37 @@ article.privacy-policy,
 .footer-nav-a i{
   font-size: 25px;
 }
+.footer-nav-li.--home .footer-nav-a{
+  width: 70px;
+  height: 70px;
+  margin: -30px auto 0;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(180deg, rgb(175, 41, 187) 0%, rgb(224, 118, 195) 100%);
+  border: 5px solid #fff;
+}
 .footer-nav-a div{
   font-size: 12px;
 }
-.footer-nav-li-select{
+/*.footer-nav-li-select{
   border-top: 5px solid rgb(175, 41, 187);
 
+}*/
+.footer-nav-li.--home.footer-nav-li-select{
+  border-top-color: transparent;
 }
 .footer-nav-li-select .footer-nav-a{
   color: rgb(175, 41, 187);
+}
+.footer-nav-li.--home.footer-nav-li-select .footer-nav-a{
+  color: #fff;
+  background: linear-gradient(135deg, rgb(175, 41, 187) 0%, rgb(224, 118, 195) 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  border:none;
+  box-shadow:
+    0 0 0 6px rgba(175, 41, 187, 0.12),
+    0 12px 24px rgba(175, 41, 187, 0.28);
 }
 
 .karidome{
@@ -355,4 +381,3 @@ article.privacy-policy,
  }
 
 }
-

@@ -5,13 +5,13 @@
 {% block contents %}
 <div class="content-main">
   <div class="memo-v2-wrapper">
-  
-    <section class="memo-v2-header">
-        <div>
-            <h2>みんなの付箋メモ</h2>
-            <!--<p>Markdown形式で自由に書いて、付箋を貼るように整理できます。</p>-->
-        </div>
-    </section>
+
+    <div class="title-wrapper">
+      <div class="title-visual --miniMargin">
+        <p class="siori-sub-title">{{ itinerary.title }}</p>
+        <h1 class="siori-title --noMargin">みんなのメモ</h1>
+      </div>
+    </div>
 
     <section class="memo-v2-help">
         <p id="save-status" class="memo-v2-save-status" data-status="idle">

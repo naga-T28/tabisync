@@ -63,7 +63,19 @@
         <footer>
             <nav class="footer-nav">
                 <ul class="footer-nav-ul">
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
+                            <i class="fa-solid fa-clipboard"></i>
+                            <!--<div>メモ</div> -->
+                        </a>
+                    </li>
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_list' or request.resolver_match.url_name == 'V2_list_edit' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
+                            <i class="fa-solid fa-list-check"></i>
+                            <!--<div>リスト</div>-->
+                        </a>
+                    </li>
+                    <li class="footer-nav-li --home {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-house"></i>
                             <!--<div>旅程表</div>-->
@@ -75,32 +87,13 @@
                             <!--<div>地図</div>-->
                         </a>
                     </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_list' or request.resolver_match.url_name == 'V2_list_edit' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
-                            <i class="fa-solid fa-list-check"></i>
-                            <!--<div>リスト</div>-->
-                        </a>
-                    </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
-                            <i class="fa-solid fa-clipboard"></i>
-                            <!--<div>メモ</div> -->
-                        </a>
-                    </li>
-                    <!---
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'edit' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}">
-                            <i class="fa-solid fa-wallet"></i>
-                            <div>割り勘</div>
-                        </a>
-                    </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'edit' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:edit' pk=itinerary.pk token=itinerary.token %}">
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_concierge' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-robot"></i>
-                            <div>AI提案</div>
+                            <!--<div>AI提案</div>-->
                         </a>
                     </li>
-                    -->
+          
                 </ul>
             </nav>
             <ul>

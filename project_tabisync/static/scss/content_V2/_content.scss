@@ -1,5 +1,6 @@
 .content-main{
     width: 100%;
+    min-height: 100vh;
     margin: 0; /* 外側の余白（上下と中央配置） */
     background-image: repeating-linear-gradient(
         -45deg,           /* ストライプの角度 */
@@ -14,31 +15,20 @@
   max-width: 750px;
   margin: 0 auto;
   margin-top: 50px;
-  padding: 16px 16px 40px;
+  padding: 16px 16px 20px;
 }
 
 .title-visual{
     margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
     position: relative; /* 相対位置指定 */
     background-color: #fff;
-}
-.title-visual:before{
-    border-bottom: 30px solid transparent; /* 上側に透明の三角形 */
-    border-left: 30px solid #aba7b0; /* 左側の三角形（色は#c6d4c6） */
-    content: ''; /* 擬似要素にコンテンツなし */
-    display: block; /* ブロック要素として表示 */
-    position: absolute; /* 絶対位置指定 */
-    top: 0px; /* 上から0px */
-    left: 0px; /* 左から0px */
-}
-.title-visual:after{
-    border-left: 30px solid transparent; /* 右側に透明の三角形 */
-    border-bottom: 30px solid #aba7b0; /* 下側の三角形（色は#c6d4c6） */
-    content: ''; /* 擬似要素にコンテンツなし */
-    display: block; /* ブロック要素として表示 */
-    position: absolute; /* 絶対位置指定 */
-    bottom: 0px; /* 下から0px */
-    right: 0px; /* 右から0px */
+    border-radius: 20px;
+    box-shadow: 0 0 5px rgb(0 0 0 / .12);
+    &.--miniMargin{
+      margin-bottom: 5px;
+      padding-top: 15px;
+      padding-bottom: 10px;
+    }
 }
 .siori-title{
     font-family: 'Yusei Magic', sans-serif;
@@ -49,6 +39,9 @@
     padding-left: 16px;
     padding-right: 16px;
     margin-top: 30px;
+    &.--noMargin{
+      margin-top: 0;
+    }
 }
 .siori-sub-title{
     font-family: 'Yusei Magic', sans-serif;
@@ -74,10 +67,11 @@
     position: relative; /* タイトルをボックス内の左上に配置するための基準 */
     margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
     background-color: #ffffff; /* ボックス背景色 */
+    box-shadow: 0 0 5px rgb(0 0 0 / .12);
 }
 
 .box5-6 .box-title {
-    background-color: rgb(255 255 255 / .1); /* テープ背景色と透過 */
+    background-color: rgb(255 255 255 / .4); /* テープ背景色と透過 */
     border-left: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ左 */
     border-right: 2px dotted rgb(0 0 0 / .1); /* テープのギザギザ右 */
     box-shadow: 0 0 5px rgb(0 0 0 / .12); /* テープ影 */
