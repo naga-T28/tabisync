@@ -1,7 +1,47 @@
+.schedule-edit-page {
+  width: min(920px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 78px 0 110px;
+}
+
+.schedule-edit-header {
+  margin-bottom: 18px;
+  padding: 22px 20px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.schedule-edit-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  background: #2f3747;
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.schedule-edit-header h1 {
+  margin-bottom: 8px;
+  font-size: 1.6rem;
+  color: #2f3747;
+}
+
+.schedule-edit-header p {
+  color: #666;
+  line-height: 1.7;
+}
+
 .schedule-editor {
   max-width: 760px;
   margin: 0 auto;
   padding: 16px 16px 88px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
 }
 
 .day-panel {
@@ -17,16 +57,18 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 16px 0;
+  margin: 8px 0 18px;
 }
 
 .day-heading {
   margin: 0;
+  text-align: center;
+  color: #2f3747;
 }
 
 .day-move-btn {
   border: none;
-  background: #f4f4f4;
+  background: #787878;
   border-radius: 999px;
   width: 36px;
   height: 36px;
@@ -36,13 +78,14 @@
 
 .schedule-row {
   position: relative;
-  border-bottom: 1px solid #eee;
-  padding: 14px 0;
+  border-bottom: 1px solid #eef1f5;
+  padding: 16px 0;
   cursor: pointer;
+  border-radius: 18px;
 }
 
 .schedule-row:hover {
-  background: #fafafa;
+  background: #fafbfd;
 }
 
 .row-delete-icon {
@@ -69,7 +112,7 @@
 .row-display {
   display: grid;
   grid-template-columns: 84px 1fr;
-  gap: 10px;
+  gap: 14px;
   align-items: start;
   padding-right: 40px;
 }
@@ -77,6 +120,7 @@
 .row-time-text {
   font-weight: 600;
   padding-top: 2px;
+  color: #5f6061;
 }
 
 .row-main-text {
@@ -86,6 +130,7 @@
 .display-title {
   font-weight: 700;
   margin-bottom: 4px;
+  color: #2f3747;
 }
 
 .display-place-line {
@@ -97,6 +142,7 @@
   margin-top: 6px;
   color: #666;
   white-space: pre-wrap;
+  line-height: 1.7;
 }
 
 .row-place-line,
@@ -129,6 +175,11 @@
 #memoInput {
   width: 100%;
   box-sizing: border-box;
+  border: 1px solid #d8dde6;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 0 12px;
+  background: #fff;
 }
 
 .description-input,
@@ -136,6 +187,7 @@
 #editDescription,
 #memoInput {
   min-height: 56px;
+  padding: 12px;
   resize: vertical;
 }
 
@@ -145,6 +197,7 @@
   padding: 0;
   text-align: left;
   cursor: pointer;
+  color: #4e6078;
 }
 
 .place-open-btn[disabled] {
@@ -163,7 +216,7 @@
   border: none;
   font-size: 28px;
   z-index: 2000;
-  background: #222;
+  background: #2f3747;
   color: #fff;
   display: flex;
   align-items: center;
@@ -192,8 +245,8 @@
   width: min(720px, 100%);
   height: min(80vh, 720px);
   background: #fff;
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 24px;
+  padding: 18px;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
@@ -220,7 +273,7 @@
 
 .suggestion-item {
   padding: 10px 12px;
-  border: 1px solid #eee;
+  border: 1px solid #e9edf2;
   border-radius: 10px;
   margin-bottom: 8px;
   cursor: pointer;
@@ -238,7 +291,7 @@
 .existing-place-list {
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid #eee;
+  border: 1px solid #e9edf2;
   border-radius: 12px;
   padding: 8px;
   background: #fafafa;
@@ -270,13 +323,24 @@
 .btn-primary,
 .edit-modal-close {
   border: none;
-  background: #f4f4f4;
+  background: #f4f6f8;
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
 }
 
+.btn-primary {
+  min-width: 96px;
+  background: #2f3747;
+  color: #fff;
+}
+
 @media (max-width: 640px) {
+  .schedule-edit-page {
+    width: calc(100% - 20px);
+    padding-top: 70px;
+  }
+
   .row-display {
     grid-template-columns: 72px 1fr;
     padding-right: 36px;

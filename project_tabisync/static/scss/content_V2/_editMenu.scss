@@ -1,17 +1,120 @@
 @use "../base/variables" as variables;
 
+.edit-content-page,
 .edit-menu{
-    padding-top: 100px;
+    width: min(920px, calc(100% - 24px));
+    padding-top: 82px;
+    padding-bottom: 120px;
     min-height: 100vh;
-    width: 80%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.edit-content-form{
+    width: 100%;
+}
+
+.edit-content-page{
+    .input-first-wrapper{
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .schedules-container{
+        background: #fff;
+        border-radius: 24px;
+        padding: 20px 18px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    .input-description-wrapper,
+    .input-group{
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .input-item-title{
+        font-size: 1.05rem;
+        margin-bottom: 10px;
+        color: #2f3747;
+    }
+
+    .input-item-title-first{
+        font-size: 1.3rem;
+    }
+
+    .input-item-description{
+        margin-bottom: 12px;
+        color: #666;
+        line-height: 1.7;
+    }
+
+    .input-title,
+    .input-description,
+    .input-date input{
+        width: 100%;
+        border: 1px solid #d8dde6;
+        border-radius: 16px;
+        background: #fff;
+        color: #2f3747;
+        font-size: 16px;
+    }
+
+    .input-title,
+    .input-date input{
+        height: 52px;
+        padding: 0 14px;
+    }
+
+    .input-description{
+        min-height: 180px;
+        padding: 14px;
+        resize: vertical;
+    }
+
+    .input-date-flex{
+        color: #666;
+        font-weight: 700;
+    }
+
+    .input-date{
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .enter-input-btn{
+        width: 100%;
+        height: 54px;
+        border: none;
+        border-radius: 999px;
+        background: #2f3747;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        box-shadow: 0 12px 24px rgba(47, 55, 71, 0.18);
+    }
+}
+
+.edit-menu{
+    background: transparent;
     .edit-menu-title{
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
+        font-size: 1.45rem;
+        color: #2f3747;
     }
     .edit-menu-description{
-        text-align: left;
+        text-align: center;
         margin-bottom: 2rem;
+        color: #666;
+        line-height: 1.7;
     }
 }
 .edit-menu-buttons{
@@ -26,28 +129,57 @@
         gap: 0.5rem;
         padding: 0.5rem 1rem;
         background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 15px;
+        border: 1px solid #e6e6e6;
+        border-radius: 22px;
         text-decoration: none;
         color: #333;
+        min-height: 88px;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
 
         i{
-            width: 10%;
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
+            border-radius: 999px;
+            background: #f5f6f8;
         }
         .edit-menu-text{
-            width: 80%;
+            flex: 1;
 
+            .edit-menu-text-title{
+                font-weight: 700;
+                margin-bottom: 4px;
+                color: #2f3747;
+            }
             .edit-menu-text-description{
                 font-size: 0.8rem;
                 color: #666;
+                line-height: 1.6;
             }
         }
     }
 }
 
 @media screen and (min-width: variables.$breakpoint-md) {
-    .edit-menu{
-    max-width: 700px;
+    .edit-menu,
+    .edit-content-page{
+        max-width: 780px;
+    }
 }
+
+@media (max-width: 640px) {
+    .edit-content-page{
+        .input-date{
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .edit-menu-buttons{
+        .edit-menu-button{
+            align-items: flex-start;
+        }
+    }
 }
