@@ -150,6 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const response = await fetch("{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": getCookie("csrftoken"),
