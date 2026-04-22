@@ -9,6 +9,9 @@ OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 OPENAI_LIGHT_MODEL = os.getenv("OPENAI_LIGHT_MODEL", "gpt-5-nano")
 OPENAI_ANSWER_MODEL = os.getenv("OPENAI_ANSWER_MODEL", "gpt-5-mini")
 OPENAI_API_TIMEOUT_SECONDS = float(os.getenv("OPENAI_API_TIMEOUT_SECONDS", "8"))
+OPENAI_ANSWER_TIMEOUT_SECONDS = float(
+    os.getenv("OPENAI_ANSWER_TIMEOUT_SECONDS", str(max(OPENAI_API_TIMEOUT_SECONDS, 20)))
+)
 
 DEFAULT_MODERATION_PROMPT = """あなたは旅行計画サービス TabiSync の安全審査担当です。
 ユーザーの入力が、旅行計画の相談として扱ってよい内容かを判定してください。
@@ -118,12 +121,19 @@ def _extract_response_text(parsed):
     raise OpenAIConciergeError("OpenAI API のレスポンス本文を解釈できませんでした。")
 
 
-def call_openai_responses_api(prompt_text, schema=None, model=None, max_output_tokens=800):
+def call_openai_responses_api(
+    prompt_text,
+    schema=None,
+    model=None,
+    max_output_tokens=800,
+    timeout_seconds=None,
+):
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise OpenAIConciergeError("OPENAI_API_KEY が設定されていません。")
 
     target_model = model or OPENAI_LIGHT_MODEL
+    request_timeout = timeout_seconds or OPENAI_API_TIMEOUT_SECONDS
     payload = (
         _json_schema_payload(target_model, prompt_text, schema, max_output_tokens)
         if schema
@@ -141,7 +151,7 @@ def call_openai_responses_api(prompt_text, schema=None, model=None, max_output_t
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=OPENAI_API_TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(request, timeout=request_timeout) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="ignore")
@@ -150,7 +160,7 @@ def call_openai_responses_api(prompt_text, schema=None, model=None, max_output_t
         raise OpenAIConciergeError(f"OpenAI API connection error: {exc}") from exc
     except socket.timeout as exc:
         raise OpenAIConciergeError(
-            f"OpenAI API timeout after {OPENAI_API_TIMEOUT_SECONDS:g}s"
+            f"OpenAI API timeout after {request_timeout:g}s"
         ) from exc
 
     try:
@@ -246,6 +256,7 @@ def run_answer(history, user_message, selected_context):
         prompt,
         schema=None,
         model=OPENAI_ANSWER_MODEL,
-        max_output_tokens=1200,
+        max_output_tokens=800,
+        timeout_seconds=OPENAI_ANSWER_TIMEOUT_SECONDS,
     )
     return prompt, payload, text.strip()
