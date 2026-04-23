@@ -259,23 +259,9 @@ body#concierge-body {
   gap: 14px;
   overflow-y: auto;
   padding-bottom:calc(var(--concierge-footer-height) + 18px);
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  scrollbar-gutter: stable;
-}
+  padding-right: 5px;
+  padding-right: 5px;
 
-.concierge-messages::-webkit-scrollbar {
-  width: 10px;
-}
-
-.concierge-messages::-webkit-scrollbar-thumb {
-  background: #d8dbe2;
-  border-radius: 999px;
-  border: 2px solid #fff;
-}
-
-.concierge-messages::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 .concierge-message {
