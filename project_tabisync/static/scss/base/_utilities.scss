@@ -1,0 +1,27 @@
+@use "variables";
+.mt-4 {
+  margin-top: 100px;
+  text-align: right;
+}
+
+.mt-4-1 {
+  text-align: right;
+}
+
+.contact-blank {
+  margin-bottom: 20px;
+}
+
+.textarea-required-title {
+  position: relative;
+
+  &::after {
+    content: "※必須";
+    color: variables.$danger;
+    font-size: 12px;
+    position: absolute;
+    top: -17px;
+    right: 3px;
+    pointer-events: none;
+  }
+}

@@ -661,9 +661,12 @@ h3.input-item-title-first{
 /*詳細の入力がめん*/
 .input-description{
   width: 100%;
+  min-height: 24px;
+  padding: 4px 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  field-sizing: content;
+  resize: vertical;
+  box-sizing: border-box;
 }
 /*時間(開始時間や終了時間)*/
 .input-start-end-time{

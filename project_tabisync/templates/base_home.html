@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>TabiSync | 無料・登録不要で旅のしおりを作成・共有できる旅行計画ツール</title>
+        <meta name="description" content="TabiSyncは、無料・登録不要で旅のしおりを簡単に作成・共有できるサービスです。日程・予定・持ち物リストまで、グループ旅行の計画をスムーズに。">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <meta name="apple-mobile-web-app-title" content="TabiSync">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta property="og:title" content="TabiSync">
+        <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="TabiSync">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="TabiSync">
+        <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    </head>
+    <body>
+        <div class="pc-body-wrapper">
+            <header class="page-header">
+                <div class="header-wrapper">
+                    <div class="header-logo">
+                        <h1>
+                            <a href="{% url 'tabisync:home' %}">
+                                <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSync" class="logo-image">
+                            </a>
+                        </h1>
+                    </div>
+                    <div id="btn08" class="btn-trigger" aria-label="メニューを開く" role="button" tabindex="0">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <nav class="header-nav-wrapper" id="nav-menu">
+                        <ul class="header-nav">
+                            <li class="header-nav-item"><a href="{% url 'tabisync:home' %}">ホーム</a></li>
+                            <li class="header-nav-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">ブログ</a></li>
+                            <li class="header-nav-item"><a href="{% url 'tabisync:create' %}">しおり作成</a></li>
+                            <li class="header-nav-item"><a href="{% url 'tabisync:demo_v2_content' %}">しおりサンプル</a></li>
+                            <li class="header-nav-item"><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+                            <li class="header-nav-item"><a href="{% url 'tabisync:contact' %}">お問い合わせ</a></li>
+                        </ul>
+                    </nav>
+
+                    <nav class="header-nav-pc-wrapper">
+                        <ul class="header-nav-pc">
+                            <li class="header-nav-pc-item"><a href="{% url 'tabisync:home' %}">HOME</a></li>
+                            <li class="header-nav-pc-item"><a href="{% url 'tabisync:demo_v2_content' %}">DEMO</a></li>
+                            <li class="header-nav-pc-item"><a href="{% url 'tabisync:qa' %}">FAQ</a></li>
+                            <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
+                            <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+
+            {% block contents %}{% endblock %}
+
+            <footer>
+                <ul>
+                    <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
+                    <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
+                    <li><a class="footer-content" href="{% url 'tabisync:profile' %}">運営者プロフィール</a></li>
+                </ul>
+                <small>Copyright &copy; 2026 TabiSync All Rights Reserved.</small>
+            </footer>
+        </div>
+        <script>
+        (function () {
+            const btn = document.getElementById("btn08");
+            const nav = document.getElementById("nav-menu");
+            if (!btn || !nav) return;
+
+            function toggleMenu() {
+                btn.classList.toggle("active");
+                nav.classList.toggle("active");
+            }
+
+            btn.addEventListener("click", toggleMenu);
+            btn.addEventListener("keydown", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleMenu();
+                }
+            });
+        })();
+        </script>
+    </body>
+</html>

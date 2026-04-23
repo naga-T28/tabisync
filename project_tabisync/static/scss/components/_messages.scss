@@ -1,0 +1,25 @@
+@use "../base/variables" as variables;
+
+.messages {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0;
+
+  li {
+    padding: 0.75em;
+    border-radius: variables.$radius-sm;
+    margin-bottom: 0.5em;
+  }
+
+  .success {
+    background-color: #e0f9e0;
+    color: #2b662b;
+    border: 1px solid #2b662b;
+  }
+
+  .error {
+    background-color: #fdd;
+    color: #900;
+    border: 1px solid #900;
+  }
+}

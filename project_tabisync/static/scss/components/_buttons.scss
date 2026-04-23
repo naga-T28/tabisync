@@ -1,0 +1,172 @@
+@use "../base/variables" as variables;
+
+.main-visual-btn,
+.demo-btn {
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+  width: 90%;
+  font-size: 20px;
+  text-decoration: none;
+  color: variables.$white;
+  background-color: transparent;
+  border: 2px solid variables.$white;
+  border-radius: variables.$radius-pill;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+  z-index: 0;
+
+  &:hover {
+    background-color: #ffffff88;
+  }
+}
+
+.main-visual-btn::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  animation: shine 2s infinite linear;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.main-visual-btn span {
+  position: relative;
+  z-index: 2;
+}
+
+.about-tabisync-btn,
+.enter-input-btn {
+  width: 100%;
+  background-color: variables.$accent-purple;
+  color: variables.$white;
+  border: 2px solid variables.$accent-purple;
+  font-size: 20px;
+}
+
+.about-tabisync-btn {
+  height: 50px;
+  border-radius: 20px;
+  text-align: center;
+  text-decoration: none;
+  padding-top: 8px;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: variables.$white;
+    color: variables.$accent-purple;
+  }
+}
+
+.enter-input-btn {
+  height: 50px;
+  border-radius: 20px;
+}
+
+.contact-form-btn {
+  width: 100%;
+  text-align: center;
+  margin-right: auto;
+  margin-left: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: variables.$radius-xl;
+  text-decoration: none;
+  color: variables.$white;
+  background-color: variables.$text-main;
+  border: 2px solid variables.$text-main;
+
+  &:hover {
+    color: variables.$text-main;
+    background-color: variables.$white;
+    border: 2px solid variables.$text-main;
+  }
+}
+
+.contact-btn,
+.contact-thnks-btn,
+.password-btn button {
+  background-color: variables.$black;
+  color: variables.$white;
+}
+
+.contact-btn {
+  margin-top: 20px;
+  width: 100%;
+  height: 50px;
+}
+
+.contact-thnks-btn {
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 500px;
+  height: 40px;
+  border-radius: variables.$radius-xl;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-link-btn {
+  display: inline-block;
+  width: 100%;
+  padding: 5px;
+  background-color: variables.$white;
+  color: #333;
+  border: 2px solid #333;
+  font-size: 12px;
+  text-align: center;
+  border-radius: variables.$radius-lg;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.profile-blog-link {
+  margin-top: 15px;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  background-color: variables.$text-main;
+  color: variables.$white;
+  text-decoration: none;
+  margin-bottom: 20px;
+  border-radius: variables.$radius-xl;
+  border: 2px solid variables.$text-main;
+
+  &:hover {
+    background-color: variables.$white;
+    color: variables.$text-main;
+    text-decoration: none;
+  }
+}
+
+.update-title-btn:hover {
+  background-color: #cecece;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+
+  100% {
+    transform: translateX(100%) rotate(25deg);
+  }
+}

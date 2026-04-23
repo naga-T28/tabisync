@@ -1,0 +1,47 @@
+@use "../base/variables" as variables;
+
+footer {
+  background-color: variables.$black;
+  color: variables.$white;
+  padding: 15px 10px;
+  padding-bottom: 50px;
+  text-align: center;
+  font-size: 14px;
+  &.page-footer-concierge{
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+
+    li a.footer-content {
+      color: variables.$white;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-weight: 500;
+
+      &:hover {
+        color: variables.$accent-pink;
+      }
+
+      i.fas.fa-external-link-alt {
+        margin-left: 5px;
+        font-size: 0.8em;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 8px;
+    color: #cccccc;
+  }
+}

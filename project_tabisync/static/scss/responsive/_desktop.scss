@@ -1,0 +1,104 @@
+@use "../base/variables" as variables;
+
+@media screen and (min-width: variables.$breakpoint-md) {
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-main {
+    flex: 1;
+    margin-top: 80px;
+    margin-bottom: 100px;
+  }
+
+  .notable-point-pc-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 90px;
+  }
+
+  .notable-point-pc-wrapper-btn,
+  .main-visual-btn,
+  .demo-btn {
+    width: 650px;
+  }
+
+  .header-nav-pc-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .notable-point-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+
+  .header-nav-pc {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    gap: 40px;
+
+    li {
+      display: flex;
+      align-items: flex-end;
+
+      a {
+        font-style: none;
+        text-decoration: none;
+        font-size: 18px;
+        color: variables.$text-main;
+      }
+
+      &:hover a {
+        color: variables.$accent-pink;
+      }
+    }
+  }
+
+  .btn-trigger {
+    display: none;
+  }
+
+  .header-wrapper {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .section3-wrapper {
+    width: 90%;
+    height: auto;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .update-wrapper {
+    flex: 1;
+    height: auto;
+    border-radius: variables.$radius-sm;
+    margin: 1em;
+    padding: 5px;
+  }
+
+  .page-header {
+    height: 70px;
+  }
+
+  .logo-image {
+    margin-top: 10px;
+    height: 60px;
+    width: auto;
+  }
+
+  .create-title-wrapper-sub,
+  .input-first-wrapper,
+  .contact-form-wrapper {
+    width: 70%;
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "TabiSync",
+  "version": "1.0.0",
+  "description": "--- ## templatesファイルの詳細 - base.html : ホーム画面やしおり作成画面などのテンプレートとなるhtml - base_content.html : 個別ページなどの非インデックス用ページ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sass:watch": "sass --watch project_tabisync/static/scss:project_tabisync/static/css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/naga-T433/tabisync.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/naga-T433/tabisync/issues"
+  },
+  "homepage": "https://github.com/naga-T433/tabisync#readme",
+  "devDependencies": {
+    "sass": "^1.97.3"
+  }
+}

@@ -1,0 +1,139 @@
+{% extends "tabisync/content/base.html" %}
+{% load static %}
+{% block title %}メモ{% endblock %}
+
+{% block contents %}
+<div class="content-main">
+  <div class="memo-v2-wrapper">
+
+    <div class="title-wrapper">
+      <div class="title-visual --miniMargin">
+        <p class="siori-sub-title">{{ itinerary.title }}</p>
+        <h1 class="siori-title --noMargin">みんなのメモ</h1>
+      </div>
+    </div>
+    <section id="memoBoard" class="memo-v2-board"></section>
+  </div>
+</div>
+
+{{ memo_notes|json_script:"memo-notes-data" }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const memoBoard = document.getElementById("memoBoard");
+  const notesScript = document.getElementById("memo-notes-data");
+  let notes = [];
+
+  try {
+    notes = JSON.parse(notesScript.textContent || "[]");
+  } catch (error) {
+    notes = [];
+  }
+
+  function createNoteId() {
+    return `note-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(text) {
+    return text
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  function renderMarkdown(markdownText) {
+    const escaped = escapeHtml(markdownText || "");
+    const lines = escaped.split(/\r?\n/);
+    const html = [];
+    let listBuffer = [];
+
+    function flushList() {
+      if (!listBuffer.length) return;
+      html.push("<ul>" + listBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ul>");
+      listBuffer = [];
+    }
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushList();
+        return;
+      }
+
+      const listMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (listMatch) {
+        listBuffer.push(listMatch[1]);
+        return;
+      }
+
+      flushList();
+
+      const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+        return;
+      }
+
+      const blockquoteMatch = trimmed.match(/^&gt;\s?(.*)$/);
+      if (blockquoteMatch) {
+        html.push(`<blockquote>${renderInlineMarkdown(blockquoteMatch[1])}</blockquote>`);
+        return;
+      }
+
+      html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+    });
+
+    flushList();
+    return html.join("") || "<p>まだメモがありません。</p>";
+  }
+
+  function normalizeNotes() {
+    notes = notes
+      .map((note) => ({
+        id: note.id || createNoteId(),
+        content: typeof note.content === "string" ? note.content : "",
+      }))
+      .filter((note) => note.content.trim());
+  }
+
+  function renderBoard() {
+    if (!memoBoard) return;
+
+    if (!notes.length) {
+      memoBoard.innerHTML = `
+        <div class="memo-v2-empty">
+          <p>まだ付箋がありません。</p>
+          <p>編集ページからメモを追加できます。</p>
+        </div>
+      `;
+      return;
+    }
+
+    memoBoard.innerHTML = notes.map((note, index) => `
+      <article class="memo-note-card" data-note-id="${note.id}">
+        <div class="memo-note-footer">
+          <h3 class="memo-note-tape memo-note-tape-${index % 4}">メモ ${index + 1}</h3>
+        </div>
+        <div class="memo-note-preview markdown-body ${!note.content.trim() ? "is-placeholder" : ""}">
+          ${renderMarkdown(note.content)}
+        </div>
+      </article>
+    `).join("");
+  }
+
+  normalizeNotes();
+  renderBoard();
+});
+</script>
+{% endblock %}

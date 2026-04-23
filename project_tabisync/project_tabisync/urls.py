@@ -26,4 +26,5 @@ urlpatterns = [
     path('admin/nagat28/', admin.site.urls),
     path("", include("tabisync.urls")),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django-sitemap'),
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
 ]

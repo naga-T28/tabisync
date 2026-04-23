@@ -1,0 +1,330 @@
+{% extends "tabisync/content/base.html" %}
+{% load static %}
+{% block title %}メモ編集{% endblock %}
+
+{% block contents %}
+<div class="content-main">
+  <div class="memo-v2-wrapper">
+    <section class="checklist-header">
+      <div>
+        <h2>メモ編集</h2>
+        <p>複数のメモを追加して、内容を自由に編集できます。</p>
+      </div>
+      <a class="checklist-edit-link" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
+        <i class="fa-solid fa-eye"></i>
+        表示ページへ
+      </a>
+    </section>
+
+    <section class="memo-v2-help">
+      <p id="save-status" class="memo-v2-save-status" data-status="idle">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span class="memo-v2-save-status-text">編集内容は自動保存されます</span>
+      </p>
+    </section>
+
+    <section id="memoBoard" class="memo-v2-board"></section>
+  </div>
+
+  <button type="button" id="addNoteBtn" class="fab-add memo-v2-fab" aria-label="付箋を追加">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+</div>
+
+{{ memo_notes|json_script:"memo-notes-data" }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const memoBoard = document.getElementById("memoBoard");
+  const addNoteBtn = document.getElementById("addNoteBtn");
+  const saveStatus = document.getElementById("save-status");
+  const saveStatusText = saveStatus ? saveStatus.querySelector(".memo-v2-save-status-text") : null;
+  const notesScript = document.getElementById("memo-notes-data");
+  const csrfToken = getCookie("csrftoken");
+
+  let notes = [];
+  let saveTimer = null;
+  const editingNoteIds = new Set();
+
+  try {
+    notes = JSON.parse(notesScript.textContent || "[]");
+  } catch (error) {
+    notes = [];
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  function createNoteId() {
+    return `note-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(text) {
+    return text
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  function renderMarkdown(markdownText) {
+    const escaped = escapeHtml(markdownText || "");
+    const lines = escaped.split(/\r?\n/);
+    const html = [];
+    let listBuffer = [];
+
+    function flushList() {
+      if (!listBuffer.length) return;
+      html.push("<ul>" + listBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ul>");
+      listBuffer = [];
+    }
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushList();
+        return;
+      }
+
+      const listMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (listMatch) {
+        listBuffer.push(listMatch[1]);
+        return;
+      }
+
+      flushList();
+
+      const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+        return;
+      }
+
+      const blockquoteMatch = trimmed.match(/^&gt;\s?(.*)$/);
+      if (blockquoteMatch) {
+        html.push(`<blockquote>${renderInlineMarkdown(blockquoteMatch[1])}</blockquote>`);
+        return;
+      }
+
+      html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+    });
+
+    flushList();
+    return html.join("") || "<p>メモを入力するとここにプレビューが表示されます。</p>";
+  }
+
+  function normalizeNotes() {
+    notes = notes
+      .map((note) => ({
+        id: note.id || createNoteId(),
+        content: typeof note.content === "string" ? note.content : "",
+      }))
+      .filter((note) => note.content.trim());
+  }
+
+  function createEmptyNote() {
+    return {
+      id: createNoteId(),
+      content: "",
+    };
+  }
+
+  function setSaveStatus(status, text) {
+    if (!saveStatus || !saveStatusText) return;
+
+    const iconClassMap = {
+      idle: "fa-circle-info",
+      saving: "fa-rotate fa-spin",
+      saved: "fa-circle-check",
+      error: "fa-circle-exclamation",
+      dirty: "fa-pen",
+    };
+
+    saveStatus.dataset.status = status;
+    saveStatusText.textContent = text;
+
+    const icon = saveStatus.querySelector("i");
+    if (icon) {
+      icon.className = `fa-solid ${iconClassMap[status] || iconClassMap.idle}`;
+    }
+  }
+
+  function renderBoard() {
+    if (!memoBoard) return;
+
+    if (!notes.length) {
+      memoBoard.innerHTML = `
+        <div class="memo-v2-empty">
+          <p>まだ付箋がありません。</p>
+          <p>「付箋を追加」からメモを始められます。</p>
+        </div>
+      `;
+      return;
+    }
+
+    memoBoard.innerHTML = notes.map((note, index) => {
+      const isEditing = editingNoteIds.has(note.id);
+
+      return `
+      <article class="memo-note-card ${isEditing ? "is-editing" : ""}" data-note-id="${note.id}">
+        <div class="memo-note-footer">
+          <h3 class="memo-note-tape memo-note-tape-${index % 4}">メモ ${index + 1}</h3>
+        </div>
+        ${isEditing ? `
+          <textarea
+            class="memo-note-textarea"
+            data-action="edit"
+            data-note-id="${note.id}"
+            placeholder="# 見出し&#10;- 箇条書き&#10;自由にメモ"
+          >${escapeHtml(note.content)}</textarea>
+        ` : ""}
+        <div class="memo-note-preview markdown-body ${!note.content.trim() ? "is-placeholder" : ""}">
+          ${renderMarkdown(note.content)}
+        </div>
+        <div class="memo-note-actions">
+          <button
+            type="button"
+            class="memo-note-action memo-note-action-edit ${isEditing ? "is-active" : ""}"
+            data-action="start-edit"
+            data-note-id="${note.id}"
+            aria-label="${isEditing ? "編集を閉じる" : "編集する"}"
+          >
+            <i class="fa-solid ${isEditing ? "fa-check" : "fa-pen-to-square"}"></i>
+          </button>
+          <button
+            type="button"
+            class="memo-note-action memo-note-delete"
+            data-action="delete"
+            data-note-id="${note.id}"
+            aria-label="削除する"
+          >
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </article>
+    `;
+    }).join("");
+  }
+
+  function queueSave() {
+    setSaveStatus("saving", "保存中...");
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNotes, 600);
+  }
+
+  async function saveNotes() {
+    const payload = notes
+      .map((note) => ({
+        content: note.content.trim(),
+      }))
+      .filter((note) => note.content);
+
+    try {
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ notes: payload }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      await response.json();
+      setSaveStatus("saved", "保存済み");
+    } catch (error) {
+      console.error(error);
+      setSaveStatus("error", "保存に失敗しました");
+    }
+  }
+
+  addNoteBtn.addEventListener("click", function () {
+    const newNote = createEmptyNote();
+    notes.unshift(newNote);
+    editingNoteIds.add(newNote.id);
+    renderBoard();
+
+    const textarea = memoBoard.querySelector(".memo-note-textarea");
+    if (textarea) {
+      textarea.focus();
+    }
+
+    setSaveStatus("dirty", "未保存の変更があります");
+  });
+
+  memoBoard.addEventListener("input", function (event) {
+    const target = event.target;
+    if (!target.matches(".memo-note-textarea")) return;
+
+    const noteId = target.dataset.noteId;
+    const note = notes.find((item) => item.id === noteId);
+    if (!note) return;
+
+    note.content = target.value;
+    const preview = target.closest(".memo-note-card").querySelector(".memo-note-preview");
+    if (preview) {
+      preview.innerHTML = renderMarkdown(note.content);
+    }
+    queueSave();
+  });
+
+  memoBoard.addEventListener("click", function (event) {
+    const editButton = event.target.closest('[data-action="start-edit"]');
+    if (editButton) {
+      const noteId = editButton.dataset.noteId;
+
+      if (editingNoteIds.has(noteId)) {
+        editingNoteIds.delete(noteId);
+        renderBoard();
+        return;
+      }
+
+      editingNoteIds.add(noteId);
+      renderBoard();
+
+      const card = memoBoard.querySelector(`[data-note-id="${noteId}"]`);
+      const textarea = card ? card.querySelector(".memo-note-textarea") : null;
+      if (textarea) {
+        textarea.focus();
+      }
+      return;
+    }
+
+    const deleteButton = event.target.closest('[data-action="delete"]');
+    if (!deleteButton) return;
+
+    const noteId = deleteButton.dataset.noteId;
+    editingNoteIds.delete(noteId);
+    notes = notes.filter((note) => note.id !== noteId);
+    renderBoard();
+    queueSave();
+  });
+
+  notes = notes.map((note) => ({
+    id: createNoteId(),
+    content: note.content || "",
+  }));
+  normalizeNotes();
+  renderBoard();
+});
+</script>
+{% endblock %}
