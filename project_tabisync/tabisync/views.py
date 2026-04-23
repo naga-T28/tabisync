@@ -1248,13 +1248,13 @@ class ConciergeV2View(View):
             logger.exception("Failed to load concierge usage count for itinerary_id=%s", self.itinerary.pk)
             return JsonResponse({
                 "status": "error",
-                "message": "AIコンシェルジュの利用状況を確認できませんでした。staging のDB設定または migration を確認してください。",
+                "message": "AIコンシェルジュの利用状況を確認できませんでした。DB設定を確認してください。",
             }, status=500)
 
         if today_count >= daily_limit:
             return JsonResponse({
                 "status": "limit_exceeded",
-                "message": f"このしおりのAIコンシェルジュは1日{daily_limit}回までです。日付が変わってから再度お試しください。",
+                "message": f"本日の利用上限に達しました。日付が変わってから再度お試しください。({daily_limit}回/日)",
                 "conversation_id": str(conversation_id),
                 "daily_limit": daily_limit,
                 "remaining_count": 0,
