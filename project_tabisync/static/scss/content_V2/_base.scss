@@ -203,6 +203,9 @@ article.privacy-policy,
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  &.--concierge-footer{
+    height: 80px;
+  }
 }
 
 .footer-nav-ul {

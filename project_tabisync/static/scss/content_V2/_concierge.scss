@@ -3,6 +3,11 @@
   --concierge-page-gutter: 18px;
   --concierge-footer-height: 84px;
 }
+.content-main-concierge{
+    width: 100%;
+    min-height: 100vh;
+    margin: 0; /* 外側の余白（上下と中央配置） */
+}
 
 .header-wrapper {
   &.--concierge-header{
@@ -349,16 +354,20 @@ body#concierge-body {
 .concierge-form {
   display: block;
   padding: 14px;
-  border-top: 1px solid #ededed;
   background: #fff;
+  position: static;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.footer-nav.--concierge-footer {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: min(90%, 1200px);
-  box-sizing: border-box;
   z-index: 2;
-  box-shadow: 0 -10px 20px rgba(255, 255, 255, 0.92);
+  background: #fff;
 }
 
 .concierge-input-wrap {
@@ -533,6 +542,9 @@ body.is-concierge-modal-open {
 
   .concierge-form {
     padding: 12px;
+  }
+
+  .footer-nav.--concierge-footer {
     width: calc(100% - 20px);
   }
 

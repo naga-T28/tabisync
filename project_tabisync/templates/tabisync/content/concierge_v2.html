@@ -36,11 +36,12 @@
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
-        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}">
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
     <body id="concierge-body">
+      <main class="content-main-concierge">
         <header class="page-header">
             <div class="header-wrapper --concierge-header">
                 <div class="header-buttons">
@@ -83,22 +84,24 @@
             </section>
           </div>
         </div>
-        <footer class="concierge-footer">
-          <form id="conciergeForm" class="concierge-form">
-            <label class="concierge-input-wrap" for="conciergeInput">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <input
-                id="conciergeInput"
-                type="text"
-                placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
-                autocomplete="off"
-              >
-              <button type="submit" class="concierge-send-btn" aria-label="送信">
-                <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
-                <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
-              </button>
-            </label>
-          </form>
+        <footer>
+            <nav class="footer-nav --concierge-footer">
+                <form id="conciergeForm" class="concierge-form">
+                  <label class="concierge-input-wrap" for="conciergeInput">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <input
+                      id="conciergeInput"
+                      type="text"
+                      placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                      autocomplete="off"
+                    >
+                    <button type="submit" class="concierge-send-btn" aria-label="送信">
+                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                    </button>
+                  </label>
+                </form>
+            </nav>
         </footer>
         <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
           <div class="concierge-detail-backdrop" data-close-modal></div>
@@ -138,6 +141,7 @@
             </div>
           </div>
         </div>
+      </main>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const messagesEl = document.getElementById("conciergeMessages");
