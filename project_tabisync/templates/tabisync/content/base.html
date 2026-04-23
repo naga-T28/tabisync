@@ -65,7 +65,7 @@
         <footer>
             <nav class="footer-nav">
                 <ul class="footer-nav-ul">
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' %}footer-nav-li-select{% endif %}">
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' or request.resolver_match.url_name == 'V2_memo_edit' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-clipboard"></i>
                             <!--<div>メモ</div> -->

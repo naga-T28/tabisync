@@ -213,6 +213,60 @@ class DemoListView(TemplateView):
         return context
 
 
+class DemoV2ContentView(TemplateView):
+    template_name = "demo/v2_content_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "content"
+        return context
+
+
+class DemoV2MemoView(TemplateView):
+    template_name = "demo/v2_memo_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "memo"
+        return context
+
+
+class DemoV2ListView(TemplateView):
+    template_name = "demo/v2_list_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "list"
+        return context
+
+
+class DemoV2MapView(TemplateView):
+    template_name = "demo/v2_map_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "map"
+        return context
+
+
+class DemoV2EditView(TemplateView):
+    template_name = "demo/v2_edit_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "edit"
+        return context
+
+
+class DemoV2ConciergeView(TemplateView):
+    template_name = "demo/v2_concierge_demo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "concierge"
+        return context
+
+
 # =========================
 # しおり作成・閲覧（v2）
 # =========================
@@ -652,7 +706,7 @@ def normalize_checklist_v2_content(raw_content):
             normalized_items.append({
                 "id": str(item.get("id") or f"item-{uuid4().hex[:10]}"),
                 "text": text,
-                "checked": False,
+                "checked": bool(item.get("checked", False)),
             })
 
         if not title and not normalized_items:
@@ -1127,6 +1181,44 @@ class MemoV2View(View):
         })
 
     def post(self, request, pk, token):
+        return JsonResponse({"status": "error", "message": "編集ページから更新してください。"}, status=405)
+
+
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
+class MemoV2EditView(View):
+    template_name = "tabisync/content/memo_edit_v2.html"
+    password_template = "tabisync/edit_password.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pk = kwargs.get("pk")
+        self.token = kwargs.get("token")
+        self.itinerary = get_object_or_404(Itinerary, pk=self.pk, token=self.token)
+
+        session_key = f"edit_auth_{self.itinerary.pk}"
+        if self.itinerary.edit_password and not request.session.get(session_key):
+            response = render(request, self.password_template, {
+                "itinerary": self.itinerary,
+                "pk": self.pk,
+                "token": self.token,
+            })
+            response["X-Robots-Tag"] = "noindex, nofollow"
+            return response
+
+        response = super().dispatch(request, *args, **kwargs)
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request, pk, token):
+        memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
+        notes = normalize_memo_v2_notes(memo.content)
+        return render(request, self.template_name, {
+            "memo": memo,
+            "memo_notes": notes,
+            "itinerary": self.itinerary,
+        })
+
+    def post(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
         try:
             data = json.loads(request.body.decode("utf-8"))
@@ -1140,7 +1232,7 @@ class MemoV2View(View):
 
         memo.content = json.dumps(notes, ensure_ascii=False)
         memo.save()
-        return JsonResponse({"status": "ok", "notes_count": len(notes)})
+        return JsonResponse({"status": "ok", "notes_count": len(notes), "notes": notes})
 
 
 # v2リスト表示ページ
@@ -1160,6 +1252,7 @@ class ChecklistV2View(View):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
         lists = normalize_checklist_v2_content(checklist.content)
@@ -1174,17 +1267,7 @@ class ChecklistV2View(View):
         })
 
     def post(self, request, pk, token):
-        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
-
-        try:
-            data = json.loads(request.body)
-        except (TypeError, ValueError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
-
-        lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
-        checklist.content = json.dumps(lists, ensure_ascii=False)
-        checklist.save()
-        return JsonResponse({"status": "ok", "lists_count": len(lists)})
+        return JsonResponse({"status": "error", "message": "編集ページから更新してください。"}, status=405)
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
@@ -1516,6 +1599,7 @@ class ChecklistV2EditView(View):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
         lists = normalize_checklist_v2_content(checklist.content)
@@ -1539,7 +1623,7 @@ class ChecklistV2EditView(View):
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
         checklist.content = json.dumps(lists, ensure_ascii=False)
         checklist.save()
-        return JsonResponse({"status": "ok", "lists_count": len(lists)})
+        return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
 
 # =========================
 # ver.1 閲覧ページ

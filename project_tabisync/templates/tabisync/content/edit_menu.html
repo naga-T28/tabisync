@@ -24,6 +24,14 @@
                 </div>
                 <p>〉</p>
             </a>
+            <a class="edit-menu-button" href="{% url 'tabisync:V2_memo_edit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
+                <i class="fa-solid fa-clipboard"></i>
+                <div class="edit-menu-text">
+                    <p class="edit-menu-text-title">メモ編集</p>
+                    <p class="edit-menu-text-description">メモの追加、削除、内容編集ができます</p>
+                </div>
+                <p>〉</p>
+            </a>
             <a class="edit-menu-button" href="{% url 'tabisync:V2_list_edit' pk=itinerary.pk token=itinerary.token %}" class="edit-menu-button">
                 <i class="fa-solid fa-list-check"></i>
                 <div class="edit-menu-text">

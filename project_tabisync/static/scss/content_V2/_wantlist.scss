@@ -193,9 +193,10 @@
 }
 
 .memo-v2-board{
+  margin-top: 30px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 25px;
 }
 
 .memo-v2-empty{
