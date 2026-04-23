@@ -2592,6 +2592,7 @@ article.privacy-policy,
 :root {
   --concierge-header-offset: 68px;
   --concierge-page-gutter: 18px;
+  --concierge-footer-height: 84px;
 }
 
 .header-wrapper.--concierge-header {
@@ -2829,7 +2830,7 @@ body#concierge-body {
 
 .concierge-chat-shell {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   padding: 0;
@@ -2843,7 +2844,7 @@ body#concierge-body {
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
-  padding: 6px 4px 16px;
+  padding: 6px 4px calc(var(--concierge-footer-height) + 18px);
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   border-radius: 18px;
@@ -2886,6 +2887,47 @@ body#concierge-body {
   border-radius: 22px;
 }
 
+.concierge-message-bubble h3,
+.concierge-message-bubble h4,
+.concierge-message-bubble h5 {
+  margin: 0 0 10px;
+  color: #2f3747;
+  font-weight: 700;
+}
+
+.concierge-message-bubble p + p,
+.concierge-message-bubble p + ul,
+.concierge-message-bubble p + ol,
+.concierge-message-bubble ul + p,
+.concierge-message-bubble ol + p,
+.concierge-message-bubble ul + ul,
+.concierge-message-bubble ol + ol {
+  margin-top: 10px;
+}
+
+.concierge-message-bubble ul,
+.concierge-message-bubble ol {
+  padding-left: 1.3em;
+}
+
+.concierge-message-bubble li + li {
+  margin-top: 6px;
+}
+
+.concierge-message-bubble a {
+  color: #2f3747;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.concierge-message-bubble code {
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+  background: rgba(47, 55, 71, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
 .concierge-message.is-assistant .concierge-message-bubble {
   /*background: linear-gradient(135deg, rgb(248, 167, 255) 0%, #ffffff 100%);*/
   border-top-left-radius: 8px;
@@ -2903,9 +2945,14 @@ body#concierge-body {
   padding: 14px;
   border-top: 1px solid #ededed;
   background: #fff;
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 1200px);
+  box-sizing: border-box;
   z-index: 2;
+  box-shadow: 0 -10px 20px rgba(255, 255, 255, 0.92);
 }
 
 .concierge-input-wrap {
@@ -3054,6 +3101,7 @@ body.is-concierge-modal-open {
   :root {
     --concierge-header-offset: 64px;
     --concierge-page-gutter: 12px;
+    --concierge-footer-height: 80px;
   }
   .concierge-page {
     width: calc(100% - 20px);
@@ -3071,6 +3119,7 @@ body.is-concierge-modal-open {
   }
   .concierge-form {
     padding: 12px;
+    width: calc(100% - 20px);
   }
   .concierge-detail-dialog {
     width: calc(100% - 20px);
