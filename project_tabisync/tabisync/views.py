@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import ipaddress
 import urllib.parse
 import urllib.request
 
@@ -90,17 +91,45 @@ def build_public_absolute_uri(request, path=None):
 def get_client_ip(request):
     cf_connecting_ip = request.META.get("HTTP_CF_CONNECTING_IP")
     if cf_connecting_ip:
-        return cf_connecting_ip.strip()
+        candidate = cf_connecting_ip.strip()
+        try:
+            ipaddress.ip_address(candidate)
+            return candidate
+        except ValueError:
+            logger.warning("Ignoring invalid CF-Connecting-IP header: %r", cf_connecting_ip)
 
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
+        for part in x_forwarded_for.split(","):
+            candidate = part.strip()
+            if not candidate:
+                continue
+            try:
+                ipaddress.ip_address(candidate)
+                return candidate
+            except ValueError:
+                continue
 
-    return (request.META.get("REMOTE_ADDR") or "").strip()
+    remote_addr = (request.META.get("REMOTE_ADDR") or "").strip()
+    try:
+        ipaddress.ip_address(remote_addr)
+        return remote_addr
+    except ValueError:
+        return ""
 
 
 def ratelimit_client_ip(_group, request):
     return get_client_ip(request)
+
+
+def build_public_service_error_message(exc, default_message):
+    if settings.DEBUG:
+        return str(exc)
+
+    detail = str(exc).lower()
+    if "timeout" in detail:
+        return "現在アクセスが集中しています。しばらくしてから再度お試しください。"
+    return default_message
 
 # =========================
 # 静的ページ・案内ページ
@@ -123,6 +152,16 @@ class UserAgreementView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+class ConciergeTermsView(TemplateView):
+    template_name = "docs/concierge_terms.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
 # Q and Aを表示するビュー
 class QAView(TemplateView):
     template_name = "docs/qanda.html"
@@ -1229,7 +1268,13 @@ class ConciergeV2View(View):
                 self.itinerary.pk,
                 exc,
             )
-            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+            return JsonResponse({
+                "status": "error",
+                "message": build_public_service_error_message(
+                    exc,
+                    "AIコンシェルジュの安全判定に失敗しました。",
+                ),
+            }, status=502)
         except Exception:
             logger.exception("Unexpected moderation failure for itinerary_id=%s", self.itinerary.pk)
             return JsonResponse({"status": "error", "message": "AIコンシェルジュの安全判定で予期しないエラーが発生しました。"}, status=500)
@@ -1260,7 +1305,13 @@ class ConciergeV2View(View):
                 self.itinerary.pk,
                 exc,
             )
-            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+            return JsonResponse({
+                "status": "error",
+                "message": build_public_service_error_message(
+                    exc,
+                    "AIコンシェルジュの文脈選択に失敗しました。",
+                ),
+            }, status=502)
         except Exception:
             logger.exception("Unexpected data-selection failure for itinerary_id=%s", self.itinerary.pk)
             return JsonResponse({"status": "error", "message": "AIコンシェルジュの文脈選択で予期しないエラーが発生しました。"}, status=500)
@@ -1280,7 +1331,13 @@ class ConciergeV2View(View):
                 self.itinerary.pk,
                 exc,
             )
-            return JsonResponse({"status": "error", "message": str(exc)}, status=502)
+            return JsonResponse({
+                "status": "error",
+                "message": build_public_service_error_message(
+                    exc,
+                    "AIコンシェルジュの回答生成に失敗しました。",
+                ),
+            }, status=502)
         except Exception:
             logger.exception("Unexpected answer generation failure for itinerary_id=%s", self.itinerary.pk)
             return JsonResponse({"status": "error", "message": "AIコンシェルジュの回答生成で予期しないエラーが発生しました。"}, status=500)

@@ -2,6 +2,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)) == "True"
+
 # .envファイルの読み込み
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 load_dotenv(dotenv_path)
@@ -10,7 +14,7 @@ load_dotenv(dotenv_path)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # DEBUG設定
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = env_bool('DEBUG', False)
 
 # Turnstile keys（Cloudflare管理画面から取得）
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
@@ -18,7 +22,14 @@ TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
-USE_HTTPS = os.environ.get("USE_HTTPS", "True") == "True"
+USE_HTTPS = env_bool("USE_HTTPS", True)
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
+CSRF_COOKIE_SAMESITE = os.environ.get("CSRF_COOKIE_SAMESITE", "Lax")
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+X_FRAME_OPTIONS = 'DENY'
 
 if not DEBUG:
     # 本番環境設定
@@ -35,13 +46,11 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = USE_HTTPS
     SESSION_COOKIE_SECURE = USE_HTTPS
     CSRF_COOKIE_SECURE = USE_HTTPS
-    SECURE_HSTS_SECONDS = 31536000 if USE_HTTPS else 0
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "31536000")) if USE_HTTPS else 0
     SECURE_HSTS_INCLUDE_SUBDOMAINS = USE_HTTPS
     SECURE_HSTS_PRELOAD = USE_HTTPS
-    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
