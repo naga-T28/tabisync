@@ -64,7 +64,7 @@
                   <div class="display-title">{{ s.title }}</div>
                   <div class="row-place-line display-place-line">
                     <button type="button" class="place-open-btn" disabled>
-                      📍<span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
+                      <i class="fa-solid fa-location-dot"></i><span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
                     </button>
                   </div>
                   <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
@@ -229,7 +229,7 @@
         <div class="display-title"></div>
         <div class="row-place-line display-place-line">
           <button type="button" class="place-open-btn" disabled>
-            📍<span class="place-name-text">場所未設定</span>
+            <i class="fa-solid fa-location-dot"></i><span class="place-name-text">場所未設定</span>
           </button>
         </div>
         <div class="display-description"></div>

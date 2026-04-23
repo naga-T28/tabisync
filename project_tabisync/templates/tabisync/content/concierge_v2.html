@@ -45,7 +45,7 @@
         <header class="page-header">
             <div class="header-wrapper --concierge-header">
                 <div class="header-buttons">
-                  <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                  <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
                           <i class="fa-solid fa-house"></i>
                   </a>
                 </div>
@@ -100,11 +100,11 @@
             </button>
             <div class="concierge-detail-content">
               <p class="concierge-eyebrow">DETAILS</p>
-              <h2 id="conciergeDetailTitle">AIコンシェルジュについて</h2>
+              <h2 id="conciergeDetailTitle">AIコンシェルジュβ版について</h2>
               <p class="concierge-detail-lead">
-                入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれる案内役です。<br>
+                入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれるあなた専用のAIコンシェルジュです。<br>
                 <small>
-                  *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回の質問を目安にお試しください。
+                  *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回までの質問に対応しています。<br>
                 </small>
               </p>
 
@@ -112,7 +112,7 @@
                 <h2>できること</h2>
                 <ul class="concierge-capability-list">
                   <li>「Day2の予定を教えて」で日程を要約</li>
-                  <li>「おすすめの場所ある？」で候補を提案</li>
+                  <li>「行きたい場所リスト」に登録した場所で予定を組んで</li>
                   <li>「空いている日は？」で余白のある日を案内</li>
                   <li>「持ち物を考えて」で準備のヒントを返答</li>
                 </ul>

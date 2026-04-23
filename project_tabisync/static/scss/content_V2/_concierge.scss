@@ -261,6 +261,7 @@ body#concierge-body {
   padding-bottom:calc(var(--concierge-footer-height) + 18px);
   padding-right: 5px;
   padding-right: 5px;
+  margin-right: 5px;
 
 }
 
@@ -345,6 +346,7 @@ body#concierge-body {
   position: static;
   width: 100%;
   box-sizing: border-box;
+  border-radius: 50%;
 }
 
 .footer-nav.--concierge-footer {

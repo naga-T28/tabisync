@@ -1,0 +1,18 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="32" fill="#EAF7FF"/>
+  <path d="M815 96C727 125 633 185 576 265C523 339 509 416 476 475C438 542 364 603 349 674C332 757 409 819 506 809C601 800 691 744 772 682C854 619 933 539 973 439C1012 342 1005 226 944 154C913 118 866 101 815 96Z" fill="#D7F0E7"/>
+  <path d="M490 171C459 183 429 213 421 249C413 287 425 330 408 364C390 400 348 418 328 451C308 485 311 534 343 561C376 589 426 586 467 572C509 557 548 531 565 491C584 446 575 394 587 350C599 306 635 267 627 225C618 178 567 154 524 157C512 158 501 163 490 171Z" fill="#C4E6FF"/>
+  <path d="M596 243C567 250 548 279 551 307C554 336 578 361 608 364C638 367 668 349 684 323C700 297 701 264 682 246C661 227 627 235 596 243Z" fill="#8FD3B5"/>
+  <circle cx="613" cy="292" r="18" fill="#FF8A65"/>
+  <circle cx="699" cy="412" r="18" fill="#FF8A65"/>
+  <circle cx="797" cy="520" r="18" fill="#FF8A65"/>
+  <circle cx="536" cy="582" r="18" fill="#FF8A65"/>
+  <path d="M613 292L699 412L797 520L536 582" stroke="#2F3747" stroke-width="6" stroke-linecap="round" stroke-dasharray="12 14"/>
+  <rect x="66" y="68" width="326" height="214" rx="24" fill="white" fill-opacity="0.92"/>
+  <text fill="#2F3747" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="40" font-weight="700" letter-spacing="0em"><tspan x="98" y="131.2">沖縄本島デモマップ</tspan></text>
+  <text fill="#5F6670" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="26" letter-spacing="0em"><tspan x="98" y="183.4">1. 国際通り</tspan><tspan x="98" y="223.4">2. 美ら海水族館</tspan><tspan x="98" y="263.4">3. アメリカンビレッジ</tspan><tspan x="98" y="303.4">4. 首里城公園</tspan></text>
+  <text fill="#2F3747" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="24" font-weight="700" letter-spacing="0em"><tspan x="640" y="288">2</tspan></text>
+  <text fill="#2F3747" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="24" font-weight="700" letter-spacing="0em"><tspan x="726" y="408">1</tspan></text>
+  <text fill="#2F3747" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="24" font-weight="700" letter-spacing="0em"><tspan x="824" y="516">3</tspan></text>
+  <text fill="#2F3747" xml:space="preserve" style="white-space: pre" font-family="'Noto Sans JP', sans-serif" font-size="24" font-weight="700" letter-spacing="0em"><tspan x="563" y="578">4</tspan></text>
+</svg>
