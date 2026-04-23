@@ -1,0 +1,283 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}スケジュール{% endblock %}
+
+{% block contents %}
+{% load static %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places" async defer></script>
+
+<div class="content-main">
+<div class="schedule-view-page">
+  <div class="title-wrapper">
+    <div class="title-visual">
+      <h1 class="siori-title">{{ itinerary.title }}</h1>
+      {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+      {% if first_date_str and last_date_str %}
+        <p class="siori-title-date">
+          {{ first_date_str }} ～ {{ last_date_str }}
+        </p>
+      {% endif %}
+    </div>
+
+    {% if itinerary.description %}
+      <div class="box5-6">
+        <h2 class="box-title">概要</h2>
+        <div class="box-content">
+          <p>{{ itinerary.description }}</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="box5-6">
+    <h2 class="box-title">日程表</h2>
+    <div id="scheduleView" class="box-content">
+      {% for group in grouped_days %}
+        <section class="day-panel {% if forloop.first %}is-active{% endif %}"
+                 id="day-{{ forloop.counter0 }}"
+                 data-day-key="{{ group.choice.value }}"
+                 data-calendar-date="{{ group.choice.calendar_date }}"
+                 data-day-num="{{ group.choice.day_num }}">
+          <div class="day-heading-nav">
+            <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
+            <h2 class="day-heading">
+              {{ group.choice.label }}<br>
+              {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
+            </h2>
+            <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
+          </div>
+
+          <div class="schedule-list">
+            {% if group.schedules %}
+              {% for s in group.schedules %}
+                <div class="schedule-row"
+                     data-start-datetime="{% if group.choice.calendar_date and s.start_time %}{{ group.choice.calendar_date }}T{{ s.start_time|time:'H:i:s' }}{% endif %}">
+                  <div class="row-display">
+                    <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
+                      <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
+                      {% if s.end_time %}<span class="display-end-time">{{ s.end_time|time:'H:i' }}</span>{% endif %}
+                    </div>
+
+                    <div class="row-main-text">
+                      <div class="display-title">{{ s.title }}</div>
+
+                      {% if s.place %}
+                        <div class="row-place-line display-place-line">
+                          <button
+                            type="button"
+                            class="place-open-btn"
+                            onclick="openPlaceModal({
+                              id: {{ s.place.id }},
+                              name: '{{ s.place.name|escapejs }}',
+                              address: '{{ s.place.address|default:''|escapejs }}',
+                              memo: '{{ s.place.memo|default:''|escapejs }}',
+                              planned_day: {{ s.place.planned_day|default:0 }},
+                              place_id: '{{ s.place.place_id|default:''|escapejs }}'
+                            })"
+                          >
+                            <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{{ s.place.name }}</span>
+                          </button>
+                        </div>
+                      {% endif %}
+
+                      {% if s.description %}
+                        <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-day-message">この日の予定はまだありません。</div>
+              <a class="edit_button_content" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}">予定を追加する</a>
+            {% endif %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="box5-6">
+    <h2 class="box-title">しおりを共有</h2>
+    <div class="box-content">
+      <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます）</p>
+      <p id="copy-url-box" class="copy-url-box">
+        <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ share_url }}</span>
+      </p>
+      <div class="share-qr-wrapper">
+        <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
+        <img class="share-qr-image" src="{{ qr_code_url }}" alt="しおり共有用QRコード" width="220" height="220" loading="lazy">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="placeModal" class="modal">
+  <div class="modal-content" onclick="event.stopPropagation();">
+    <span class="close" onclick="closePlaceModal()">&times;</span>
+    <h3 id="modalTitle"></h3>
+
+    <div class="modal-memo">
+      <p><i class="fa-regular fa-clipboard"></i></p>
+      <p id="modalMemo"></p>
+    </div>
+
+    <div class="modal-adress">
+      <p><i class="fa-solid fa-location-dot"></i></p>
+      <p id="modalAdress"></p>
+    </div>
+
+    <div class="modal-date">
+      <p><i class="fa-regular fa-calendar-days"></i></p>
+      <p id="modalDay"></p>
+    </div>
+
+    <div class="modal-actions">
+      <a id="modalMapsButton" href="#" target="_blank" rel="noopener noreferrer" class="maps-button">
+        Google Mapsで開く
+      </a>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+            document.addEventListener("DOMContentLoaded", function () {
+          const urlBox = document.getElementById("copy-url-box");
+          const urlText = document.getElementById("copy-url-text");
+
+          if (urlBox && urlText) {
+            urlBox.addEventListener("click", function () {
+              const textToCopy = urlText.textContent;
+
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy)
+                  .then(() => alert("URLをコピーしました！"))
+                  .catch(() => prompt("コピーできませんでした。手動でコピーしてください：", textToCopy));
+              } else {
+                prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+              }
+            });
+          }
+        });
+function getPanels() {
+  return [...document.querySelectorAll('.day-panel')];
+}
+
+function setActivePanelByIndex(index) {
+  const panels = getPanels();
+  if (!panels.length) return;
+
+  panels.forEach(p => p.classList.remove('is-active'));
+  panels[index].classList.add('is-active');
+}
+
+function moveDay(direction) {
+  const panels = getPanels();
+  if (!panels.length) return;
+
+  const activeIndex = panels.findIndex(panel => panel.classList.contains('is-active'));
+  const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+
+  let nextIndex = currentIndex + direction;
+
+  if (nextIndex < 0) {
+    nextIndex = panels.length - 1;
+  } else if (nextIndex >= panels.length) {
+    nextIndex = 0;
+  }
+
+  setActivePanelByIndex(nextIndex);
+}
+
+function activateTodayPanelIfExists() {
+  const panels = getPanels();
+  if (!panels.length) return;
+
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  const todayPanelIndex = panels.findIndex(panel => panel.dataset.calendarDate === todayStr);
+
+  if (todayPanelIndex >= 0) {
+    setActivePanelByIndex(todayPanelIndex);
+  } else {
+    setActivePanelByIndex(0);
+  }
+}
+
+function highlightNextSchedule() {
+  const rows = [...document.querySelectorAll('.schedule-row[data-start-datetime]')];
+  if (!rows.length) return;
+
+  const now = new Date();
+  let nearestRow = null;
+  let nearestTime = null;
+
+  rows.forEach(row => {
+    const raw = row.dataset.startDatetime;
+    if (!raw) return;
+
+    const start = new Date(raw);
+    if (Number.isNaN(start.getTime())) return;
+    if (start < now) return;
+
+    if (!nearestTime || start < nearestTime) {
+      nearestTime = start;
+      nearestRow = row;
+    }
+  });
+
+  if (nearestRow) {
+    nearestRow.classList.add('is-next-schedule');
+
+    const panel = nearestRow.closest('.day-panel');
+    if (panel) {
+      const panels = getPanels();
+      const index = panels.indexOf(panel);
+
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const hasTodayPanel = panels.some(p => p.dataset.calendarDate === todayStr);
+
+      if (!hasTodayPanel && index >= 0) {
+        setActivePanelByIndex(index);
+      }
+    }
+  }
+}
+
+function openPlaceModal(place) {
+  document.getElementById("modalTitle").textContent = place.name || "";
+  document.getElementById("modalAdress").textContent = place.address || "住所情報なし";
+  document.getElementById("modalMemo").textContent = place.memo || "メモなし";
+
+  const dayVal = parseInt(place.planned_day) || 0;
+  document.getElementById("modalDay").textContent = dayVal === 0 ? "未定" : `Day ${dayVal}`;
+
+  const mapsButton = document.getElementById("modalMapsButton");
+  if (place.place_id) {
+    mapsButton.href = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${place.place_id}`;
+    mapsButton.style.display = "inline-block";
+  } else {
+    mapsButton.style.display = "none";
+  }
+
+  document.getElementById("placeModal").classList.add("active");
+}
+
+function closePlaceModal() {
+  document.getElementById("placeModal").classList.remove("active");
+}
+
+document.getElementById("placeModal").addEventListener("click", function(e) {
+  if (e.target === this) {
+    closePlaceModal();
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  activateTodayPanelIfExists();
+  highlightNextSchedule();
+});
+</script>
+{% endblock %}

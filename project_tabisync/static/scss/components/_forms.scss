@@ -1,0 +1,228 @@
+@use "../base/variables" as variables;
+
+.create-form {
+  width: 100%;
+}
+
+.input-first-wrapper {
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.input-description-wrapper,
+.input-group,
+#dateInputs,
+#daysInput {
+  width: 100%;
+}
+
+.input-item-description {
+  margin-bottom: 20px;
+}
+
+.input-title,
+.input-password {
+  width: 100%;
+  border-radius: variables.$radius-md;
+  border: 1px solid variables.$gray-border;
+}
+
+.input-title {
+  margin-bottom: 10px;
+  padding: 6px;
+}
+
+.input-password {
+  margin-bottom: 5px;
+}
+
+.input-password-last {
+  margin-bottom: 40px;
+}
+
+.input-description {
+  width: 100%;
+  min-height: 24px;
+  padding: 4px 6px;
+  border-radius: variables.$radius-md;
+  border: 1px solid variables.$gray-border;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.input-description-under {
+  margin-bottom: 50px;
+}
+
+.input-start-end-time {
+  display: flex;
+  margin-bottom: 5px;
+
+  &:first-child {
+    margin-top: 10px;
+    position: relative;
+
+    &::after {
+      content: "※必須";
+      color: variables.$danger;
+      font-size: 12px;
+      font-weight: bold;
+      position: absolute;
+      top: -17px;
+      right: 3px;
+      pointer-events: none;
+    }
+  }
+}
+
+.input-time-label {
+  white-space: nowrap;
+}
+
+.time-input {
+  flex: 1;
+  height: auto;
+  background-color: variables.$white;
+  border-radius: variables.$radius-md;
+  border: 1px solid variables.$gray-border;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 5px 0;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+}
+
+.input-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+
+  input[type="date"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1px solid variables.$gray-light;
+    border-radius: variables.$radius-xl;
+    background-color: variables.$gray-bg;
+    color: #333;
+    transition: all 0.2s ease;
+  }
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #4f8cff;
+  background-color: variables.$white;
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.15);
+}
+
+input[type="date"]:hover {
+  border-color: #bbb;
+}
+
+#daysInput input[type="number"] {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid variables.$gray-light;
+  border-radius: variables.$radius-xl;
+  background-color: variables.$gray-bg;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.date-header {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.9em;
+}
+
+.input-item-title {
+  width: 100%;
+  text-align: center;
+  padding-top: 40px;
+  margin-bottom: 10px;
+  font-size: 25px;
+  border-top: 1px dotted variables.$text-sub;
+}
+
+h3.input-item-title-first {
+  border: none;
+  margin-bottom: 20px;
+}
+
+.input-date-flex::after {
+  content: "※必須";
+  color: variables.$danger;
+  font-size: 12px;
+  font-weight: bold;
+  position: absolute;
+  top: -17px;
+  right: 3px;
+  pointer-events: none;
+}
+
+.date-block {
+  margin-bottom: 5px;
+  margin-top: 5px;
+  padding: 2px;
+  border-radius: variables.$radius-lg;
+  background-color: variables.$black;
+}
+
+.schedules-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: variables.$white;
+  border-bottom-right-radius: variables.$radius-lg;
+  border-bottom-left-radius: variables.$radius-lg;
+  padding: 5px 5px 35px;
+}
+
+.schedules-container-wrapper {
+  width: 95%;
+  margin: 0 auto;
+  border: 2px solid variables.$black;
+  padding: 10px;
+}
+
+.input-user-agreement-check {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.cf-turnstile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.precautions-area {
+  width: 90%;
+  margin-left: 0;
+  margin-right: auto;
+  margin-top: 20px;
+
+  ul li {
+    color: #999;
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+}

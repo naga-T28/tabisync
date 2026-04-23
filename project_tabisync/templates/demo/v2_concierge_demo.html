@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>AIコンシェルジュ デモ | TabiSync</title>
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <meta name="apple-mobile-web-app-title" content="TabiSync">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
+    </head>
+    <body id="concierge-body">
+      <main class="content-main-concierge">
+        <header class="page-header">
+            <div class="header-wrapper --concierge-header">
+                <div class="header-buttons">
+                  <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_content' %}">
+                    <i class="fa-solid fa-house"></i>
+                  </a>
+                </div>
+                <div class="header-logo">
+                    <h1>
+                        <a href="{% url 'tabisync:home' %}">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                        </a>
+                    </h1>
+                </div>
+                <div class="header-buttons">
+                    <button id="conciergeDetailOpen"><i class="fa-regular fa-circle-question"></i></button>
+                </div>
+            </div>
+        </header>
+        <div class="concierge-main">
+          <div class="concierge-page">
+            <section class="concierge-layout">
+              <section class="concierge-chat-panel">
+                <div class="concierge-chat-shell">
+                  <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
+                </div>
+              </section>
+            </section>
+          </div>
+        </div>
+        <footer class="page-footer-concierge">
+            <nav class="footer-nav --concierge-footer">
+                <form id="conciergeForm" class="concierge-form">
+                  <label class="concierge-input-wrap" for="conciergeInput">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <input
+                      id="conciergeInput"
+                      type="text"
+                      value="デモページのため送信はできません"
+                      autocomplete="off"
+                      disabled
+                    >
+                    <button type="submit" class="concierge-send-btn" aria-label="送信" disabled>
+                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                    </button>
+                  </label>
+                </form>
+            </nav>
+        </footer>
+        <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
+          <div class="concierge-detail-backdrop" data-close-modal></div>
+          <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
+            <button type="button" class="concierge-detail-close" id="conciergeDetailClose" aria-label="閉じる">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="concierge-detail-content">
+              <p class="concierge-eyebrow">DEMO</p>
+              <h2 id="conciergeDetailTitle">AIコンシェルジュ デモについて</h2>
+              <p class="concierge-detail-lead">
+                実際のAI送信は行わず、会話UIと説明モーダルの見た目だけを確認できるデモです。<br>
+                <small>
+                  *会話内容はすべて架空で、送信や保存は行われません。<br>
+                </small>
+              </p>
+
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>このデモで見られるもの</h2>
+                <ul class="concierge-capability-list">
+                  <li>チャットUIの見え方</li>
+                  <li>AI回答の吹き出しデザイン</li>
+                  <li>詳細モーダルの挙動</li>
+                  <li>プロンプトチップのデザイン</li>
+                </ul>
+              </div>
+
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>サンプル質問</h2>
+                <div class="concierge-prompt-list">
+                  <button type="button" class="concierge-prompt-chip" disabled>Day2の予定を教えて</button>
+                  <button type="button" class="concierge-prompt-chip" disabled>おすすめの場所ある？</button>
+                  <button type="button" class="concierge-prompt-chip" disabled>持ち物を考えて</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const messagesEl = document.getElementById("conciergeMessages");
+  const formEl = document.getElementById("conciergeForm");
+  const detailModalEl = document.getElementById("conciergeDetailModal");
+  const detailOpenEl = document.getElementById("conciergeDetailOpen");
+  const detailCloseEl = document.getElementById("conciergeDetailClose");
+
+  const demoMessages = [
+    {
+      role: "assistant",
+      html: `
+        <p>こんにちは、沖縄旅行デモの <strong>AIコンシェルジュ</strong> です。</p>
+        <p>このページでは、実際の送信はできませんが、会話画面のデザインを確認できます。</p>
+      `,
+    },
+    {
+      role: "user",
+      text: "Day2で海も観光も楽しめる回り方ある？",
+    },
+    {
+      role: "assistant",
+      html: `
+        <p>あります。たとえばこんな流れです。</p>
+        <ul>
+          <li>朝: 美ら海水族館へ移動して観光</li>
+          <li>昼: 古宇利島方面でランチ</li>
+          <li>夕方: ビーチ沿いのカフェで休憩</li>
+        </ul>
+        <p>無理のない移動にしたいなら、北部に絞るのがよさそうです。</p>
+      `,
+    },
+    {
+      role: "user",
+      text: "子ども連れ向けの持ち物も知りたい",
+    },
+    {
+      role: "assistant",
+      html: `
+        <p>子ども連れなら、このあたりを先に準備しておくと安心です。</p>
+        <ol>
+          <li>着替えを多めに用意</li>
+          <li>日差し対策グッズを忘れない</li>
+          <li>移動中のおやつと飲み物を確保</li>
+        </ol>
+      `,
+    }
+  ];
+
+  function addMessage(message) {
+    const article = document.createElement("article");
+    article.className = `concierge-message is-${message.role}`;
+
+    const label = document.createElement("p");
+    label.className = "concierge-message-label";
+    label.textContent = message.role === "assistant" ? "AIコンシェルジュ" : "あなた";
+
+    const bubble = document.createElement("div");
+    bubble.className = "concierge-message-bubble";
+    if (message.html) {
+      bubble.innerHTML = message.html;
+    } else {
+      bubble.textContent = message.text || "";
+    }
+
+    article.appendChild(label);
+    article.appendChild(bubble);
+    messagesEl.appendChild(article);
+  }
+
+  function openDetailModal() {
+    detailModalEl.hidden = false;
+    document.body.classList.add("is-modal-open");
+  }
+
+  function closeDetailModal() {
+    detailModalEl.hidden = true;
+    document.body.classList.remove("is-modal-open");
+  }
+
+  demoMessages.forEach(addMessage);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  if (formEl) {
+    formEl.addEventListener("submit", function (event) {
+      event.preventDefault();
+    });
+  }
+
+  if (detailOpenEl) {
+    detailOpenEl.addEventListener("click", openDetailModal);
+  }
+
+  if (detailCloseEl) {
+    detailCloseEl.addEventListener("click", closeDetailModal);
+  }
+
+  detailModalEl.querySelectorAll("[data-close-modal]").forEach((node) => {
+    node.addEventListener("click", closeDetailModal);
+  });
+});
+</script>
+    </body>
+</html>

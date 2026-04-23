@@ -1,0 +1,874 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}しおり作成画面{% endblock %}
+
+{% block contents %}
+{% load static %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initMap" async defer></script>
+
+<div class="place-wrapper">
+    <div id="map"></div>
+    <!-- 一覧表示 -->
+    <div class="place-list-column">
+      <!-- Dayフィルター -->
+      <div class="day-filter-bar">
+          <div>
+          <button type="button" id="dayFilterButton" class="day-filter-button" onclick="openDayFilterModal()">
+              <i class="fa-solid fa-sliders"></i>
+              <span>絞り込み</span>
+              <span id="dayFilterCount" class="day-filter-count" hidden>0</span>
+          </button>
+          </div>
+          <div>
+          <button type="button" id="sortFilterButton" class="day-filter-button" onclick="openSortFilterModal()">
+              <i class="fa-solid fa-arrow-down-wide-short"></i>
+              <span>並び替え</span>
+              <span id="sortFilterLabel" class="sort-filter-label">日数順</span>
+          </button>
+          </div>
+      </div>
+
+      <div class="place-list-wrapper">
+          {% for place in places %}
+          <div class="card-wrapper" data-id="{{ place.id }}" data-day="{{ place.planned_day|default:0 }}" data-priority="{{ place.priority|default:3 }}">
+              <div class="card" onclick="openModalFromCard({{ place.id }})">
+                  <div class="card-content">
+                      <h3>{{ place.name }}</h3>
+                      <div class="modal-date-only"><p><i class="fa-solid fa-ranking-star"></i></p><p class="card-day">
+                          <span class="card-priority-stars">
+                              {% for _ in "12345" %}
+                                  {% if forloop.counter <= place.priority|default:3 %}
+                                      <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                                  {% else %}
+                                      <span class="is-empty"><i class="fa-regular fa-star"></i></span>
+                                  {% endif %}
+                              {% endfor %}
+                          </span>
+                      </p></div>
+                      <!-- <p class="memo">{{ place.address }}</p> -->
+                      <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">
+                          {% if place.planned_day == 0 %}
+                              未定
+                          {% else %}
+                              Day {{ place.planned_day }}
+                          {% endif %}
+                      </p></div>
+                      {% if place.memo %}
+                      <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">{{ place.memo }}</p></div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+          {% endfor %}
+        <!-- 新規追加ボタン -->
+        <button type="button" class="fab-add" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+
+      </div>
+    </div>
+    <div id="dayFilterModal" class="filter-modal">
+        <div class="filter-modal-content" onclick="event.stopPropagation();">
+            <div class="filter-modal-header">
+                <h3>日数の絞り込み</h3>
+                <button type="button" class="edit-modal-close" onclick="closeDayFilterModal()">&times;</button>
+            </div>
+            <div class="filter-checkbox-list">
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="0">
+                    <span>未定</span>
+                </label>
+                {% for day in itinerary_days %}
+                    <label class="filter-checkbox-item">
+                        <input type="checkbox" class="day-filter-check" value="{{ day }}">
+                        <span>Day {{ day }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="filter-modal-footer">
+                <button type="button" class="btn-secondary" onclick="clearDayFilterSelection()">クリア</button>
+                <button type="button" class="btn-primary" onclick="applyDayFilterSelection()">適用</button>
+            </div>
+        </div>
+    </div>
+    <div id="sortFilterModal" class="filter-modal">
+        <div class="filter-modal-content" onclick="event.stopPropagation();">
+            <div class="filter-modal-header">
+                <h3>並び替え</h3>
+                <button type="button" class="edit-modal-close" onclick="closeSortFilterModal()">&times;</button>
+            </div>
+            <div class="filter-option-list">
+                <button type="button" class="filter-option-button" data-sort-value="day" onclick="applySortFilter('day')">日数順</button>
+                <button type="button" class="filter-option-button" data-sort-value="priority" onclick="applySortFilter('priority')">行きたい度順</button>
+            </div>
+        </div>
+    </div>
+    <div id="placeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle"></h3>
+            <input type="hidden" id="modalPlaceDbId" value="">
+            
+            <div class="modal-memo"><p><i class="fa-regular fa-clipboard"></i></p><p id="modalMemo"></p></div>
+            <div class="modal-adress"><p><i class="fa-solid fa-location-dot"></i></p><p id="modalAdress"></p></div>
+            <div class="modal-date">
+                <p><i class="fa-regular fa-calendar-days"></i></p>
+                <p id="modalDay"></p>
+            </div>
+            <div class="modal-priority">
+                <p><i class="fa-solid fa-star"></i></p>
+                <p id="modalPriority"></p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-edit-btn" onclick="openEditModalFromView()"><i class="fa-solid fa-pen-to-square"></i>編集</button>
+                <a id="modalMapsButton" href="#" target="_blank" class="maps-button">
+                    Google Mapsで開く
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- 編集/追加モーダル -->
+    <div id="editModal" class="edit-modal">
+        <div class="edit-modal-content" onclick="event.stopPropagation();">
+            <div class="edit-modal-header">
+                <h3 id="editModalTitle">行きたい場所を追加</h3>
+                <button type="button" class="edit-modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+
+            <div class="search-wrapper">
+                <input id="searchInput" type="text" placeholder="場所を検索">
+                <button id="searchBtn" type="button">検索</button>
+            </div>
+            <div id="suggestions" class="suggestions-box"></div>
+
+            <input id="placeName" placeholder="場所名">
+            <input id="placeAddress" placeholder="住所">
+            <textarea id="memoInput" placeholder="メモ"></textarea>
+
+            <select id="plannedDayInput">
+                <option value="0">未定</option>
+                {% for day in itinerary_days %}
+                    <option value="{{ day }}">Day {{ day }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="place-priority">
+                <p class="place-priority-label">行きたい度</p>
+                <div class="place-priority-stars" id="placePriorityStars" role="radiogroup" aria-label="行きたい度">
+                    <button type="button" class="priority-star" data-value="1" aria-label="星1">★</button>
+                    <button type="button" class="priority-star" data-value="2" aria-label="星2">★</button>
+                    <button type="button" class="priority-star" data-value="3" aria-label="星3">★</button>
+                    <button type="button" class="priority-star" data-value="4" aria-label="星4">★</button>
+                    <button type="button" class="priority-star" data-value="5" aria-label="星5">★</button>
+                </div>
+                <input id="placePriorityInput" type="hidden" value="3">
+            </div>
+
+            <details class="place-detail-settings" id="placeDetailSettings">
+                <summary><span id="placeDetailToggleIcon">＋</span>詳細設定</summary>
+                <p class="place-detail-note">Google検索で場所を選ぶと自動入力されます。必要に応じて手動で編集できます。</p>
+                <div class="place-detail-grid">
+                    <label class="place-detail-field">
+                        <span>緯度</span>
+                        <input id="placeLatInput" type="number" step="any" inputmode="decimal" placeholder="例: 35.681236">
+                    </label>
+                    <label class="place-detail-field">
+                        <span>経度</span>
+                        <input id="placeLngInput" type="number" step="any" inputmode="decimal" placeholder="例: 139.767125">
+                    </label>
+                    <label class="place-detail-field place-detail-field-wide">
+                        <span>Google Place ID</span>
+                        <input id="placeIdInput" type="text" placeholder="Google Places の place_id">
+                    </label>
+                </div>
+            </details>
+
+            <div class="edit-modal-footer">
+                <button type="button" class="btn-primary" onclick="savePlace()">保存</button>
+                <button type="button" class="btn-danger" id="deleteBtn" onclick="deletePlace()" style="display:none;">削除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let map;
+let markers = [];
+let currentDayFilterValues = [];
+let currentSortFilter = "day";
+
+let editTargetId = null; // WantToGoのDB id
+let selectedPlace = null; // Google Places 選択結果
+let placesService = null;
+let autocompleteService = null;
+
+const placesData = [
+    {% for place in places %}
+    {
+        id: {{ place.id }},
+        name: "{{ place.name|escapejs }}",
+        lat: {{ place.latitude|default:"null" }},
+        lng: {{ place.longitude|default:"null" }},
+        address: "{{ place.address|escapejs }}",
+        memo: "{{ place.memo|escapejs }}",
+        planned_day: {{ place.planned_day|default:0 }},
+        place_id: "{{ place.place_id|default:'' }}",
+        priority: {{ place.priority|default:3 }},
+        rating: {{ place.rating|default:"null" }}
+    },
+    {% endfor %}
+];
+
+function getSelectedDaySet() {
+    return new Set(currentDayFilterValues.map(String));
+}
+
+function syncDayFilterCount() {
+    const countEl = document.getElementById("dayFilterCount");
+    const count = currentDayFilterValues.length;
+
+    if (!countEl) return;
+
+    if (count === 0) {
+        countEl.hidden = true;
+        countEl.textContent = "";
+        return;
+    }
+
+    countEl.hidden = false;
+    countEl.textContent = String(count);
+}
+
+function syncDayFilterChecksFromState() {
+    const selected = getSelectedDaySet();
+    document.querySelectorAll(".day-filter-check").forEach((checkbox) => {
+        checkbox.checked = selected.has(checkbox.value);
+    });
+}
+
+function syncSortFilterLabel() {
+    const labelEl = document.getElementById("sortFilterLabel");
+    if (!labelEl) return;
+
+    labelEl.textContent = currentSortFilter === "priority" ? "行きたい度順" : "日数順";
+
+    document.querySelectorAll(".filter-option-button").forEach((button) => {
+        const isActive = button.dataset.sortValue === currentSortFilter;
+        button.classList.toggle("is-active", isActive);
+    });
+}
+
+function openDayFilterModal() {
+    syncDayFilterChecksFromState();
+    document.getElementById("dayFilterModal").classList.add("active");
+}
+
+function closeDayFilterModal() {
+    document.getElementById("dayFilterModal").classList.remove("active");
+}
+
+function openSortFilterModal() {
+    syncSortFilterLabel();
+    document.getElementById("sortFilterModal").classList.add("active");
+}
+
+function closeSortFilterModal() {
+    document.getElementById("sortFilterModal").classList.remove("active");
+}
+
+function clearDayFilterSelection() {
+    document.querySelectorAll(".day-filter-check").forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+}
+
+function applyDayFilterSelection() {
+    currentDayFilterValues = [...document.querySelectorAll(".day-filter-check:checked")]
+        .map((checkbox) => checkbox.value);
+    syncDayFilterCount();
+    closeDayFilterModal();
+    applyFilter();
+}
+
+function applySortFilter(value) {
+    currentSortFilter = value === "priority" ? "priority" : "day";
+    syncSortFilterLabel();
+    closeSortFilterModal();
+    sortCards();
+    applyFilter();
+}
+
+function setPlaceDetailFields({ placeId = "", lat = "", lng = "" } = {}) {
+    document.getElementById("placeIdInput").value = placeId || "";
+    document.getElementById("placeLatInput").value = lat ?? "";
+    document.getElementById("placeLngInput").value = lng ?? "";
+}
+
+function getOptionalNumber(inputId) {
+    const rawValue = document.getElementById(inputId).value.trim();
+    if (!rawValue) return null;
+
+    const parsed = Number(rawValue);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getManualPlaceMeta() {
+    return {
+        place_id: document.getElementById("placeIdInput").value.trim(),
+        lat: getOptionalNumber("placeLatInput"),
+        lng: getOptionalNumber("placeLngInput"),
+    };
+}
+
+function setPriorityStars(value) {
+    const safeValue = Math.min(5, Math.max(1, parseInt(value || "3", 10) || 3));
+    document.getElementById("placePriorityInput").value = String(safeValue);
+
+    document.querySelectorAll(".priority-star").forEach((star) => {
+        const starValue = parseInt(star.dataset.value, 10);
+        const isActive = starValue <= safeValue;
+        star.classList.toggle("is-active", isActive);
+        star.setAttribute("aria-checked", starValue === safeValue ? "true" : "false");
+    });
+}
+
+function getPriorityValue() {
+    return parseInt(document.getElementById("placePriorityInput").value || "3", 10) || 3;
+}
+
+function syncPlaceDetailToggle() {
+    const details = document.getElementById("placeDetailSettings");
+    const icon = document.getElementById("placeDetailToggleIcon");
+    if (!details || !icon) return;
+    icon.textContent = details.open ? "➖" : "➕";
+}
+
+function initMap() {
+
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.681236, lng: 139.767125 },
+        zoom: 4
+    });
+
+    // Places API services（検索/詳細取得用）
+    placesService = new google.maps.places.PlacesService(map);
+    if (google.maps.places && google.maps.places.AutocompleteService) {
+        autocompleteService = new google.maps.places.AutocompleteService();
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+
+    placesData.forEach(place => {
+
+        // lat/lngが無いデータはスキップ（JSエラー防止）
+        if (place.lat === null || place.lng === null || place.lat === undefined || place.lng === undefined) return;
+        const position = { lat: place.lat, lng: place.lng };
+
+        // 数値に変換
+        const dayNumber = parseInt(place.planned_day) || 0;
+
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: place.name,
+            icon: getMarkerSymbol(dayNumber)
+        });
+
+
+        markers.push({ marker, day: dayNumber, place_id: place.place_id, dbid: place.id });
+
+
+        marker.addListener("click", () => {
+            openModal(place);
+        });
+
+        bounds.extend(position);
+    });
+
+    if (placesData.length > 0) {
+        map.fitBounds(bounds);
+    }
+    syncDayFilterCount();
+    syncSortFilterLabel();
+    sortCards();
+    applyFilter();
+}
+
+// Dayごとの色分け
+// Dayごとの色分け（Symbolで描画）
+function getMarkerSymbol(day) {
+  // Day→色（必要なら好みで調整OK）
+  const colors = {
+    0:  "#4e4e4e", // 未定: グレー
+    1:  "#c08080", // くすみ赤
+    2:  "#7080c0", // くすみ青
+    3:  "#60a060", // くすみ緑
+    4:  "#d0b070", // くすみ黄
+    5:  "#906090", // くすみ紫
+    6:  "#d090a0", // くすみピンク
+    7:  "#d09c60", // くすみオレンジ
+    8:  "#70b0c0", // くすみ水色
+    9:  "#7080c0",
+    10: "#c08080",
+    11: "#60a060",
+    12: "#d0b070",
+    13: "#906090",
+    14: "#d090a0",
+    15: "#d09c60",
+    16: "#70b0c0",
+    17: "#7080c0",
+    18: "#c08080",
+    19: "#60a060",
+    20: "#d0b070"
+  };
+
+  const fill = (day > 20) ? "#d09c60" : (colors[day] || "#8a8a8a");
+
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: fill,
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeOpacity: 1,
+    strokeWeight: 2,
+    scale: 10, // サイズ
+  };
+}
+// カードをクリックしたとき
+function openModalFromCard(placeId) {
+    const place = placesData.find(p => p.id === placeId);
+    if (place) openModal(place);
+}
+function openModal(place) {
+    document.getElementById("modalTitle").textContent = place.name;
+    document.getElementById("modalAdress").textContent = place.address;
+    document.getElementById("modalMemo").textContent = place.memo || "メモなし";
+    document.getElementById("modalPriority").textContent = `★`.repeat(place.priority || 3) + `☆`.repeat(5 - (place.priority || 3));
+
+    // Google Mapsボタンのリンクを更新
+    if (place.place_id) {
+        const mapsButton = document.getElementById('modalMapsButton');
+        mapsButton.href = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${place.place_id}`;
+        mapsButton.style.display = 'inline-block';
+    } else {
+        document.getElementById('modalMapsButton').style.display = 'none';
+    }
+
+    // Day情報（表示のみ）
+    const dayVal = parseInt(place.planned_day) || 0;
+    const dayEl = document.getElementById("modalDay");
+    if (dayEl) dayEl.textContent = (dayVal === 0) ? "未定" : `Day ${dayVal}`;
+
+    // DBのidを保持（更新API用）
+    document.getElementById("modalPlaceDbId").value = place.id;
+
+    // モーダルを表示
+    document.getElementById("placeModal").classList.add("active");
+}
+document.getElementById("placeModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+
+// CSRF（Django cookie）
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+document.getElementById("dayFilterModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+        closeDayFilterModal();
+    }
+});
+document.getElementById("sortFilterModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+        closeSortFilterModal();
+    }
+});
+
+function compareByDay(a, b) {
+    const aDay = parseInt(a.dataset.day || "0", 10);
+    const bDay = parseInt(b.dataset.day || "0", 10);
+    const aSortDay = aDay === 0 ? Number.MAX_SAFE_INTEGER : aDay;
+    const bSortDay = bDay === 0 ? Number.MAX_SAFE_INTEGER : bDay;
+
+    if (aSortDay !== bSortDay) {
+        return aSortDay - bSortDay;
+    }
+
+    const aPriority = parseInt(a.dataset.priority || "3", 10);
+    const bPriority = parseInt(b.dataset.priority || "3", 10);
+    if (aPriority !== bPriority) {
+        return bPriority - aPriority;
+    }
+
+    return parseInt(a.dataset.id || "0", 10) - parseInt(b.dataset.id || "0", 10);
+}
+
+function compareByPriority(a, b) {
+    const aPriority = parseInt(a.dataset.priority || "3", 10);
+    const bPriority = parseInt(b.dataset.priority || "3", 10);
+
+    if (aPriority !== bPriority) {
+        return bPriority - aPriority;
+    }
+
+    return compareByDay(a, b);
+}
+
+function sortCards() {
+    const wrapper = document.querySelector(".place-list-wrapper");
+    if (!wrapper) return;
+
+    const cards = [...wrapper.querySelectorAll(".card-wrapper")];
+    const sortedCards = cards.sort((a, b) => {
+        if (currentSortFilter === "priority") {
+            return compareByPriority(a, b);
+        }
+        return compareByDay(a, b);
+    });
+
+    sortedCards.forEach((card) => wrapper.appendChild(card));
+}
+
+function applyFilter() {
+    const selectedDays = getSelectedDaySet();
+    const hasDayFilter = selectedDays.size > 0;
+
+    // cards
+    document.querySelectorAll(".card-wrapper").forEach(card => {
+        const day = card.dataset.day || "0";
+        const show = !hasDayFilter || selectedDays.has(day);
+        card.style.display = show ? "" : "none";
+    });
+
+    // markers
+    markers.forEach(({marker, day}) => {
+        const show = !hasDayFilter || selectedDays.has(String(day));
+        marker.setMap(show ? map : null);
+    });
+}
+
+
+
+/* ===============================
+   追加/編集モーダル
+================================= */
+function openAddModal(){
+  editTargetId = null;
+  selectedPlace = null;
+
+  document.getElementById("editModalTitle").textContent = "行きたい場所を追加";
+  document.getElementById("deleteBtn").style.display = "none";
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("placeName").value = "";
+  document.getElementById("placeAddress").value = "";
+  document.getElementById("memoInput").value = "";
+  document.getElementById("plannedDayInput").value = "0";
+  setPriorityStars(3);
+  setPlaceDetailFields();
+  document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("placeDetailSettings").open = false;
+  syncPlaceDetailToggle();
+
+  document.getElementById("editModal").classList.add("active");
+}
+
+function openEditModalFromView(){
+  const dbid = document.getElementById("modalPlaceDbId").value;
+  const place = placesData.find(p => p.id === parseInt(dbid, 10));
+  if (!place) return;
+
+  editTargetId = place.id;
+
+  document.getElementById("editModalTitle").textContent = "場所を編集";
+  document.getElementById("deleteBtn").style.display = "inline-flex";
+
+  document.getElementById("searchInput").value = place.name || "";
+  document.getElementById("placeName").value = place.name || "";
+  document.getElementById("placeAddress").value = place.address || "";
+  document.getElementById("memoInput").value = place.memo || "";
+  document.getElementById("plannedDayInput").value = String(parseInt(place.planned_day, 10) || 0);
+  setPriorityStars(place.priority || 3);
+  setPlaceDetailFields({
+    placeId: place.place_id || "",
+    lat: place.lat ?? "",
+    lng: place.lng ?? ""
+  });
+  document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("placeDetailSettings").open = false;
+  syncPlaceDetailToggle();
+
+  selectedPlace = {
+    place_id: place.place_id || "",
+    name: place.name || "",
+    formatted_address: place.address || "",
+    rating: place.rating ?? null,
+    geometry: {
+      location: {
+        lat: () => place.lat,
+        lng: () => place.lng
+      }
+    }
+  };
+
+  closeModal();
+  document.getElementById("editModal").classList.add("active");
+}
+
+function closeEditModal(){
+  document.getElementById("editModal").classList.remove("active");
+}
+
+function closeEditModal(){
+  document.getElementById("editModal").classList.remove("active");
+}
+
+// 背景クリックで閉じる
+document.getElementById("editModal").addEventListener("click", () => closeEditModal());
+
+/* ===============================
+   Place検索（候補表示）
+================================= */
+function renderSuggestions(items){
+  const box = document.getElementById("suggestions");
+  box.innerHTML = "";
+  if (!items || items.length === 0) return;
+
+  items.forEach(it => {
+    const div = document.createElement("div");
+    div.className = "suggestion-item";
+    div.textContent = it.description || it.name || "";
+    div.addEventListener("click", () => selectSuggestion(it));
+    box.appendChild(div);
+  });
+}
+
+function selectSuggestion(pred){
+  const placeId = pred.place_id || pred.placeId;
+  if (!placeId || !placesService) return;
+
+  placesService.getDetails({
+    placeId,
+    fields: ["place_id","name","formatted_address","geometry","rating"]
+  }, (place, status) => {
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !place) return;
+
+    selectedPlace = place;
+
+    document.getElementById("searchInput").value = place.name || "";
+    document.getElementById("placeName").value = place.name || "";
+    document.getElementById("placeAddress").value = place.formatted_address || "";
+    setPlaceDetailFields({
+      placeId: place.place_id || "",
+      lat: place.geometry?.location?.lat?.() ?? "",
+      lng: place.geometry?.location?.lng?.() ?? ""
+    });
+    document.getElementById("suggestions").innerHTML = "";
+  });
+}
+
+function doSearch(){
+  const q = document.getElementById("searchInput").value.trim();
+  if (!q) return;
+
+  if (autocompleteService){
+    autocompleteService.getPlacePredictions({ input: q }, (preds, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+        renderSuggestions([]);
+        return;
+      }
+      renderSuggestions(preds.slice(0, 8));
+    });
+    return;
+  }
+
+  if (placesService){
+    placesService.textSearch({ query: q }, (results, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
+        renderSuggestions([]);
+        return;
+      }
+      const items = results.slice(0, 8).map(r => ({ description: r.name, place_id: r.place_id }));
+      renderSuggestions(items);
+    });
+  }
+}
+
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); doSearch(); }
+});
+document.getElementById("placeDetailSettings").addEventListener("toggle", syncPlaceDetailToggle);
+document.querySelectorAll(".priority-star").forEach((star) => {
+  star.addEventListener("click", () => setPriorityStars(star.dataset.value));
+});
+setPriorityStars(3);
+syncPlaceDetailToggle();
+
+/* ===============================
+   保存 / 削除（WanteditへPOST）
+================================= */
+async function savePlace(){
+  const csrfToken = getCookie("csrftoken");
+
+  const memo = document.getElementById("memoInput").value;
+  const day = parseInt(document.getElementById("plannedDayInput").value || "0", 10);
+  const priority = getPriorityValue();
+  const name = document.getElementById("placeName").value.trim();
+  const address = document.getElementById("placeAddress").value.trim();
+  const manualMeta = getManualPlaceMeta();
+
+  if (!name) {
+    alert("場所名を入力してください。");
+    return;
+  }
+
+  let payload = null;
+
+  if (editTargetId) {
+    const basePlace = placesData.find(p => p.id === parseInt(editTargetId, 10));
+
+    if (!basePlace) {
+      alert("編集対象のデータが見つかりませんでした。再読み込みしてください。");
+      return;
+    }
+
+    payload = {
+      action: "update_want_to_go",
+      id: parseInt(editTargetId, 10),
+      place_id: manualMeta.place_id,
+      name: name || selectedPlace?.name || basePlace.name || "",
+      address: address || selectedPlace?.formatted_address || basePlace.address || "",
+      lat: manualMeta.lat,
+      lng: manualMeta.lng,
+      rating: selectedPlace?.rating ?? basePlace.rating ?? null,
+      memo: memo,
+      day: day,
+      priority: priority
+    };
+  } else {
+    payload = {
+      action: "save_want_to_go",
+      place_id: manualMeta.place_id,
+      name: name || selectedPlace?.name || "",
+      address: address || selectedPlace?.formatted_address || "",
+      lat: manualMeta.lat,
+      lng: manualMeta.lng,
+      rating: selectedPlace?.rating ?? null,
+      memo: memo,
+      day: day,
+      priority: priority
+    };
+  }
+
+try {
+  const res = await fetch("{% url 'tabisync:Wantedit' pk=itinerary.pk token=itinerary.token %}", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("HTTP error:", res.status, text);
+
+    if (res.status === 403) {
+      alert("403 Forbiddenです。CSRFトークンまたはセッションが送れていません。localhost または 127.0.0.1 で開き直してください。");
+    } else {
+      alert(`保存に失敗しました（HTTP ${res.status}）`);
+    }
+    return;
+  }
+
+  if (!contentType.includes("application/json")) {
+    const text = await res.text();
+    console.error("Non-JSON response:", text);
+    alert("サーバーがJSONではなくHTMLを返しました。");
+    return;
+  }
+
+  const data = await res.json();
+
+  if (data.status === "saved" || data.status === "updated") {
+    location.reload();
+  } else {
+    console.error("save error:", data);
+    alert("保存に失敗しました");
+  }
+} catch (e) {
+  console.error(e);
+  alert("通信エラーが発生しました");
+}
+}
+
+async function deletePlace(){
+  if (!editTargetId) return;
+  if (!confirm("この場所を削除しますか？")) return;
+
+  const csrfToken = getCookie("csrftoken");
+
+try {
+  const res = await fetch("{% url 'tabisync:Wantedit' pk=itinerary.pk token=itinerary.token %}", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+    },
+    body: JSON.stringify({ action: "delete_want_to_go", id: parseInt(editTargetId, 10) })
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("HTTP error:", res.status, text);
+
+    if (res.status === 403) {
+      alert("403 Forbiddenです。CSRFトークンまたはセッションが送れていません。localhost または 127.0.0.1 で開き直してください。");
+    } else {
+      alert(`削除に失敗しました（HTTP ${res.status}）`);
+    }
+    return;
+  }
+
+  if (!contentType.includes("application/json")) {
+    const text = await res.text();
+    console.error("Non-JSON response:", text);
+    alert("サーバーがJSONではなくHTMLを返しました。");
+    return;
+  }
+
+  const data = await res.json();
+
+  if (data.status === "deleted") {
+    location.reload();
+  } else {
+    alert("削除に失敗しました");
+  }
+} catch (e) {
+  console.error(e);
+  alert("通信エラーが発生しました");
+}
+}
+
+
+function closeModal() {
+    document.getElementById("placeModal").classList.remove("active");
+}
+</script>
+
+
+{% endblock %}
