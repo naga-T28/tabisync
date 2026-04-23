@@ -98,6 +98,10 @@ section.update-section {
   align-items: center;
   margin: 0 auto;
 }
+.header-wrapper.--concierge-header {
+  margin-left: 20px;
+  margin-right: 20px;
+}
 
 .header-logo a {
   text-decoration: none;

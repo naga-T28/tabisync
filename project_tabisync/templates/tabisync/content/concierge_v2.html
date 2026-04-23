@@ -1,92 +1,174 @@
-{% extends "tabisync/content/base.html" %}
-{% block title %}AIコンシェルジュ{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>AIコンシェルジュβ版 | TabiSync</title>
+        <!-- インデックス防止用-->
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Font Awesome CDN (最新版) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ファビコン -->
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <!-- iPhone用のアイコンサイズを指定 -->
+        <meta name="apple-mobile-web-app-title" content="TabiSync">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <!---Googleフォント-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+        <!-- OGP設定 -->
+        <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
+        <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="TabiSync">
+        <!-- Twitterカード（任意）-->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
+        <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <!---リセットcsss-->
+        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <!--オリジナルCSS-->
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </head>
+    <body id="concierge-body">
+        <header class="page-header">
+            <div class="header-wrapper --concierge-header">
+                <div class="header-buttons">
+                  <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                          <i class="fa-solid fa-house"></i>
+                  </a>
+                </div>
+                <div class="header-logo">
+                    <h1>
+                        <a href="{% url 'tabisync:home' %}">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                        </a>
+                    </h1>
+                </div>
+                <!-- ハンバーガーアイコン -->
+                <div class="header-buttons">
+                    <button id="conciergeDetailOpen"><i class="fa-regular fa-circle-question"></i></button>
+                </div>
+            </div>
+        </header>
+        <div class="concierge-main">
+          <div class="concierge-page">
+            <section class="concierge-hero">
+              <div class="concierge-hero-copy">
+                <p class="concierge-eyebrow">TabiSync AI CONCIERGE ver.β</p>
+                <p class="concierge-lead">
+                  入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれる案内役です。<br>
+                  <small>
+                    *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回の質問を目安にお試しください。<br>
+                  </small>
+                </p>
+              </div>
+            </section>
+            <section class="concierge-layout">
+              <section class="concierge-chat-panel">
+                <div class="concierge-chat-shell">
+                  <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
 
-{% block contents %}
-<div class="content-main concierge-main">
-  <div class="concierge-page">
-    <section class="concierge-hero">
-      <div class="concierge-hero-copy">
-        <p class="concierge-eyebrow">TABISYNC CONCIERGE</p>
-        <h1>AIコンシェルジュβ版</h1>
-        <p class="concierge-lead">
-          入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれる案内役です。<br>
-          <small>
-            *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回の質問を目安にお試しください。<br>
-          </small>
-        </p>
-      </div>
-      <div class="concierge-hero-meta">
-        <div class="concierge-meta-card">
-          <span class="concierge-meta-label">しおり</span>
-          <strong>{{ itinerary.title }}</strong>
-          {% if itinerary.subtitle %}<p>{{ itinerary.subtitle }}</p>{% endif %}
-        </div>
-        {% if first_date_str and last_date_str %}
-          <div class="concierge-meta-card">
-            <span class="concierge-meta-label">日程</span>
-            <strong>{{ first_date_str }} - {{ last_date_str }}</strong>
+                  <form id="conciergeForm" class="concierge-form">
+                    <label class="concierge-input-wrap" for="conciergeInput">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                      <input
+                        id="conciergeInput"
+                        type="text"
+                        placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                        autocomplete="off"
+                      >
+                      <button type="submit" class="concierge-send-btn" aria-label="送信">
+                        <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                        <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                      </button>
+                    </label>
+                  </form>
+                </div>
+              </section>
+            </section>
           </div>
-        {% endif %}
-      </div>
-    </section>
-
-    <section class="concierge-layout">
-      <aside class="concierge-side-panel">
-        <div class="concierge-panel">
-          <h2>できること</h2>
-          <ul class="concierge-capability-list">
-            <li>「Day2の予定を教えて」で日程を要約</li>
-            <li>「おすすめの場所ある？」で候補を提案</li>
-            <li>「空いている日は？」で余白のある日を案内</li>
-            <li>「持ち物を考えて」で準備のヒントを返答</li>
-          </ul>
         </div>
+        <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
+          <div class="concierge-detail-backdrop" data-close-modal></div>
+          <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
+            <button type="button" class="concierge-detail-close" id="conciergeDetailClose" aria-label="閉じる">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="concierge-detail-content">
+              <p class="concierge-eyebrow">DETAILS</p>
+              <h2 id="conciergeDetailTitle">AIコンシェルジュについて</h2>
+              <p class="concierge-detail-lead">
+                入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれる案内役です。<br>
+                <small>
+                  *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回の質問を目安にお試しください。
+                </small>
+              </p>
 
-        <div class="concierge-panel">
-          <h2>すぐ試す</h2>
-          <div class="concierge-prompt-list">
-            <button type="button" class="concierge-prompt-chip" data-prompt="Day1の予定を教えて">Day1の予定を教えて</button>
-            <button type="button" class="concierge-prompt-chip" data-prompt="おすすめの場所ある？">おすすめの場所ある？</button>
-            <button type="button" class="concierge-prompt-chip" data-prompt="空いている日はある？">空いている日はある？</button>
-            <button type="button" class="concierge-prompt-chip" data-prompt="持ち物を考えて">持ち物を考えて</button>
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>できること</h2>
+                <ul class="concierge-capability-list">
+                  <li>「Day2の予定を教えて」で日程を要約</li>
+                  <li>「おすすめの場所ある？」で候補を提案</li>
+                  <li>「空いている日は？」で余白のある日を案内</li>
+                  <li>「持ち物を考えて」で準備のヒントを返答</li>
+                </ul>
+              </div>
+
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>すぐ試す</h2>
+                <div class="concierge-prompt-list">
+                  <button type="button" class="concierge-prompt-chip" data-prompt="Day1の予定を教えて">Day1の予定を教えて</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="おすすめの場所ある？">おすすめの場所ある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="空いている日はある？">空いている日はある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="持ち物を考えて">持ち物を考えて</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </aside>
-
-      <section class="concierge-chat-panel">
-        <div class="concierge-chat-shell">
-          <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
-
-          <form id="conciergeForm" class="concierge-form">
-            <label class="concierge-input-wrap" for="conciergeInput">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <input
-                id="conciergeInput"
-                type="text"
-                placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
-                autocomplete="off"
-              >
-            </label>
-            <button type="submit" class="concierge-send-btn">送信</button>
-          </form>
-        </div>
-      </section>
-    </section>
-  </div>
-</div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const messagesEl = document.getElementById("conciergeMessages");
   const formEl = document.getElementById("conciergeForm");
   const inputEl = document.getElementById("conciergeInput");
   const sendButtonEl = formEl.querySelector(".concierge-send-btn");
-  const storageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
-  const historyKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
-  let conversationId = window.sessionStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
+  const detailModalEl = document.getElementById("conciergeDetailModal");
+  const detailOpenEl = document.getElementById("conciergeDetailOpen");
+  const detailCloseEl = document.getElementById("conciergeDetailClose");
+  const itineraryStorageId = "{{ itinerary.pk }}";
+  const storageKey = `tabisync_concierge_conversation_${itineraryStorageId}`;
+  const historyKey = `tabisync_concierge_history_${itineraryStorageId}`;
+  const legacyStorageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
+  const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
+  let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
   let chatHistory = [];
 
-  function addMessage(role, text) {
+  function migrateLegacyHistory() {
+    const legacyConversationId = window.sessionStorage.getItem(legacyStorageKey);
+    const legacyHistory = window.sessionStorage.getItem(legacyHistoryKey);
+
+    if (!window.localStorage.getItem(storageKey) && legacyConversationId) {
+      window.localStorage.setItem(storageKey, legacyConversationId);
+      conversationId = legacyConversationId;
+    }
+
+    if (!window.localStorage.getItem(historyKey) && legacyHistory) {
+      window.localStorage.setItem(historyKey, legacyHistory);
+    }
+  }
+
+  function addMessage(role, text, options = {}) {
     const article = document.createElement("article");
     article.className = `concierge-message is-${role}`;
 
@@ -96,7 +178,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const bubble = document.createElement("div");
     bubble.className = "concierge-message-bubble";
-    bubble.textContent = text;
+    if (options.renderedHtml) {
+      bubble.innerHTML = options.renderedHtml;
+    } else {
+      bubble.textContent = text;
+    }
 
     article.appendChild(label);
     article.appendChild(bubble);
@@ -105,27 +191,33 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function persistHistory() {
-    window.sessionStorage.setItem(storageKey, conversationId);
-    window.sessionStorage.setItem(historyKey, JSON.stringify(chatHistory));
+    window.localStorage.setItem(storageKey, conversationId);
+    window.localStorage.setItem(historyKey, JSON.stringify(chatHistory));
   }
 
   function restoreHistory() {
     try {
-      const rawHistory = window.sessionStorage.getItem(historyKey);
+      const rawHistory = window.localStorage.getItem(historyKey);
       const parsed = JSON.parse(rawHistory || "[]");
       if (!Array.isArray(parsed) || !parsed.length) return false;
       chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
-      chatHistory.forEach((item) => addMessage(item.role, item.content));
+      chatHistory.forEach((item) => addMessage(item.role, item.content, { renderedHtml: item.rendered_html || "" }));
       return chatHistory.length > 0;
     } catch (error) {
       return false;
     }
   }
 
+  function setModalOpen(isOpen) {
+    if (!detailModalEl) return;
+    detailModalEl.hidden = !isOpen;
+    document.body.classList.toggle("is-concierge-modal-open", isOpen);
+  }
+
   function setSending(isSending) {
     sendButtonEl.disabled = isSending;
     inputEl.disabled = isSending;
-    sendButtonEl.textContent = isSending ? "送信中..." : "送信";
+    sendButtonEl.classList.toggle("is-sending", isSending);
   }
 
   function getCookie(name) {
@@ -199,17 +291,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
     button.addEventListener("click", function () {
+      setModalOpen(false);
       submitPrompt(button.dataset.prompt || "");
     });
+  });
+
+  detailOpenEl?.addEventListener("click", function () {
+    setModalOpen(true);
+  });
+
+  detailCloseEl?.addEventListener("click", function () {
+    setModalOpen(false);
+  });
+
+  detailModalEl?.addEventListener("click", function (event) {
+    if (event.target instanceof HTMLElement && event.target.hasAttribute("data-close-modal")) {
+      setModalOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      setModalOpen(false);
+    }
   });
 
   window.tabisyncConciergePing = function () {
     return submitPrompt("__ping__");
   };
 
+  migrateLegacyHistory();
+
   if (!restoreHistory()) {
-    addMessage("assistant", "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。まずは自然な言葉で相談してください。");
+    const welcomeMessage = "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。利用規約と注意事項を必ずお読みの上、ご利用ください。質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」";
+    const welcomeMessageHtml = '旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。<a href="{% url "tabisync:concierge_terms" %}" target="_blank" rel="noopener noreferrer">利用規約と注意事項</a>を必ずお読みの上、ご利用ください。<br>質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」';
+    addMessage("assistant", welcomeMessage, { renderedHtml: welcomeMessageHtml });
+    chatHistory.push({
+      role: "assistant",
+      content: welcomeMessage,
+      rendered_html: welcomeMessageHtml,
+    });
+    persistHistory();
   }
 });
 </script>
-{% endblock %}
+  </body>
+</html>

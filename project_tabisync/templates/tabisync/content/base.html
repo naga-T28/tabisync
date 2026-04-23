@@ -43,6 +43,9 @@
     <body id="content-body">
         <header class="page-header">
             <div class="header-wrapper">
+                <div class="header-buttons">
+                    <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button>
+                </div>
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
@@ -52,8 +55,7 @@
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
-                    <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button>
-                    <a href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}" id="share-button"><i class="fa-solid fa-pen-to-square"></i></a>
+                    <a href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}" id="share-button"><i class="fa-solid fa-robot"></i></a>
                 </div>
             </div>
         </header>
@@ -87,10 +89,10 @@
                             <!--<div>地図</div>-->
                         </a>
                     </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_concierge' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}">
-                            <i class="fa-solid fa-robot"></i>
-                            <!--<div>AI提案</div>-->
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_edit_v2' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                            <!--<div>編集</div>-->
                         </a>
                     </li>
           
