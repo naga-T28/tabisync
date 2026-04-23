@@ -36,9 +36,10 @@ body#concierge-body {
 }
 
 .concierge-page {
-  width: min(90%, 1200px);
+  width: 100%;
   height: 100%;
   margin: 0 auto;
+  margin-right: 0;
   overflow: hidden;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
