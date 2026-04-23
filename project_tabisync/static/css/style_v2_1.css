@@ -2766,7 +2766,6 @@ body#concierge-body {
 .concierge-chat-shell {
   border-radius: 28px;
   background: #fff;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
 }
 
 .concierge-panel {
@@ -2847,8 +2846,6 @@ body#concierge-body {
   padding: 6px 4px calc(var(--concierge-footer-height) + 18px);
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
   scrollbar-gutter: stable;
 }
 
@@ -3110,7 +3107,9 @@ body.is-concierge-modal-open {
     padding: 0 18px;
     border-radius: 22px;
   }
-  .concierge-chat-shell,
+  .concierge-chat-shell {
+    border-radius: 0;
+  }
   .concierge-panel {
     border-radius: 22px;
   }

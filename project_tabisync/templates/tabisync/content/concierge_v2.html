@@ -78,27 +78,28 @@
               <section class="concierge-chat-panel">
                 <div class="concierge-chat-shell">
                   <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
-
-                  <form id="conciergeForm" class="concierge-form">
-                    <label class="concierge-input-wrap" for="conciergeInput">
-                      <i class="fa-solid fa-wand-magic-sparkles"></i>
-                      <input
-                        id="conciergeInput"
-                        type="text"
-                        placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
-                        autocomplete="off"
-                      >
-                      <button type="submit" class="concierge-send-btn" aria-label="送信">
-                        <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
-                        <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
-                      </button>
-                    </label>
-                  </form>
                 </div>
               </section>
             </section>
           </div>
         </div>
+        <footer class="concierge-footer">
+          <form id="conciergeForm" class="concierge-form">
+            <label class="concierge-input-wrap" for="conciergeInput">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <input
+                id="conciergeInput"
+                type="text"
+                placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                autocomplete="off"
+              >
+              <button type="submit" class="concierge-send-btn" aria-label="送信">
+                <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+              </button>
+            </label>
+          </form>
+        </footer>
         <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
           <div class="concierge-detail-backdrop" data-close-modal></div>
           <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
