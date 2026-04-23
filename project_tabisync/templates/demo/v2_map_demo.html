@@ -1,0 +1,53 @@
+{% extends "demo/v2_base.html" %}
+{% block title %}沖縄旅行地図デモ{% endblock %}
+
+{% block contents %}
+{% load static %}
+<div class="content-main">
+  <div class="place-wrapper">
+    <div class="box5-6" style="margin: 74px auto 0; width: min(780px, calc(100% - 24px));">
+      <h2 class="box-title">行きたい場所マップ</h2>
+      <div class="box-content">
+        <p style="margin-bottom: 14px;">デモでは重たい地図APIの代わりに、沖縄本島のイメージマップを表示しています。</p>
+        <img
+          src="{% static 'img/demo-okinawa-map.svg' %}"
+          alt="沖縄旅行デモ用の地図イメージ"
+          style="width: 100%; border-radius: 18px; border: 1px solid #d7dce3; background: #fff;"
+        >
+      </div>
+    </div>
+
+    <div class="place-list-column">
+      <div class="place-list-wrapper">
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-content">
+              <h3>国際通り</h3>
+              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 1</p></div>
+              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">ランチとお土産探し</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-content">
+              <h3>美ら海水族館</h3>
+              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 2</p></div>
+              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">午前中に入る予定</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-content">
+              <h3>アメリカンビレッジ</h3>
+              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 3</p></div>
+              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">夜景も見たい</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

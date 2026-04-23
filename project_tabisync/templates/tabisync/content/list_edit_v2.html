@@ -84,6 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return {
       id: createId("item"),
       text: "",
+      checked: false,
     };
   }
 
@@ -119,7 +120,13 @@ document.addEventListener("DOMContentLoaded", function () {
             ${(list.items || []).map((item) => `
               <li class="checklist-edit-item">
                 <label class="checklist-item-check">
-                  <input type="checkbox" disabled>
+                  <input
+                    type="checkbox"
+                    data-action="toggle-item"
+                    data-list-id="${list.id}"
+                    data-item-id="${item.id}"
+                    ${item.checked ? "checked" : ""}
+                  >
                 </label>
                 <input
                   type="text"
@@ -154,8 +161,8 @@ document.addEventListener("DOMContentLoaded", function () {
       .replace(/'/g, "&#39;");
   }
 
-  function sanitizeLists() {
-    lists = lists
+  function buildSanitizedLists() {
+    return lists
       .map((list) => ({
         id: list.id || createId("list"),
         title: String(list.title || "").trim(),
@@ -164,6 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
               .map((item) => ({
                 id: item.id || createId("item"),
                 text: String(item.text || "").trim(),
+                checked: Boolean(item.checked),
               }))
               .filter((item) => item.text)
           : [],
@@ -172,8 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function saveLists() {
-    sanitizeLists();
-    renderEditor();
+    const payloadLists = buildSanitizedLists();
     setStatus("saving", "保存中...");
 
     try {
@@ -183,13 +190,15 @@ document.addEventListener("DOMContentLoaded", function () {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
         },
-        body: JSON.stringify({ lists }),
+        credentials: "same-origin",
+        body: JSON.stringify({ lists: payloadLists }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
+      await response.json();
       setStatus("saved", "保存済み");
     } catch (error) {
       console.error(error);
@@ -236,6 +245,20 @@ document.addEventListener("DOMContentLoaded", function () {
       item.text = target.value;
       queueSave();
     }
+  });
+
+  editor.addEventListener("change", function (event) {
+    const target = event.target;
+    if (target.dataset.action !== "toggle-item") return;
+
+    const list = lists.find((entry) => entry.id === target.dataset.listId);
+    if (!list) return;
+
+    const item = (list.items || []).find((entry) => entry.id === target.dataset.itemId);
+    if (!item) return;
+
+    item.checked = target.checked;
+    queueSave();
   });
 
   editor.addEventListener("click", function (event) {

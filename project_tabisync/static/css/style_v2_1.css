@@ -935,9 +935,10 @@ article.privacy-policy,
 }
 
 .memo-v2-board {
+  margin-top: 30px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 25px;
 }
 
 .memo-v2-empty {
@@ -2199,7 +2200,7 @@ article.privacy-policy,
 .edit-modal-header,
 .search-wrapper {
   display: flex;
-  gap: 8px;
+  gap: 0;
   align-items: center;
 }
 
@@ -2267,7 +2268,7 @@ article.privacy-policy,
 .btn-primary,
 .edit-modal-close {
   border: none;
-  background: #f4f6f8;
+  background: #fff;
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
@@ -2299,7 +2300,7 @@ article.privacy-policy,
 }
 .checklist-view-page,
 .checklist-page {
-  width: min(920px, 100% - 24px);
+  width: 90%;
   margin: 0 auto;
   padding: 82px 0 120px;
 }
@@ -2308,7 +2309,7 @@ article.privacy-policy,
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 35px;
 }
 
 .checklist-edit-page {
@@ -2383,7 +2384,7 @@ article.privacy-policy,
 
 .checklist-board {
   display: grid;
-  gap: 18px;
+  gap: 35px;
 }
 
 .checklist-card {
@@ -2391,6 +2392,7 @@ article.privacy-policy,
 }
 
 .checklist-box {
+  width: 100%;
   position: relative;
   margin-bottom: 0;
   border-radius: 24px;
@@ -2488,7 +2490,7 @@ article.privacy-policy,
 
 .checklist-edit-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
 }
@@ -2511,6 +2513,7 @@ article.privacy-policy,
 
 .checklist-item-input {
   min-height: 44px;
+  min-width: 0;
   padding: 10px 12px;
   font-size: 0.95rem;
 }
@@ -2524,6 +2527,10 @@ article.privacy-policy,
   background: #eef1f4;
   color: #5f6670;
   cursor: pointer;
+}
+
+.checklist-delete-item {
+  justify-self: end;
 }
 
 .checklist-add-item {
@@ -2570,7 +2577,7 @@ article.privacy-policy,
 @media (max-width: 768px) {
   .checklist-view-page,
   .checklist-page {
-    width: calc(100% - 20px);
+    width: 90%;
     padding-top: 72px;
   }
   .checklist-header {
@@ -2581,11 +2588,7 @@ article.privacy-policy,
     width: 100%;
   }
   .checklist-edit-item {
-    grid-template-columns: auto 1fr;
-  }
-  .checklist-delete-item {
-    grid-column: 2;
-    justify-self: end;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 }
 :root {
@@ -2852,6 +2855,7 @@ body#concierge-body {
   padding-bottom: calc(var(--concierge-footer-height) + 18px);
   padding-right: 5px;
   padding-right: 5px;
+  margin-right: 5px;
 }
 
 .concierge-message {
@@ -2935,6 +2939,7 @@ body#concierge-body {
   position: static;
   width: 100%;
   box-sizing: border-box;
+  border-radius: 50%;
 }
 
 .footer-nav.--concierge-footer {
@@ -3134,6 +3139,7 @@ footer {
 }
 footer.page-footer-concierge {
   padding: 0;
+  border-radius: 50%;
 }
 footer ul {
   list-style: none;
