@@ -2843,7 +2843,7 @@ body#concierge-body {
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
-  padding: 6px 4px calc(var(--concierge-footer-height) + 18px);
+  padding-bottom: calc(var(--concierge-footer-height) + 18px);
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
