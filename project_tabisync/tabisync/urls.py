@@ -9,6 +9,7 @@ urlpatterns = [
     path('qa/', views.QAView.as_view(), name='qa'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('user_agreement/', views.UserAgreementView.as_view(), name='user_agreement'),
+    path('concierge_terms/', views.ConciergeTermsView.as_view(), name='concierge_terms'),
     path('privacy_policy/', views.PrivacyPolicyView.as_view(), name='privacy_policy'),
     path('demo/', views.DemoContentView.as_view(), name='demo_content'),
     path('demo/edit', views.DemoEditView.as_view(), name='demo_edit'),
