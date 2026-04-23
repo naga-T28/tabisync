@@ -1,0 +1,61 @@
+{% extends "demo/v2_base.html" %}
+{% block title %}沖縄旅行メモデモ{% endblock %}
+
+{% block contents %}
+<div class="content-main">
+  <div class="memo-v2-wrapper">
+    <div class="title-wrapper">
+      <div class="title-visual --miniMargin">
+        <p class="siori-sub-title">沖縄旅行</p>
+        <h1 class="siori-title --noMargin">みんなのメモ</h1>
+      </div>
+    </div>
+
+    <section class="checklist-header">
+      <div>
+        <h2>メモ一覧</h2>
+        <p>V2 では旅の気づきや集合メモも、このようなカードで見やすく共有できます。</p>
+      </div>
+    </section>
+
+    <section class="memo-v2-board">
+      <article class="memo-note-card">
+        <div class="memo-note-footer">
+          <h3 class="memo-note-tape memo-note-tape-0">メモ 1</h3>
+        </div>
+        <div class="memo-note-preview markdown-body">
+          <h3>初日の持ち物</h3>
+          <ul>
+            <li>レンタカー予約確認メール</li>
+            <li>帽子と日焼け止め</li>
+            <li>空港で食べる軽食は不要</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="memo-note-card">
+        <div class="memo-note-footer">
+          <h3 class="memo-note-tape memo-note-tape-1">メモ 2</h3>
+        </div>
+        <div class="memo-note-preview markdown-body">
+          <p><strong>美ら海水族館</strong> は午前のほうが空いていそう。駐車場から少し歩くので、歩きやすい靴推奨。</p>
+        </div>
+      </article>
+
+      <article class="memo-note-card">
+        <div class="memo-note-footer">
+          <h3 class="memo-note-tape memo-note-tape-2">メモ 3</h3>
+        </div>
+        <div class="memo-note-preview markdown-body">
+          <p>お土産候補:</p>
+          <ul>
+            <li>ちんすこう</li>
+            <li>紅いもタルト</li>
+            <li>海ぶどう</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>
+{% endblock %}

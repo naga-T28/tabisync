@@ -1,0 +1,97 @@
+{% extends "tabisync/content/base.html" %}
+{% block title %}しおり内容の編集{% endblock %}
+
+{% block contents %}
+{% load static %}
+<main class="content-main">
+  <div class="edit-content-page">
+  <form class="create-form edit-content-form" method="post" action="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}">
+    {% csrf_token %}
+    <div class="input-first-wrapper">
+      <div class="schedules-container">
+        <h3 class="input-item-title input-item-title-first">しおり内容の編集</h3>
+        <p class="input-item-description">作成時に入力した内容のうち、パスワード設定以外を編集できます。</p>
+        {% if error %}
+          <p class="input-item-description" style="color: #c0392b;">{{ error }}</p>
+        {% endif %}
+        <div class="input-description-wrapper">
+          <div class="textarea-required-title">
+            <input class="input-title" type="text" name="title" placeholder="タイトル（例：沖縄旅行）" required value="{{ itinerary.title }}">
+          </div>
+          <input class="input-title" type="text" name="subtitle" placeholder="サブタイトル（例：2泊3日の卒業旅行）" value="{{ itinerary.subtitle|default:'' }}">
+          <textarea class="input-description" name="description" placeholder="概要（例：卒業旅行で沖縄に行きます！首里城や美ら海水族館を訪問予定！）" rows="20">{{ itinerary.description|default:'' }}</textarea>
+        </div>
+      </div>
+
+      <div class="schedules-container">
+        <h3 class="input-item-title"><i class="fa-solid fa-calendar-days"></i> 日程設定</h3>
+        <div class="input-group">
+          <label class="input-date-flex">日程</label>
+          <div class="input-date">
+            <input
+              type="date"
+              name="start_date"
+              id="startDate"
+              value="{% if itinerary.start_date %}{{ itinerary.start_date|date:'Y-m-d' }}{% endif %}"
+              required
+            >~<input
+              type="date"
+              name="end_date"
+              id="endDate"
+              value="{% if itinerary.end_date %}{{ itinerary.end_date|date:'Y-m-d' }}{% endif %}"
+              required
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="schedules-container">
+        <h3 class="input-item-title"><i class="fa-solid fa-key"></i> パスワード設定</h3>
+        <p class="input-item-description">閲覧用・編集用パスワードと再設定用メールアドレスはこの画面では変更できません。</p>
+      </div>
+
+      <button class="enter-input-btn" type="submit">保存する</button>
+    </div>
+  </form>
+  </div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const startDate = document.getElementById("startDate");
+  const endDate = document.getElementById("endDate");
+
+  if (!startDate || !endDate) return;
+
+  startDate.addEventListener("input", function () {
+    if (!this.value) return;
+
+    endDate.min = this.value;
+
+    if (endDate.value && endDate.value < this.value) {
+      endDate.value = "";
+    }
+
+    if (!endDate.value) {
+      const parts = this.value.split("-");
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const nextDate = new Date(year, month, day + 1);
+
+      const yyyy = nextDate.getFullYear();
+      const mm = String(nextDate.getMonth() + 1).padStart(2, "0");
+      const dd = String(nextDate.getDate()).padStart(2, "0");
+      endDate.value = `${yyyy}-${mm}-${dd}`;
+    }
+  });
+
+  endDate.addEventListener("change", function () {
+    if (startDate.value && this.value && this.value < startDate.value) {
+      alert("終了日は開始日以降を選択してください。");
+      this.value = "";
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+@use "variables";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+  font-family: variables.$font-base;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: variables.$text-main;
+  margin: 0;
+  padding: 0;
+}

@@ -1,0 +1,425 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>AIコンシェルジュβ版 | TabiSync</title>
+        <!-- インデックス防止用-->
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Font Awesome CDN (最新版) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ファビコン -->
+        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <!-- iPhone用のアイコンサイズを指定 -->
+        <meta name="apple-mobile-web-app-title" content="TabiSync">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <!---Googleフォント-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+        <!-- OGP設定 -->
+        <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
+        <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="TabiSync">
+        <!-- Twitterカード（任意）-->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
+        <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <!---リセットcsss-->
+        <link rel="stylesheet" href="{% static 'css/reset.css'%}">
+        <!--オリジナルCSS-->
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </head>
+    <body id="concierge-body">
+      <main class="content-main-concierge">
+        <header class="page-header">
+            <div class="header-wrapper --concierge-header">
+                <div class="header-buttons">
+                  <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
+                          <i class="fa-solid fa-house"></i>
+                  </a>
+                </div>
+                <div class="header-logo">
+                    <h1>
+                        <a href="{% url 'tabisync:home' %}">
+                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                        </a>
+                    </h1>
+                </div>
+                <!-- ハンバーガーアイコン -->
+                <div class="header-buttons">
+                    <button id="conciergeDetailOpen"><i class="fa-regular fa-circle-question"></i></button>
+                </div>
+            </div>
+        </header>
+        <div class="concierge-main">
+          <div class="concierge-page">
+            <section class="concierge-layout">
+              <section class="concierge-chat-panel">
+                <div class="concierge-chat-shell">
+                  <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
+                </div>
+              </section>
+            </section>
+          </div>
+        </div>
+        <footer class="page-footer-concierge">
+            <nav class="footer-nav --concierge-footer">
+                <form id="conciergeForm" class="concierge-form">
+                  <label class="concierge-input-wrap" for="conciergeInput">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <input
+                      id="conciergeInput"
+                      type="text"
+                      placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                      autocomplete="off"
+                    >
+                    <button type="submit" class="concierge-send-btn" aria-label="送信">
+                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                    </button>
+                  </label>
+                </form>
+            </nav>
+        </footer>
+        <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
+          <div class="concierge-detail-backdrop" data-close-modal></div>
+          <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
+            <button type="button" class="concierge-detail-close" id="conciergeDetailClose" aria-label="閉じる">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="concierge-detail-content">
+              <p class="concierge-eyebrow">DETAILS</p>
+              <h2 id="conciergeDetailTitle">AIコンシェルジュβ版について</h2>
+              <p class="concierge-detail-lead">
+                入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれるあなた専用のAIコンシェルジュです。<br>
+                <small>
+                  *現在β版のため、提案の正確性や対応内容には限りがあります。一つのしおりで1日あたり5回までの質問に対応しています。<br>
+                </small>
+              </p>
+
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>できること</h2>
+                <ul class="concierge-capability-list">
+                  <li>「Day2の予定を教えて」で日程を要約</li>
+                  <li>「行きたい場所リスト」に登録した場所で予定を組んで</li>
+                  <li>「空いている日は？」で余白のある日を案内</li>
+                  <li>「持ち物を考えて」で準備のヒントを返答</li>
+                </ul>
+              </div>
+
+              <div class="concierge-panel concierge-detail-panel">
+                <h2>すぐ試す</h2>
+                <div class="concierge-prompt-list">
+                  <button type="button" class="concierge-prompt-chip" data-prompt="Day1の予定を教えて">Day1の予定を教えて</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="おすすめの場所ある？">おすすめの場所ある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="空いている日はある？">空いている日はある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="持ち物を考えて">持ち物を考えて</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const messagesEl = document.getElementById("conciergeMessages");
+  const formEl = document.getElementById("conciergeForm");
+  const inputEl = document.getElementById("conciergeInput");
+  const sendButtonEl = formEl.querySelector(".concierge-send-btn");
+  const detailModalEl = document.getElementById("conciergeDetailModal");
+  const detailOpenEl = document.getElementById("conciergeDetailOpen");
+  const detailCloseEl = document.getElementById("conciergeDetailClose");
+  const itineraryStorageId = "{{ itinerary.pk }}";
+  const storageKey = `tabisync_concierge_conversation_${itineraryStorageId}`;
+  const historyKey = `tabisync_concierge_history_${itineraryStorageId}`;
+  const legacyStorageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
+  const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
+  let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
+  let chatHistory = [];
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(text) {
+    let html = escapeHtml(text);
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    return html;
+  }
+
+  function renderMarkdown(text) {
+    const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+    const blocks = [];
+    let listType = null;
+    let listItems = [];
+    let paragraphLines = [];
+
+    function flushParagraph() {
+      if (!paragraphLines.length) return;
+      blocks.push(`<p>${paragraphLines.map((line) => renderInlineMarkdown(line)).join("<br>")}</p>`);
+      paragraphLines = [];
+    }
+
+    function flushList() {
+      if (!listType || !listItems.length) return;
+      blocks.push(`<${listType}>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</${listType}>`);
+      listType = null;
+      listItems = [];
+    }
+
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushParagraph();
+        flushList();
+        continue;
+      }
+
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+      if (headingMatch) {
+        flushParagraph();
+        flushList();
+        const level = headingMatch[1].length;
+        blocks.push(`<h${level + 2}>${renderInlineMarkdown(headingMatch[2])}</h${level + 2}>`);
+        continue;
+      }
+
+      const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (unorderedMatch) {
+        flushParagraph();
+        if (listType && listType !== "ul") flushList();
+        listType = "ul";
+        listItems.push(unorderedMatch[1]);
+        continue;
+      }
+
+      const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+      if (orderedMatch) {
+        flushParagraph();
+        if (listType && listType !== "ol") flushList();
+        listType = "ol";
+        listItems.push(orderedMatch[1]);
+        continue;
+      }
+
+      if (listType) flushList();
+      paragraphLines.push(trimmed);
+    }
+
+    flushParagraph();
+    flushList();
+
+    return blocks.join("");
+  }
+
+  function migrateLegacyHistory() {
+    const legacyConversationId = window.sessionStorage.getItem(legacyStorageKey);
+    const legacyHistory = window.sessionStorage.getItem(legacyHistoryKey);
+
+    if (!window.localStorage.getItem(storageKey) && legacyConversationId) {
+      window.localStorage.setItem(storageKey, legacyConversationId);
+      conversationId = legacyConversationId;
+    }
+
+    if (!window.localStorage.getItem(historyKey) && legacyHistory) {
+      window.localStorage.setItem(historyKey, legacyHistory);
+    }
+  }
+
+  function addMessage(role, text, options = {}) {
+    const article = document.createElement("article");
+    article.className = `concierge-message is-${role}`;
+
+    const label = document.createElement("p");
+    label.className = "concierge-message-label";
+    label.textContent = role === "assistant" ? "AIコンシェルジュ" : "あなた";
+
+    const bubble = document.createElement("div");
+    bubble.className = "concierge-message-bubble";
+    if (options.renderedHtml) {
+      bubble.innerHTML = options.renderedHtml;
+    } else if (options.markdown) {
+      bubble.innerHTML = renderMarkdown(text);
+    } else {
+      bubble.textContent = text;
+    }
+
+    article.appendChild(label);
+    article.appendChild(bubble);
+    messagesEl.appendChild(article);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function persistHistory() {
+    window.localStorage.setItem(storageKey, conversationId);
+    window.localStorage.setItem(historyKey, JSON.stringify(chatHistory));
+  }
+
+  function restoreHistory() {
+    try {
+      const rawHistory = window.localStorage.getItem(historyKey);
+      const parsed = JSON.parse(rawHistory || "[]");
+      if (!Array.isArray(parsed) || !parsed.length) return false;
+      chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
+      chatHistory.forEach((item) => addMessage(item.role, item.content, { renderedHtml: item.rendered_html || "" }));
+      return chatHistory.length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setModalOpen(isOpen) {
+    if (!detailModalEl) return;
+    detailModalEl.hidden = !isOpen;
+    document.body.classList.toggle("is-concierge-modal-open", isOpen);
+  }
+
+  function setSending(isSending) {
+    sendButtonEl.disabled = isSending;
+    inputEl.disabled = isSending;
+    sendButtonEl.classList.toggle("is-sending", isSending);
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop().split(";").shift();
+    }
+    return "";
+  }
+
+  async function submitPrompt(prompt) {
+    const userText = String(prompt || "").trim();
+    if (!userText) return;
+
+    addMessage("user", userText);
+    chatHistory.push({ role: "user", content: userText });
+    persistHistory();
+    inputEl.value = "";
+    setSending(true);
+
+    try {
+      const response = await fetch("{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+          message: userText,
+          conversation_id: conversationId,
+          history: chatHistory.slice(0, -1),
+        }),
+      });
+
+      const responseText = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        const contentType = response.headers.get("content-type") || "(unknown)";
+        throw new Error(`サーバーがJSON以外を返しました (status=${response.status}, content-type=${contentType}): ${responseText.slice(0, 120)}`);
+      }
+
+      if (!response.ok || data.status === "error" || data.status === "limit_exceeded") {
+        throw new Error(data.message || "AIコンシェルジュに接続できませんでした。");
+      }
+
+      if (data.conversation_id) {
+        conversationId = data.conversation_id;
+      }
+
+      const assistantReply = data.reply || "返答を生成できませんでした。";
+      addMessage("assistant", assistantReply, { markdown: true });
+      chatHistory.push({
+        role: "assistant",
+        content: assistantReply,
+        rendered_html: renderMarkdown(assistantReply),
+      });
+      persistHistory();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "エラーが発生しました。";
+      addMessage("assistant", message);
+      chatHistory.push({ role: "assistant", content: message });
+      persistHistory();
+    } finally {
+      setSending(false);
+    }
+  }
+
+  formEl.addEventListener("submit", function (event) {
+    event.preventDefault();
+    submitPrompt(inputEl.value);
+  });
+
+  document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
+    button.addEventListener("click", function () {
+      setModalOpen(false);
+      submitPrompt(button.dataset.prompt || "");
+    });
+  });
+
+  detailOpenEl?.addEventListener("click", function () {
+    setModalOpen(true);
+  });
+
+  detailCloseEl?.addEventListener("click", function () {
+    setModalOpen(false);
+  });
+
+  detailModalEl?.addEventListener("click", function (event) {
+    if (event.target instanceof HTMLElement && event.target.hasAttribute("data-close-modal")) {
+      setModalOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      setModalOpen(false);
+    }
+  });
+
+  window.tabisyncConciergePing = function () {
+    return submitPrompt("__ping__");
+  };
+
+  migrateLegacyHistory();
+
+  if (!restoreHistory()) {
+    const welcomeMessage = "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。利用規約と注意事項を必ずお読みの上、ご利用ください。質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」";
+    const welcomeMessageHtml = '旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。<a href="{% url "tabisync:concierge_terms" %}" target="_blank" rel="noopener noreferrer">利用規約と注意事項</a>を必ずお読みの上、ご利用ください。<br>質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」';
+    addMessage("assistant", welcomeMessage, { renderedHtml: welcomeMessageHtml });
+    chatHistory.push({
+      role: "assistant",
+      content: welcomeMessage,
+      rendered_html: welcomeMessageHtml,
+    });
+    persistHistory();
+  }
+});
+</script>
+  </body>
+</html>
