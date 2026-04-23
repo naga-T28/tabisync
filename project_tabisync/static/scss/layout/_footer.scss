@@ -7,6 +7,9 @@ footer {
   padding-bottom: 50px;
   text-align: center;
   font-size: 14px;
+  &.page-footer-concierge{
+    padding: 0;
+  }
 
   ul {
     list-style: none;

@@ -215,6 +215,9 @@ footer {
   text-align: center;
   font-size: 14px;
 }
+footer.page-footer-concierge {
+  padding: 0;
+}
 footer ul {
   list-style: none;
   padding: 0;
