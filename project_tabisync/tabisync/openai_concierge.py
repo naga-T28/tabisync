@@ -121,7 +121,7 @@ def _extract_response_text(parsed):
     if chunks:
         return "\n".join(chunks).strip()
 
-    raise OpenAIConciergeError("OpenAI API のレスポンス本文を解釈できませんでした。")
+    raise OpenAIConciergeError("レスポンス本文を解釈できませんでした。")
 
 
 def call_openai_responses_api(
@@ -169,7 +169,7 @@ def call_openai_responses_api(
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise OpenAIConciergeError("OpenAI API のレスポンスJSONを解釈できませんでした。") from exc
+        raise OpenAIConciergeError("レスポンスJSONを解釈できませんでした。") from exc
 
     return _extract_response_text(parsed), payload
 

@@ -2,13 +2,7 @@
     width: 100%;
     min-height: 100vh;
     margin: 0; /* 外側の余白（上下と中央配置） */
-    background-image: repeating-linear-gradient(
-        -45deg,           /* ストライプの角度 */
-        #f2f3f7 0,        /* ストライプの色（薄いグレー） */
-        #f2f3f7 3px,      /* ストライプの太さ（3pxの間隔） */
-        transparent 3px,  /* 透明部分 */
-        transparent 6px   /* 透明部分（3pxから6pxまで） */
-    );
+
 }
 .schedule-view-page {
   width: 95%;
@@ -61,7 +55,8 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 16px 0;
+  margin: 8px 0 16px;
+  padding-top: 1em;
 }
 .box5-6 {
     position: relative; /* タイトルをボックス内の左上に配置するための基準 */
@@ -95,6 +90,147 @@
 }
 .box-content {
   width: 100%;
+}
+
+.schedule-content-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-side-column {
+  display: contents;
+}
+
+.schedule-overview-box {
+  order: 1;
+}
+
+.schedule-main-column {
+  order: 2;
+}
+
+.schedule-share-box {
+  order: 3;
+}
+
+.day-tabs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+  padding: 2.5em 1em 0;
+  position: relative;
+}
+
+.day-tabs-scroll {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid #d7d7d7;
+  border-radius: 10px;
+  background: #f8f8f8;
+}
+
+.day-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.day-tab {
+  flex: 0 0 96px;
+  min-height: 54px;
+  border: none;
+  border-right: 1px solid #d7d7d7;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: inherit;
+}
+
+.day-tab:last-child {
+  border-right: none;
+}
+
+.day-tab.is-active {
+  background: #666;
+  color: #fff;
+}
+
+.day-tab-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.day-tab-date {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.day-tab-menu {
+  position: relative;
+}
+
+.day-tab-more {
+  width: 44px;
+  height: 100%;
+  min-height: 54px;
+  border: 1px solid #d7d7d7;
+  border-radius: 10px;
+  background: #fff;
+  color: #555;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.day-tab-menu-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid #d7d7d7;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(0 0 0 / .14);
+}
+
+.day-tab-menu.is-open .day-tab-menu-list {
+  display: grid;
+  gap: 4px;
+}
+
+.day-tab-menu-item {
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.day-tab-menu-item.is-active {
+  background: #666;
+  color: #fff;
+}
+
+.day-tab-menu-date {
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .day-panel {
@@ -348,6 +484,56 @@
   border-radius: 12px;
 }
 
+@media screen and (min-width: 960px) {
+  .schedule-view-page {
+    width: min(100% - 48px, 1180px);
+    max-width: none;
+    margin-top: 24px;
+    padding: 24px 0 40px;
+  }
+
+  .title-wrapper {
+    width: 100%;
+  }
+
+  .title-visual {
+    margin-bottom: 28px;
+  }
+
+  .schedule-content-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .schedule-main-column,
+  .schedule-side-column {
+    min-width: 0;
+    order: 0;
+  }
+
+  .schedule-side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .schedule-side-column .box5-6,
+  .schedule-table-box {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  #scheduleView {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .day-panel.is-active {
+    width: 100%;
+  }
+}
 
 @media (max-width: 640px) {
   .row-display {
