@@ -7,29 +7,74 @@
 
 <div class="content-main">
 <div class="schedule-edit-page">
-  <section class="schedule-edit-header">
-    <div class="schedule-edit-header-copy">
-      <p class="schedule-edit-eyebrow">SCHEDULE EDITOR</p>
-      <h1>旅程表を編集</h1>
-      <p>Dayごとに予定を追加・編集・削除できます。時間や場所もこの画面からまとめて整えられます。</p>
+  <div class="title-wrapper">
+    <div class="title-visual">
+      <h1 class="siori-title">{{ itinerary.title }}</h1>
+      {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+      {% if first_date_str and last_date_str %}
+        <p class="siori-title-date">{{ first_date_str }} ～ {{ last_date_str }}</p>
+      {% endif %}
     </div>
-  </section>
+  </div>
 
-<div class="schedule-editor">
+<div class="box5-6 schedule-table-box schedule-editor">
+  <h2 class="box-title">日程表を編集</h2>
+  <div class="day-tabs" aria-label="日程を選択">
+    <div class="day-tabs-scroll" role="tablist">
+      {% for group in grouped_days %}
+        <button
+          type="button"
+          class="day-tab {% if forloop.first %}is-active{% endif %}"
+          role="tab"
+          aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+          aria-controls="day-{{ forloop.counter0 }}"
+          data-day-tab-index="{{ forloop.counter0 }}"
+          data-calendar-date="{{ group.choice.calendar_date }}"
+          onclick="setActivePanelByIndex({{ forloop.counter0 }})"
+        >
+          <span class="day-tab-label">{{ group.choice.day_num }}日目</span>
+          {% if group.choice.calendar_date %}<span class="day-tab-date">{{ group.choice.calendar_date }}</span>{% endif %}
+        </button>
+      {% endfor %}
+    </div>
+    <div class="day-tab-menu">
+      <button
+        type="button"
+        class="day-tab-more"
+        aria-label="ほかの日程を選択"
+        aria-expanded="false"
+        onclick="toggleDayMenu()"
+      >...</button>
+      <div class="day-tab-menu-list" role="menu">
+        {% for group in grouped_days %}
+          <button
+            type="button"
+            class="day-tab-menu-item {% if forloop.first %}is-active{% endif %}"
+            role="menuitem"
+            data-day-menu-index="{{ forloop.counter0 }}"
+            data-calendar-date="{{ group.choice.calendar_date }}"
+            onclick="setActivePanelByIndex({{ forloop.counter0 }})"
+          >
+            <span>{{ group.choice.day_num }}日目</span>
+            {% if group.choice.calendar_date %}<span class="day-tab-menu-date">{{ group.choice.calendar_date }}</span>{% endif %}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
   <div id="scheduleForm">
     {% csrf_token %}
+    <div id="scheduleView" class="box-content">
     {% for group in grouped_days %}
       <section class="day-panel {% if forloop.first %}is-active{% endif %}"
                id="day-{{ forloop.counter0 }}"
                data-day-key="{{ group.choice.value }}"
                data-calendar-date="{{ group.choice.calendar_date }}">
         <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
           <h2 class="day-heading">
-            {{ group.choice.label }}
+            {{ group.choice.day_num }}日目<br>
             {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
           </h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
         </div>
 
         <div class="schedule-list">
@@ -54,7 +99,7 @@
               >&times;</button>
 
               <div class="row-display">
-                <div class="row-time-text">
+                <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
                   <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
                   <span class="time-separator">{% if s.end_time %}〜{% endif %}</span>
                   <span class="display-end-time">{% if s.end_time %}{{ s.end_time|time:'H:i' }}{% endif %}</span>
@@ -64,17 +109,22 @@
                   <div class="display-title">{{ s.title }}</div>
                   <div class="row-place-line display-place-line">
                     <button type="button" class="place-open-btn" disabled>
-                      <i class="fa-solid fa-location-dot"></i><span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
+                      <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
                     </button>
                   </div>
-                  <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
+                  <div class="display-description {% if not s.description %}is-empty{% endif %}">
+                    <i class="fa-regular fa-clipboard"></i><span class="description-text">{{ s.description }}</span>
+                  </div>
                 </div>
               </div>
             </div>
+          {% empty %}
+            <div class="empty-day-message">この日の予定はまだありません。</div>
           {% endfor %}
         </div>
       </section>
     {% endfor %}
+    </div>
   </div>
 
   <button type="button" class="fab-add" id="addRowBtn">＋</button>
@@ -89,7 +139,7 @@
       <button type="button" class="edit-modal-close" onclick="closeAddScheduleModal()">&times;</button>
     </div>
 
-    <select id="newDate">
+    <select id="newDate" class="modal-field">
       {% for choice in day_choices %}
         <option value="{{ choice.value }}" {% if forloop.first %}selected{% endif %}>
           {{ choice.label }}
@@ -97,10 +147,18 @@
       {% endfor %}
     </select>
 
-    <input id="newStartTime" type="time" placeholder="開始時間">
-    <input id="newEndTime" type="time" placeholder="終了時間">
-    <input id="newTitle" type="text" maxlength="30" placeholder="タイトル">
-    <textarea id="newDescription" maxlength="100" placeholder="詳細メモ"></textarea>
+    <div class="modal-time-grid">
+      <label class="modal-time-field">
+        <span>開始時刻</span>
+        <input id="newStartTime" type="time">
+      </label>
+      <label class="modal-time-field">
+        <span>終了時刻</span>
+        <input id="newEndTime" type="time">
+      </label>
+    </div>
+    <input id="newTitle" class="modal-field" type="text" maxlength="30" placeholder="タイトル">
+    <textarea id="newDescription" class="modal-field" maxlength="100" placeholder="詳細メモ"></textarea>
 
     <div class="row-place-line modal-place-line">
       <button type="button" class="place-open-btn" onclick="openPlaceModalForNewSchedule()">
@@ -125,7 +183,7 @@
     <input type="hidden" id="editRowId">
     <input type="hidden" id="editPlaceId">
 
-    <select id="editDate">
+    <select id="editDate" class="modal-field">
       {% for choice in day_choices %}
         <option value="{{ choice.value }}">
           {{ choice.label }}
@@ -133,10 +191,18 @@
       {% endfor %}
     </select>
 
-    <input id="editStartTime" type="time" placeholder="開始時間">
-    <input id="editEndTime" type="time" placeholder="終了時間">
-    <input id="editTitle" type="text" maxlength="30" placeholder="タイトル">
-    <textarea id="editDescription" maxlength="100" placeholder="詳細メモ"></textarea>
+    <div class="modal-time-grid">
+      <label class="modal-time-field">
+        <span>開始時刻</span>
+        <input id="editStartTime" type="time">
+      </label>
+      <label class="modal-time-field">
+        <span>終了時刻</span>
+        <input id="editEndTime" type="time">
+      </label>
+    </div>
+    <input id="editTitle" class="modal-field" type="text" maxlength="30" placeholder="タイトル">
+    <textarea id="editDescription" class="modal-field" maxlength="100" placeholder="詳細メモ"></textarea>
 
     <div class="row-place-line modal-place-line">
       <button type="button" class="place-open-btn" onclick="openPlaceModalForEditSchedule()">
@@ -229,10 +295,12 @@
         <div class="display-title"></div>
         <div class="row-place-line display-place-line">
           <button type="button" class="place-open-btn" disabled>
-            <i class="fa-solid fa-location-dot"></i><span class="place-name-text">場所未設定</span>
+            <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">場所未設定</span>
           </button>
         </div>
-        <div class="display-description"></div>
+        <div class="display-description is-empty">
+          <i class="fa-regular fa-clipboard"></i><span class="description-text"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -277,6 +345,45 @@ function getPanels() {
   return [...document.querySelectorAll('.day-panel')];
 }
 
+function setActivePanelByIndex(index) {
+  const panels = getPanels();
+  const tabs = [...document.querySelectorAll('.day-tab')];
+  const menuItems = [...document.querySelectorAll('.day-tab-menu-item')];
+  const targetPanel = panels[index];
+  if (!targetPanel) return;
+
+  panels.forEach(panel => panel.classList.remove('is-active'));
+  tabs.forEach(tab => {
+    const isActive = Number(tab.dataset.dayTabIndex) === index;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  menuItems.forEach(item => {
+    item.classList.toggle('is-active', Number(item.dataset.dayMenuIndex) === index);
+  });
+
+  targetPanel.classList.add('is-active');
+  closeDayMenu();
+}
+
+function toggleDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const button = document.querySelector('.day-tab-more');
+  if (!menu || !button) return;
+
+  const isOpen = menu.classList.toggle('is-open');
+  button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const button = document.querySelector('.day-tab-more');
+  if (!menu || !button) return;
+
+  menu.classList.remove('is-open');
+  button.setAttribute('aria-expanded', 'false');
+}
+
 function moveDay(direction) {
   const panels = getPanels();
   const activeIndex = panels.findIndex(panel => panel.classList.contains('is-active'));
@@ -285,8 +392,7 @@ function moveDay(direction) {
   const nextIndex = activeIndex + direction;
   if (nextIndex < 0 || nextIndex >= panels.length) return;
 
-  panels.forEach(p => p.classList.remove('is-active'));
-  panels[nextIndex].classList.add('is-active');
+  setActivePanelByIndex(nextIndex);
 }
 
 document.getElementById('addRowBtn').addEventListener('click', () => {
@@ -367,8 +473,10 @@ function applyResultToRow(row, data) {
   row.querySelector(".display-start-time").textContent = data.start_time || "";
   row.querySelector(".display-end-time").textContent = data.end_time || "";
   row.querySelector(".time-separator").textContent = data.end_time ? "〜" : "";
+  row.querySelector(".row-time-text")?.classList.toggle("has-end-time", Boolean(data.end_time));
   row.querySelector(".display-title").textContent = data.title || "";
-  row.querySelector(".display-description").textContent = data.description || "";
+  row.querySelector(".description-text").textContent = data.description || "";
+  row.querySelector(".display-description")?.classList.toggle("is-empty", !data.description);
   row.querySelector(".place-name-text").textContent = data.place_name || "場所未設定";
 }
 
@@ -379,6 +487,7 @@ function appendSavedRow(panel, data) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = html;
   const row = wrapper.firstElementChild;
+  panel.querySelector(".empty-day-message")?.remove();
 
   applyResultToRow(row, data);
   panel.querySelector('.schedule-list').appendChild(row);
@@ -463,11 +572,18 @@ async function saveEditScheduleModal() {
 
   const newPanel = document.querySelector(`.day-panel[data-day-key="${result.date}"]`);
   if (newPanel && oldPanel && newPanel !== oldPanel) {
+    newPanel.querySelector(".empty-day-message")?.remove();
     newPanel.querySelector(".schedule-list").appendChild(editingRow);
   }
 
-  if (oldPanel) sortRowsByStartTime(oldPanel);
-  if (newPanel) sortRowsByStartTime(newPanel);
+  if (oldPanel) {
+    sortRowsByStartTime(oldPanel);
+    ensureEmptyDayMessage(oldPanel);
+  }
+  if (newPanel) {
+    sortRowsByStartTime(newPanel);
+    ensureEmptyDayMessage(newPanel);
+  }
 
   closeEditScheduleModal();
 }
@@ -477,7 +593,9 @@ async function deleteScheduleRow(btn) {
   const rowId = row.querySelector('.row-id-input')?.value;
 
   if (!rowId) {
+    const panel = row.closest('.day-panel');
     row.remove();
+    ensureEmptyDayMessage(panel);
     return;
   }
 
@@ -503,11 +621,24 @@ async function deleteScheduleRow(btn) {
 
     const panel = row.closest('.day-panel');
     row.remove();
-    if (panel) sortRowsByStartTime(panel);
+    if (panel) {
+      sortRowsByStartTime(panel);
+      ensureEmptyDayMessage(panel);
+    }
   } catch (e) {
     console.error(e);
     alert("通信エラーが発生しました");
   }
+}
+
+function ensureEmptyDayMessage(panel) {
+  const list = panel?.querySelector(".schedule-list");
+  if (!list || list.querySelector(".schedule-row") || list.querySelector(".empty-day-message")) return;
+
+  const message = document.createElement("div");
+  message.className = "empty-day-message";
+  message.textContent = "この日の予定はまだありません。";
+  list.appendChild(message);
 }
 
 function openPlaceModalFromSchedule(btn) {

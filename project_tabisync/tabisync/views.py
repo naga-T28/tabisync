@@ -1010,12 +1010,19 @@ class ScheduleV2EditView(View):
             })
 
         want_to_go_places = itinerary.want_to_go_list.all().order_by("planned_day", "id")
+        first_date_str = None
+        last_date_str = None
+        if itinerary.start_date and itinerary.end_date:
+            first_date_str = itinerary.start_date.strftime("%Y.%m.%d")
+            last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
         response = render(request, self.template_name, {
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
             "want_to_go_places": want_to_go_places,
+            "first_date_str": first_date_str,
+            "last_date_str": last_date_str,
         })
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
