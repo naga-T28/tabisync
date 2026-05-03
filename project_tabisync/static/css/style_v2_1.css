@@ -1104,22 +1104,25 @@ article.privacy-policy,
 }
 
 .display-description {
-  margin-top: 6px;
+  margin-top: 10px;
   color: #666;
   white-space: pre-wrap;
   gap: 10px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+}
+.display-description i {
+  margin-top: 5px;
 }
 
 .row-place-line {
-  margin-top: 6px;
+  margin-top: 10px;
   gap: 10px;
 }
 
 .place-open-btn {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   border: none;
   background: none;
@@ -1128,6 +1131,9 @@ article.privacy-policy,
   cursor: pointer;
   color: inherit;
   font: inherit;
+}
+.place-open-btn i {
+  margin-top: 5px;
 }
 
 .place-open-btn:hover .place-name-text {
@@ -3178,53 +3184,6 @@ body#content-body:has(.content-main-map) > footer > small {
 .checklist-board {
   display: grid;
   gap: 35px;
-}
-
-.checklist-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 0 10px;
-  scrollbar-width: none;
-}
-
-.checklist-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.checklist-tab,
-.checklist-tab-add {
-  min-height: 42px;
-  border: 0;
-  background: #fff;
-  color: #445064;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.07);
-  cursor: pointer;
-  flex: 0 0 auto;
-}
-
-.checklist-tab {
-  max-width: 180px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.checklist-tab.is-active {
-  background: #2f3747;
-  color: #fff;
-}
-
-.checklist-tab-add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  border-radius: 50%;
 }
 
 .checklist-card {
