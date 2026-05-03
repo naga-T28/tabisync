@@ -32,6 +32,7 @@ DEFAULT_MODERATION_PROMPT = """あなたは旅行計画サービス TabiSync の
 許可する例:
 - 旅行日程、観光、移動、持ち物、食事、ホテル、予算、準備に関する相談
 - 旅行先の一般的な注意点や安全配慮
+- 前のやり取りを踏まえた上での追加の質問や確認と捉えられるもの
 """
 
 DEFAULT_DATA_SELECTION_PROMPT = """あなたは旅行コンシェルジュの前処理担当です。
@@ -55,6 +56,14 @@ DEFAULT_ANSWER_PROMPT = """あなたは TabiSync のAIコンシェルジュで�
 - 旅行の意思決定を助ける具体性を優先する
 - 安全や規約に反する依頼には応じない
 - 文字数は600字以内に収める
+- 明確にしおりの編集が必要な場合のみ、replyに続けて編集に必要なJSONをedit_actionsへ入れる
+- 編集が必要ない場合や確認だけの場合、edit_actionsは空配列にする
+- edit_actionsで使えるactionは schedule_create, schedule_update, schedule_delete, want_create, want_update, want_delete, memo_append, checklist_add_item
+- 既存データを更新・削除する場合は、利用可能データに含まれるidがわかるときだけidを指定する。idがないものを推測で更新・削除しない
+- schedule_create/updateでは day, title, start_time, end_time, description, icon, place_name を必要に応じて使う。時刻はHH:MM形式、dayは1以上の数値
+- want_create/updateでは place_name, address, memo, day, priority を使う
+- memo_appendでは content に追加するメモ本文を入れる
+- checklist_add_itemでは title にリスト名、items に追加項目を入れる
 """
 
 
@@ -256,11 +265,86 @@ def run_answer(history, user_message, selected_context):
         + "\n\n利用可能データ(JSON):\n"
         + json.dumps(selected_context, ensure_ascii=False, indent=2)
     )
+    schema = {
+        "name": "concierge_answer_with_edit_actions",
+        "schema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "reply": {"type": "string"},
+                "edit_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": [
+                                    "schedule_create",
+                                    "schedule_update",
+                                    "schedule_delete",
+                                    "want_create",
+                                    "want_update",
+                                    "want_delete",
+                                    "memo_append",
+                                    "checklist_add_item",
+                                ],
+                            },
+                            "id": {"type": ["integer", "null"]},
+                            "day": {"type": ["integer", "null"]},
+                            "title": {"type": ["string", "null"]},
+                            "description": {"type": ["string", "null"]},
+                            "start_time": {"type": ["string", "null"]},
+                            "end_time": {"type": ["string", "null"]},
+                            "icon": {"type": ["string", "null"]},
+                            "place_name": {"type": ["string", "null"]},
+                            "address": {"type": ["string", "null"]},
+                            "memo": {"type": ["string", "null"]},
+                            "priority": {"type": ["integer", "null"]},
+                            "content": {"type": ["string", "null"]},
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                        },
+                        "required": [
+                            "action",
+                            "id",
+                            "day",
+                            "title",
+                            "description",
+                            "start_time",
+                            "end_time",
+                            "icon",
+                            "place_name",
+                            "address",
+                            "memo",
+                            "priority",
+                            "content",
+                            "items",
+                        ],
+                    },
+                },
+            },
+            "required": ["reply", "edit_actions"],
+        },
+    }
     text, payload = call_openai_responses_api(
         prompt,
-        schema=None,
+        schema=schema,
         model=OPENAI_ANSWER_MODEL,
-        max_output_tokens=800,
+        max_output_tokens=1400,
         timeout_seconds=OPENAI_ANSWER_TIMEOUT_SECONDS,
     )
-    return prompt, payload, text.strip()
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise OpenAIConciergeError("回答JSONを解釈できませんでした。") from exc
+
+    reply = str(parsed.get("reply") or "").strip()
+    edit_actions = parsed.get("edit_actions")
+    if not isinstance(edit_actions, list):
+        edit_actions = []
+
+    return prompt, payload, reply, edit_actions
