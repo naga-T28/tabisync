@@ -10,8 +10,8 @@
         <!-- Font Awesome CDN (最新版) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ファビコン -->
-        <link rel="icon" href="{% static 'img/icon_tabisync.ico'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-pc.webp'%}">
         <!-- iPhone用のアイコンサイズを指定 -->
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,7 +20,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
@@ -75,6 +74,11 @@
                         <span class="content-side-nav-label">AIコンシェルジュ</span>
                         <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
                     </a>
+                    <a class="content-side-nav-link {% if request.resolver_match.url_name == 'content_edit_v2' %}is-active{% endif %}" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-regular fa-pen-to-square content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">編集</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
                 </nav>
                 <div class="content-side-nav-bottom">
                     <nav class="content-side-nav-legal" aria-label="サイト情報">
@@ -105,7 +109,7 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync-v2-2.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>

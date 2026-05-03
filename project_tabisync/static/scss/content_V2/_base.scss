@@ -1,3 +1,5 @@
+@use "../base/variables" as variables;
+
 /*----------------------------------------
   全体のの設定
 ----------------------------------------*/
@@ -27,7 +29,7 @@ body {
   margin-bottom: 100px;
 }
 main{
-    font-family: 'Yusei Magic', sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
 }
 main#edit-main{
     font-family: "Noto Sans JP", sans-serif;
@@ -210,10 +212,6 @@ article.privacy-policy,
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  &.--concierge-footer{
-    height: 80px;
-    box-shadow: none;
-  }
 }
 
 .footer-nav-ul {
@@ -285,7 +283,7 @@ article.privacy-policy,
 
 }
 
-@media screen and (min-width: 960px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   body {
     display: flex;
     flex-direction: column;
@@ -549,15 +547,6 @@ article.privacy-policy,
   }
   body#content-body > footer {
     display: none;
-  }
-  .footer-nav.--concierge-footer {
-    left: 240px;
-    width: calc(100% - 240px);
-    transition: left .24s ease, width .24s ease;
-  }
-  body.is-side-nav-collapsed .footer-nav.--concierge-footer {
-    left: 72px;
-    width: calc(100% - 72px);
   }
   .logo-image{
     margin-top: 10px;

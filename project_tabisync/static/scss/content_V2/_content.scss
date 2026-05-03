@@ -1,3 +1,5 @@
+@use "../base/variables" as variables;
+
 .content-main{
     width: 100%;
     min-height: 100vh;
@@ -11,7 +13,25 @@
   margin-top: 50px;
   padding: 16px 16px 20px;
 }
-
+/*編集追加ボタン*/
+.edit-schedule-link-wrapper{
+  display: flex;
+  justify-content: center;
+  .edit_button_content_under_schedule{
+    display: flex;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    gap:10px;
+    padding: 8px 16px;
+    align-items: center;
+    background-color: #fff;
+    color: #3128b9;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
 .title-visual{
     margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
     position: relative; /* 相対位置指定 */
@@ -25,7 +45,7 @@
     }
 }
 .siori-title{
-    font-family: 'Yusei Magic', sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
     text-align: center;
     font-size: 40px;
     margin:0;
@@ -38,13 +58,13 @@
     }
 }
 .siori-sub-title{
-    font-family: 'Yusei Magic', sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
     text-align: center;
     font-size: 20px;
     margin-top: -10px;
 }
 .siori-title-date{
-    font-family: 'Yusei Magic', sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
     text-align: center;
     font-size: 14px;
     margin-top: 30px;
@@ -57,6 +77,11 @@
   gap: 12px;
   margin: 8px 0 16px;
   padding-top: 1em;
+}
+.schedule-table-box{
+  box-shadow:0 0 5px rgb(0 0 0 / .12);;
+  padding-top: 0;
+  border-radius: 5px;
 }
 .box5-6 {
     position: relative; /* タイトルをボックス内の左上に配置するための基準 */
@@ -95,22 +120,45 @@
 .schedule-content-layout {
   display: flex;
   flex-direction: column;
+  gap: 0;
+  min-width: 0;
 }
 
 .schedule-side-column {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  order: 2;
 }
 
 .schedule-overview-box {
   order: 1;
+  width: 100%;
 }
 
 .schedule-main-column {
-  order: 2;
+  order: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .schedule-share-box {
-  order: 3;
+  order: 2;
+  width: 100%;
+}
+
+.schedule-overview-box,
+.schedule-share-box {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.schedule-overview-box .box-content,
+.schedule-share-box .box-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .day-tabs {
@@ -118,7 +166,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch;
   gap: 8px;
-  padding: 2.5em 1em 0;
+  padding: 0;
   position: relative;
 }
 
@@ -126,9 +174,8 @@
   display: flex;
   overflow-x: auto;
   scrollbar-width: none;
-  border: 1px solid #d7d7d7;
-  border-radius: 10px;
-  background: #f8f8f8;
+  border: none;
+  background-color: #fff;
 }
 
 .day-tabs-scroll::-webkit-scrollbar {
@@ -156,8 +203,9 @@
 }
 
 .day-tab.is-active {
-  background: #666;
-  color: #fff;
+  color: #AF29BB;
+  font-weight: 700;
+  border-bottom: #AF29BB 3px solid;
 }
 
 .day-tab-label {
@@ -178,8 +226,7 @@
   width: 44px;
   height: 100%;
   min-height: 54px;
-  border: 1px solid #d7d7d7;
-  border-radius: 10px;
+  border: none;
   background: #fff;
   color: #555;
   font-size: 18px;
@@ -265,87 +312,89 @@
   cursor: pointer;
 }
 
+/* =========================
+   Schedule rows
+   ========================= */
 .schedule-row {
   border-bottom: 1px solid #c4c4c4;
   padding: 14px 0;
+  min-height: 85px;
 }
 
 .schedule-row:last-child {
   border-bottom: none;
 }
+
 .schedule-row.is-next-schedule {
-  background: #fff6bf;
-  border-radius: 12px;
-  padding-left: 10px;
-  padding-right: 10px;
+  border-left: #7b4bb2 5px solid;
 }
 
 .schedule-row.is-next-schedule + .schedule-row {
   margin-top: 6px;
 }
 
-/* ===== レイアウト ===== */
 .row-display {
   display: grid;
-  grid-template-columns: 84px 1fr;
+  grid-template-columns: 55px 40px minmax(0, 1fr);
+  column-gap: 8px;
   align-items: stretch;
 }
 
-/* ===== 時間エリア ===== */
+/* =========================
+   Schedule time column
+   ========================= */
 .row-time-text {
   width: 55px;
   height: 100%;
   font-weight: 600;
   padding-top: 2px;
-
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
   position: relative;
 }
 
-/* ===== 時間バッジ ===== */
 .row-time-text span {
-  background-color: #666;
-  color: #fff;
   padding: 2px 4px;
   border-radius: 4px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  height: 24px;              /* ←安定させる */
-  font-size: 12px;
-
-  z-index: 1;                /* ←線より前に出す */
+  height: 24px;
+  font-size: 16px;
+  z-index: 1;
   background-clip: padding-box;
 }
 
-/* ===== デフォルト：線なし ===== */
 .row-time-text::before {
-  content: none;
-}
-
-/* ===== 終了時間があるときだけ線表示 ===== */
-.row-time-text.has-end-time::before {
   content: "";
   position: absolute;
-
-  top: 12px;    /* 上のバッジ中央 */
-  bottom: 12px; /* 下のバッジ中央 */
-
+  top: 32px;
   left: 50%;
+  width: 0;
+  height: 24px;
   transform: translateX(-50%);
-
-  border-left: 2px dashed #5e5e5e;
+  border-left: 2px dotted #5e5e5e;
+  border-radius: 999px;
   z-index: 0;
 }
 
-/* ===== 本文 ===== */
+.row-time-text.has-end-time::before {
+  border-left-style: solid;
+}
+
+/* =========================
+   Schedule icon column
+   ========================= */
+.row-icon-column {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 0;
+}
+
 .row-main-text {
-  min-width: calc(100% - 84px);
+  min-width: 0;
 }
 
 .display-title {
@@ -353,6 +402,120 @@
   margin-bottom: 4px;
 }
 
+/* =========================
+   Schedule title and icon
+   ========================= */
+
+.schedule-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  position: relative;
+  color: #7b4bb2;
+  font-size: 14px;
+  --schedule-icon-bg: #f2f3f7;
+  background: var(--schedule-icon-bg);
+}
+
+.schedule-icon::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  width: 0;
+  height: 24px;
+  transform: translateX(-50%);
+  border-left: 2px solid var(--schedule-icon-bg);
+  border-radius: 999px;
+}
+
+.schedule-title-default {
+  color: #7b4bb2;
+}
+
+.schedule-icon.schedule-title-default {
+  --schedule-icon-bg: #eee3fb;
+}
+
+.schedule-title-food {
+  color: #c25a1a;
+}
+
+.schedule-icon.schedule-title-food {
+  --schedule-icon-bg: #fbe7d8;
+}
+
+.schedule-title-move {
+  color: #2563a8;
+}
+
+.schedule-icon.schedule-title-move {
+  --schedule-icon-bg: #dcecff;
+}
+
+.schedule-title-photo {
+  color: #7b4bb2;
+}
+
+.schedule-icon.schedule-title-photo {
+  --schedule-icon-bg: #eee3fb;
+}
+
+.schedule-title-stay {
+  color: #26745f;
+}
+
+.schedule-icon.schedule-title-stay {
+  --schedule-icon-bg: #dcefe9;
+}
+
+.schedule-title-shopping {
+  color: #b43f68;
+}
+
+.schedule-icon.schedule-title-shopping {
+  --schedule-icon-bg: #f8dfea;
+}
+
+.schedule-title-event {
+  color: #9a6a00;
+}
+
+.schedule-icon.schedule-title-event {
+  --schedule-icon-bg: #f7ebc9;
+}
+
+.schedule-title-flag {
+  color: #d34a4a;
+}
+
+.schedule-icon.schedule-title-flag {
+  --schedule-icon-bg: #fbe1e1;
+}
+
+.schedule-title-flight {
+  color: #1f7fbf;
+}
+
+.schedule-icon.schedule-title-flight {
+  --schedule-icon-bg: #dcefff;
+}
+
+.schedule-title-car {
+  color: #4f6f2d;
+}
+
+.schedule-icon.schedule-title-car {
+  --schedule-icon-bg: #e5efd7;
+}
+
+/* =========================
+   Schedule details
+   ========================= */
 .display-place-line {
   padding-left: 0;
   margin-top: 0;
@@ -362,18 +525,20 @@
   margin-top: 6px;
   color: #666;
   white-space: pre-wrap;
-  gap:8px;
+  gap: 10px;
   display: flex;
   align-items: center;
-  margin-left: 16px;
 }
 
 .row-place-line {
   margin-top: 6px;
-  margin-left: 16px;
+  gap: 10px;
 }
 
 .place-open-btn {
+  display: flex;
+  align-items: center;
+  gap:10px;
   border: none;
   background: none;
   padding: 0;
@@ -390,6 +555,7 @@
 .empty-day-message {
   color: #666;
   padding: 20px 0;
+  text-align: center;
 }
 
 .modal {
@@ -445,8 +611,9 @@
 }
 
 #copy-url-box{
-  width: 95%;
-  height: 30px;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
   margin-left: auto;
   margin-right: auto;
   margin-top: 20px;
@@ -462,7 +629,15 @@
   gap:5px;
 }
 
+#copy-url-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .share-qr-wrapper{
+  width: 100%;
+  min-width: 0;
   margin-top: 20px;
   display: flex;
   flex-direction: column;
@@ -476,15 +651,17 @@
 }
 
 .share-qr-image{
-  width: min(220px, 70vw);
+  width: min(220px, 100%);
+  max-width: calc(100vw - 80px);
   height: auto;
+  box-sizing: border-box;
   padding: 10px;
   background: #fff;
   border: 1px solid #d8d8d8;
   border-radius: 12px;
 }
 
-@media screen and (min-width: 960px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   .schedule-view-page {
     width: min(100% - 48px, 1180px);
     max-width: none;
@@ -524,10 +701,19 @@
     width: 100%;
     margin-bottom: 0;
   }
-
+.schedule-table-box{
+  box-shadow:0 0 5px rgb(0 0 0 / .12);;
+  padding-top: 0;
+  border-radius: 5px;
+}
   #scheduleView {
     align-items: stretch;
     justify-content: stretch;
+    &.box-content{
+      padding-right: 20px;
+      padding-left: 20px;
+      padding-bottom: 50px;
+    }
   }
 
   .day-panel.is-active {
@@ -535,8 +721,12 @@
   }
 }
 
-@media (max-width: 640px) {
+.row-display {
+  grid-template-columns: 55px 40px minmax(0, 1fr);
+}
+
+@media screen and (min-width: variables.$breakpoint-md) {
   .row-display {
-    grid-template-columns: 72px 1fr;
+    grid-template-columns: 55px 40px minmax(0, 1fr);
   }
 }

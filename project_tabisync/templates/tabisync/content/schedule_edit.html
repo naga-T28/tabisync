@@ -17,8 +17,7 @@
     </div>
   </div>
 
-<div class="box5-6 schedule-table-box schedule-editor">
-  <h2 class="box-title">日程表を編集</h2>
+<div class="schedule-table-box schedule-editor">
   <div class="day-tabs" aria-label="日程を選択">
     <div class="day-tabs-scroll" role="tablist">
       {% for group in grouped_days %}
@@ -89,6 +88,7 @@
               <input type="hidden" value="{{ s.start_time|time:'H:i' }}" class="row-start-time">
               <input type="hidden" value="{% if s.end_time %}{{ s.end_time|time:'H:i' }}{% endif %}" class="row-end-time">
               <input type="hidden" value="{{ s.title }}" class="row-title-input">
+              <input type="hidden" value="{{ s.icon|default:'default' }}" class="row-icon-input">
               <input type="hidden" value="{{ s.description|default:'' }}" class="row-description-input">
 
               <button
@@ -105,8 +105,14 @@
                   <span class="display-end-time">{% if s.end_time %}{{ s.end_time|time:'H:i' }}{% endif %}</span>
                 </div>
 
+                <div class="row-icon-column">
+                  <span class="schedule-icon {{ s.get_title_color_class }}" aria-hidden="true">
+                    <i class="fa-solid {{ s.get_icon_class }}"></i>
+                  </span>
+                </div>
+
                 <div class="row-main-text">
-                  <div class="display-title">{{ s.title }}</div>
+                  <div class="display-title {{ s.get_title_color_class }}">{{ s.title }}</div>
                   <div class="row-place-line display-place-line">
                     <button type="button" class="place-open-btn" disabled>
                       <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{% if s.place %}{{ s.place.name }}{% else %}場所未設定{% endif %}</span>
@@ -157,12 +163,50 @@
         <input id="newEndTime" type="time">
       </label>
     </div>
+    <input type="hidden" id="newIcon" value="default">
+    <div class="schedule-icon-picker" aria-label="予定アイコンを選択">
+      <button type="button" class="schedule-icon-option is-active" data-icon-target="new" data-icon-value="default" onclick="selectScheduleIcon('new', 'default')" aria-label="通常">
+        <i class="fa-solid fa-circle"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="food" onclick="selectScheduleIcon('new', 'food')" aria-label="食事">
+        <i class="fa-solid fa-utensils"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="move" onclick="selectScheduleIcon('new', 'move')" aria-label="移動">
+        <i class="fa-solid fa-train-subway"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="photo" onclick="selectScheduleIcon('new', 'photo')" aria-label="観光">
+        <i class="fa-solid fa-camera"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="stay" onclick="selectScheduleIcon('new', 'stay')" aria-label="宿泊">
+        <i class="fa-solid fa-bed"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="shopping" onclick="selectScheduleIcon('new', 'shopping')" aria-label="買い物">
+        <i class="fa-solid fa-cart-shopping"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="event" onclick="selectScheduleIcon('new', 'event')" aria-label="イベント">
+        <i class="fa-solid fa-star"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="flag" onclick="selectScheduleIcon('new', 'flag')" aria-label="フラグ">
+        <i class="fa-solid fa-flag"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="flight" onclick="selectScheduleIcon('new', 'flight')" aria-label="飛行機">
+        <i class="fa-solid fa-plane"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="new" data-icon-value="car" onclick="selectScheduleIcon('new', 'car')" aria-label="車">
+        <i class="fa-solid fa-car"></i>
+      </button>
+    </div>
     <input id="newTitle" class="modal-field" type="text" maxlength="30" placeholder="タイトル">
     <textarea id="newDescription" class="modal-field" maxlength="100" placeholder="詳細メモ"></textarea>
 
     <div class="row-place-line modal-place-line">
       <button type="button" class="place-open-btn" onclick="openPlaceModalForNewSchedule()">
-        📍<span id="newPlaceNameText">場所を追加</span>
+        <span class="modal-place-icon"><i class="fa-solid fa-location-dot"></i></span>
+        <span class="modal-place-text">
+          <span class="modal-place-label">場所</span>
+          <span id="newPlaceNameText" class="modal-place-name">場所を追加</span>
+        </span>
+        <i class="fa-solid fa-chevron-right modal-place-chevron"></i>
       </button>
       <input type="hidden" id="newPlaceId" value="">
     </div>
@@ -201,12 +245,50 @@
         <input id="editEndTime" type="time">
       </label>
     </div>
+    <input type="hidden" id="editIcon" value="default">
+    <div class="schedule-icon-picker" aria-label="予定アイコンを選択">
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="default" onclick="selectScheduleIcon('edit', 'default')" aria-label="通常">
+        <i class="fa-solid fa-circle"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="food" onclick="selectScheduleIcon('edit', 'food')" aria-label="食事">
+        <i class="fa-solid fa-utensils"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="move" onclick="selectScheduleIcon('edit', 'move')" aria-label="移動">
+        <i class="fa-solid fa-train-subway"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="photo" onclick="selectScheduleIcon('edit', 'photo')" aria-label="観光">
+        <i class="fa-solid fa-camera"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="stay" onclick="selectScheduleIcon('edit', 'stay')" aria-label="宿泊">
+        <i class="fa-solid fa-bed"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="shopping" onclick="selectScheduleIcon('edit', 'shopping')" aria-label="買い物">
+        <i class="fa-solid fa-cart-shopping"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="event" onclick="selectScheduleIcon('edit', 'event')" aria-label="イベント">
+        <i class="fa-solid fa-star"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="flag" onclick="selectScheduleIcon('edit', 'flag')" aria-label="フラグ">
+        <i class="fa-solid fa-flag"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="flight" onclick="selectScheduleIcon('edit', 'flight')" aria-label="飛行機">
+        <i class="fa-solid fa-plane"></i>
+      </button>
+      <button type="button" class="schedule-icon-option" data-icon-target="edit" data-icon-value="car" onclick="selectScheduleIcon('edit', 'car')" aria-label="車">
+        <i class="fa-solid fa-car"></i>
+      </button>
+    </div>
     <input id="editTitle" class="modal-field" type="text" maxlength="30" placeholder="タイトル">
     <textarea id="editDescription" class="modal-field" maxlength="100" placeholder="詳細メモ"></textarea>
 
     <div class="row-place-line modal-place-line">
       <button type="button" class="place-open-btn" onclick="openPlaceModalForEditSchedule()">
-        📍<span id="editPlaceNameText">場所を追加</span>
+        <span class="modal-place-icon"><i class="fa-solid fa-location-dot"></i></span>
+        <span class="modal-place-text">
+          <span class="modal-place-label">場所</span>
+          <span id="editPlaceNameText" class="modal-place-name">場所を追加</span>
+        </span>
+        <i class="fa-solid fa-chevron-right modal-place-chevron"></i>
       </button>
     </div>
 
@@ -223,7 +305,7 @@
       <button type="button" class="edit-modal-close" onclick="closePlaceEditModal()">&times;</button>
     </div>
 
-    <div class="search-wrapper">
+    <div class="place-search-wrapper">
       <input id="searchInput" type="text" placeholder="場所を検索">
       <button id="searchBtn" type="button">検索</button>
     </div>
@@ -275,6 +357,7 @@
     <input type="hidden" value="" class="row-start-time">
     <input type="hidden" value="" class="row-end-time">
     <input type="hidden" value="" class="row-title-input">
+    <input type="hidden" value="default" class="row-icon-input">
     <input type="hidden" value="" class="row-description-input">
 
     <button
@@ -291,8 +374,14 @@
         <span class="display-end-time"></span>
       </div>
 
+      <div class="row-icon-column">
+        <span class="schedule-icon schedule-title-default" aria-hidden="true">
+          <i class="fa-solid fa-circle"></i>
+        </span>
+      </div>
+
       <div class="row-main-text">
-        <div class="display-title"></div>
+        <div class="display-title schedule-title-default"></div>
         <div class="row-place-line display-place-line">
           <button type="button" class="place-open-btn" disabled>
             <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">場所未設定</span>
@@ -312,6 +401,33 @@ const dayChoicesMap = {
     "{{ choice.value }}": {{ choice.day_num }}{% if not forloop.last %},{% endif %}
   {% endfor %}
 };
+
+const scheduleIconMap = {
+  default: { iconClass: "fa-circle", titleClass: "schedule-title-default" },
+  food: { iconClass: "fa-utensils", titleClass: "schedule-title-food" },
+  move: { iconClass: "fa-train-subway", titleClass: "schedule-title-move" },
+  photo: { iconClass: "fa-camera", titleClass: "schedule-title-photo" },
+  stay: { iconClass: "fa-bed", titleClass: "schedule-title-stay" },
+  shopping: { iconClass: "fa-cart-shopping", titleClass: "schedule-title-shopping" },
+  event: { iconClass: "fa-star", titleClass: "schedule-title-event" },
+  flag: { iconClass: "fa-flag", titleClass: "schedule-title-flag" },
+  flight: { iconClass: "fa-plane", titleClass: "schedule-title-flight" },
+  car: { iconClass: "fa-car", titleClass: "schedule-title-car" }
+};
+
+function normalizeScheduleIcon(icon) {
+  return scheduleIconMap[icon] ? icon : "default";
+}
+
+function selectScheduleIcon(target, icon) {
+  const selectedIcon = normalizeScheduleIcon(icon);
+  const input = document.getElementById(`${target}Icon`);
+  if (input) input.value = selectedIcon;
+
+  document.querySelectorAll(`.schedule-icon-option[data-icon-target="${target}"]`).forEach(button => {
+    button.classList.toggle("is-active", button.dataset.iconValue === selectedIcon);
+  });
+}
 
 let rowIndex = 1000;
 let activeScheduleRow = null;
@@ -406,6 +522,7 @@ function openAddScheduleModal() {
   document.getElementById("newStartTime").value = "";
   document.getElementById("newEndTime").value = "";
   document.getElementById("newTitle").value = "";
+  selectScheduleIcon("new", "default");
   document.getElementById("newDescription").value = "";
   document.getElementById("newPlaceId").value = "";
   document.getElementById("newPlaceNameText").textContent = "場所を追加";
@@ -467,6 +584,7 @@ function applyResultToRow(row, data) {
   row.querySelector(".row-start-time").value = data.start_time || "";
   row.querySelector(".row-end-time").value = data.end_time || "";
   row.querySelector(".row-title-input").value = data.title || "";
+  row.querySelector(".row-icon-input").value = normalizeScheduleIcon(data.icon);
   row.querySelector(".row-description-input").value = data.description || "";
   row.querySelector(".place-id-input").value = data.place_id || "";
 
@@ -474,7 +592,25 @@ function applyResultToRow(row, data) {
   row.querySelector(".display-end-time").textContent = data.end_time || "";
   row.querySelector(".time-separator").textContent = data.end_time ? "〜" : "";
   row.querySelector(".row-time-text")?.classList.toggle("has-end-time", Boolean(data.end_time));
-  row.querySelector(".display-title").textContent = data.title || "";
+  const icon = normalizeScheduleIcon(data.icon);
+  const iconConfig = scheduleIconMap[icon];
+  const iconElement = row.querySelector(".schedule-icon i");
+  if (iconElement) {
+    iconElement.className = `fa-solid ${data.icon_class || iconConfig.iconClass}`;
+  }
+
+  const iconWrapper = row.querySelector(".schedule-icon");
+  if (iconWrapper) {
+    Object.values(scheduleIconMap).forEach(config => iconWrapper.classList.remove(config.titleClass));
+    iconWrapper.classList.add(data.title_color_class || iconConfig.titleClass);
+  }
+
+  const titleElement = row.querySelector(".display-title");
+  if (titleElement) {
+    titleElement.textContent = data.title || "";
+    Object.values(scheduleIconMap).forEach(config => titleElement.classList.remove(config.titleClass));
+    titleElement.classList.add(data.title_color_class || iconConfig.titleClass);
+  }
   row.querySelector(".description-text").textContent = data.description || "";
   row.querySelector(".display-description")?.classList.toggle("is-empty", !data.description);
   row.querySelector(".place-name-text").textContent = data.place_name || "場所未設定";
@@ -501,6 +637,7 @@ async function createScheduleFromModal() {
     start_time: document.getElementById("newStartTime").value,
     end_time: document.getElementById("newEndTime").value,
     title: document.getElementById("newTitle").value.trim(),
+    icon: document.getElementById("newIcon").value || "default",
     description: document.getElementById("newDescription").value.trim(),
     place_id: document.getElementById("newPlaceId").value || ""
   };
@@ -533,6 +670,7 @@ function openEditScheduleModal(target) {
   document.getElementById("editStartTime").value = row.querySelector(".row-start-time").value || "";
   document.getElementById("editEndTime").value = row.querySelector(".row-end-time").value || "";
   document.getElementById("editTitle").value = row.querySelector(".row-title-input").value || "";
+  selectScheduleIcon("edit", row.querySelector(".row-icon-input").value || "default");
   document.getElementById("editDescription").value = row.querySelector(".row-description-input").value || "";
   document.getElementById("editPlaceId").value = row.querySelector(".place-id-input").value || "";
   document.getElementById("editPlaceNameText").textContent =
@@ -555,6 +693,7 @@ async function saveEditScheduleModal() {
     start_time: document.getElementById("editStartTime").value || "",
     end_time: document.getElementById("editEndTime").value || "",
     title: document.getElementById("editTitle").value.trim(),
+    icon: document.getElementById("editIcon").value || "default",
     description: document.getElementById("editDescription").value.trim(),
     place_id: document.getElementById("editPlaceId").value || ""
   };
@@ -759,6 +898,11 @@ function selectExistingPlace(btn) {
 function doSearch() {
   const q = document.getElementById("searchInput").value.trim();
   if (!q) return;
+
+  if (!autocompleteService && !placesService) {
+    alert("場所検索の準備中です。少し待ってからもう一度検索してください。");
+    return;
+  }
 
   if (autocompleteService) {
     autocompleteService.getPlacePredictions({ input: q }, (preds, status) => {

@@ -10,8 +10,8 @@
         <!-- Font Awesome CDN (最新版) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ファビコン -->
-        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-pc.webp'%}">
         <!-- iPhone用のアイコンサイズを指定 -->
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,7 +20,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
@@ -36,7 +35,7 @@
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
-        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260503">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
@@ -46,8 +45,8 @@
             <div class="content-side-nav-inner">
                 <div class="content-side-nav-logo">
                     <a href="{% url 'tabisync:home' %}">
-                        <img src="{% static 'img/logo-tabisync-v2-2.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-expanded">
-                        <img src="{% static 'img/icon-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-collapsed">
+                        <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-expanded">
+                        <img src="{% static 'img/icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-collapsed">
                     </a>
                 </div>
                 <nav class="content-side-nav-menu" aria-label="しおりメニュー">
@@ -76,11 +75,13 @@
                         <span class="content-side-nav-label">AIコンシェルジュ</span>
                         <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
                     </a>
+                    <a class="content-side-nav-link {% if request.resolver_match.url_name == 'content_edit_v2' %}is-active{% endif %}" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-regular fa-pen-to-square content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">編集</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
                 </nav>
                 <div class="content-side-nav-bottom">
-                    <button type="button" class="content-side-nav-toggle" aria-label="サイドバーを折りたたむ" aria-expanded="true">
-                        <i class="fa-solid fa-angle-left"></i>
-                    </button>
                     <nav class="content-side-nav-legal" aria-label="サイト情報">
                         <a href="{% url 'tabisync:profile' %}">
                             <i class="fa-regular fa-user content-side-nav-legal-icon"></i>
@@ -95,6 +96,9 @@
                             <span class="content-side-nav-label">利用規約</span>
                         </a>
                     </nav>
+                    <button type="button" class="content-side-nav-toggle" aria-label="サイドバーを折りたたむ" aria-expanded="true">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -129,25 +133,23 @@
             </section>
           </div>
         </div>
-        <footer class="page-footer-concierge">
-            <nav class="footer-nav --concierge-footer">
-                <form id="conciergeForm" class="concierge-form">
-                  <label class="concierge-input-wrap" for="conciergeInput">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <input
-                      id="conciergeInput"
-                      type="text"
-                      placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
-                      autocomplete="off"
-                    >
-                    <button type="submit" class="concierge-send-btn" aria-label="送信">
-                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
-                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
-                    </button>
-                  </label>
-                </form>
-            </nav>
-        </footer>
+        <div class="concierge-input-dock" role="region" aria-label="AIコンシェルジュへの質問入力">
+            <form id="conciergeForm" class="concierge-form">
+              <label class="concierge-input-wrap" for="conciergeInput">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <input
+                  id="conciergeInput"
+                  type="text"
+                  placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                  autocomplete="off"
+                >
+                <button type="submit" class="concierge-send-btn" aria-label="送信">
+                  <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                  <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                </button>
+              </label>
+            </form>
+        </div>
         <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
           <div class="concierge-detail-backdrop" data-close-modal></div>
           <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
