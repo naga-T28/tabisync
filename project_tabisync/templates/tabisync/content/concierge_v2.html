@@ -10,8 +10,8 @@
         <!-- Font Awesome CDN (最新版) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ファビコン -->
-        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-pc.webp'%}">
         <!-- iPhone用のアイコンサイズを指定 -->
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,7 +20,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
@@ -36,13 +35,74 @@
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
-        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260503">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
     <body id="concierge-body">
       <main class="content-main-concierge">
-        <header class="page-header">
+        <header class="page-header --only-pc content-side-nav">
+            <div class="content-side-nav-inner">
+                <div class="content-side-nav-logo">
+                    <a href="{% url 'tabisync:home' %}">
+                        <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-expanded">
+                        <img src="{% static 'img/icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-collapsed">
+                    </a>
+                </div>
+                <nav class="content-side-nav-menu" aria-label="しおりメニュー">
+                    <a class="content-side-nav-link" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-solid fa-house content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">旅程表</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-solid fa-clipboard content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">メモ</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:V2_list' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-solid fa-list-check content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">リスト</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:Wantto' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-solid fa-map-location-dot content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">地図</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link is-active" href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-solid fa-robot content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">AIコンシェルジュ</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link {% if request.resolver_match.url_name == 'content_edit_v2' %}is-active{% endif %}" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                        <i class="fa-regular fa-pen-to-square content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">編集</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                </nav>
+                <div class="content-side-nav-bottom">
+                    <nav class="content-side-nav-legal" aria-label="サイト情報">
+                        <a href="{% url 'tabisync:profile' %}">
+                            <i class="fa-regular fa-user content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">運営者について</span>
+                        </a>
+                        <a href="{% url 'tabisync:privacy_policy' %}">
+                            <i class="fa-solid fa-shield-halved content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">プライバシーポリシー</span>
+                        </a>
+                        <a href="{% url 'tabisync:user_agreement' %}">
+                            <i class="fa-regular fa-file-lines content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">利用規約</span>
+                        </a>
+                    </nav>
+                    <button type="button" class="content-side-nav-toggle" aria-label="サイドバーを折りたたむ" aria-expanded="true">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <header class="page-header --only-sp">
             <div class="header-wrapper --concierge-header">
                 <div class="header-buttons">
                   <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
@@ -52,7 +112,7 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/logo-ai-concierge.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>
@@ -73,25 +133,24 @@
             </section>
           </div>
         </div>
-        <footer class="page-footer-concierge">
-            <nav class="footer-nav --concierge-footer">
-                <form id="conciergeForm" class="concierge-form">
-                  <label class="concierge-input-wrap" for="conciergeInput">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <input
-                      id="conciergeInput"
-                      type="text"
-                      placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
-                      autocomplete="off"
-                    >
-                    <button type="submit" class="concierge-send-btn" aria-label="送信">
-                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
-                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
-                    </button>
-                  </label>
-                </form>
-            </nav>
-        </footer>
+        <div class="concierge-input-dock" role="region" aria-label="AIコンシェルジュへの質問入力">
+            <form id="conciergeForm" class="concierge-form">
+              <label class="concierge-input-wrap" for="conciergeInput">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <input
+                  id="conciergeInput"
+                  type="text"
+                  placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                  autocomplete="off"
+                  maxlength="60"
+                >
+                <button type="submit" class="concierge-send-btn" aria-label="送信">
+                  <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                  <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                </button>
+              </label>
+            </form>
+        </div>
         <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
           <div class="concierge-detail-backdrop" data-close-modal></div>
           <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
@@ -145,8 +204,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const historyKey = `tabisync_concierge_history_${itineraryStorageId}`;
   const legacyStorageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
   const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
+  const conciergeMessageMaxLength = 60;
   let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
   let chatHistory = [];
+  const pendingChangeSets = new Map();
 
   function escapeHtml(text) {
     return String(text)
@@ -267,6 +328,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     article.appendChild(label);
     article.appendChild(bubble);
+
+    if (role === "assistant" && Array.isArray(options.editActions) && options.editActions.length) {
+      const changeSetId = options.changeSetId || `changes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      pendingChangeSets.set(changeSetId, options.editActions);
+
+      const applyBox = document.createElement("div");
+      applyBox.className = "concierge-apply-box";
+      applyBox.dataset.changeSetId = changeSetId;
+
+      const summary = document.createElement("p");
+      summary.className = "concierge-apply-summary";
+      summary.textContent = `${options.editActions.length}件の変更候補があります。`;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "concierge-apply-btn";
+      button.dataset.changeSetId = changeSetId;
+      button.innerHTML = '<i class="fa-solid fa-check"></i><span>変更を適用</span>';
+
+      const status = document.createElement("p");
+      status.className = "concierge-apply-status";
+      status.setAttribute("aria-live", "polite");
+
+      applyBox.appendChild(summary);
+      applyBox.appendChild(button);
+      applyBox.appendChild(status);
+      article.appendChild(applyBox);
+    }
+
     messagesEl.appendChild(article);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
@@ -282,7 +372,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const parsed = JSON.parse(rawHistory || "[]");
       if (!Array.isArray(parsed) || !parsed.length) return false;
       chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
-      chatHistory.forEach((item) => addMessage(item.role, item.content, { renderedHtml: item.rendered_html || "" }));
+      chatHistory.forEach((item) => addMessage(item.role, item.content, {
+        renderedHtml: item.rendered_html || "",
+        editActions: item.edit_actions || [],
+        changeSetId: item.change_set_id || "",
+      }));
       return chatHistory.length > 0;
     } catch (error) {
       return false;
@@ -313,6 +407,10 @@ document.addEventListener("DOMContentLoaded", function () {
   async function submitPrompt(prompt) {
     const userText = String(prompt || "").trim();
     if (!userText) return;
+    if (userText.length > conciergeMessageMaxLength) {
+      addMessage("assistant", `メッセージは${conciergeMessageMaxLength}字以内で入力してください。`);
+      return;
+    }
 
     addMessage("user", userText);
     chatHistory.push({ role: "user", content: userText });
@@ -353,11 +451,19 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const assistantReply = data.reply || "返答を生成できませんでした。";
-      addMessage("assistant", assistantReply, { markdown: true });
+      const editActions = Array.isArray(data.edit_actions) ? data.edit_actions : [];
+      const changeSetId = editActions.length ? `changes-${Date.now()}-${Math.random().toString(16).slice(2)}` : "";
+      addMessage("assistant", assistantReply, {
+        markdown: true,
+        editActions,
+        changeSetId,
+      });
       chatHistory.push({
         role: "assistant",
         content: assistantReply,
         rendered_html: renderMarkdown(assistantReply),
+        edit_actions: editActions,
+        change_set_id: changeSetId,
       });
       persistHistory();
     } catch (error) {
@@ -373,6 +479,63 @@ document.addEventListener("DOMContentLoaded", function () {
   formEl.addEventListener("submit", function (event) {
     event.preventDefault();
     submitPrompt(inputEl.value);
+  });
+
+  messagesEl.addEventListener("click", async function (event) {
+    const button = event.target instanceof Element ? event.target.closest(".concierge-apply-btn") : null;
+    if (!button) return;
+
+    const changeSetId = button.dataset.changeSetId || "";
+    const editActions = pendingChangeSets.get(changeSetId);
+    const applyBox = button.closest(".concierge-apply-box");
+    const statusEl = applyBox ? applyBox.querySelector(".concierge-apply-status") : null;
+    if (!Array.isArray(editActions) || !editActions.length) {
+      if (statusEl) statusEl.textContent = "適用できる変更が見つかりませんでした。";
+      return;
+    }
+
+    button.disabled = true;
+    button.classList.add("is-applying");
+    if (statusEl) statusEl.textContent = "変更を適用しています...";
+
+    try {
+      const response = await fetch("{% url 'tabisync:V2_concierge_apply' pk=itinerary.pk token=itinerary.token %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ edit_actions: editActions }),
+      });
+      const responseText = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error("サーバーからJSON以外の応答が返りました。");
+      }
+      if (!response.ok || data.status !== "ok") {
+        throw new Error(data.message || "変更を適用できませんでした。");
+      }
+
+      button.classList.remove("is-applying");
+      button.classList.add("is-applied");
+      button.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>適用済み</span>';
+      if (statusEl) statusEl.textContent = `${data.applied_count || editActions.length}件の変更を適用しました。`;
+      pendingChangeSets.delete(changeSetId);
+
+      chatHistory = chatHistory.map((item) => (
+        item.change_set_id === changeSetId
+          ? { ...item, edit_actions: [], applied: true }
+          : item
+      ));
+      persistHistory();
+    } catch (error) {
+      button.disabled = false;
+      button.classList.remove("is-applying");
+      if (statusEl) statusEl.textContent = error instanceof Error ? error.message : "変更を適用できませんでした。";
+    }
   });
 
   document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
@@ -418,6 +581,36 @@ document.addEventListener("DOMContentLoaded", function () {
       rendered_html: welcomeMessageHtml,
     });
     persistHistory();
+  }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const toggle = document.querySelector(".content-side-nav-toggle");
+  const storageKey = "tabisync_content_side_nav_collapsed";
+  const collapsedClass = "is-side-nav-collapsed";
+
+  function applySideNavState(isCollapsed) {
+    document.body.classList.toggle(collapsedClass, isCollapsed);
+    if (!toggle) return;
+
+    toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+    toggle.setAttribute("aria-label", isCollapsed ? "サイドバーを開く" : "サイドバーを折りたたむ");
+
+    const icon = toggle.querySelector("i");
+    if (icon) {
+      icon.className = isCollapsed ? "fa-solid fa-angle-right" : "fa-solid fa-angle-left";
+    }
+  }
+
+  applySideNavState(window.localStorage.getItem(storageKey) === "true");
+
+  if (toggle) {
+    toggle.addEventListener("click", function () {
+      const nextState = !document.body.classList.contains(collapsedClass);
+      window.localStorage.setItem(storageKey, String(nextState));
+      applySideNavState(nextState);
+    });
   }
 });
 </script>

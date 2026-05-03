@@ -6,137 +6,193 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places" async defer></script>
 
 <div class="content-main">
-<div class="schedule-view-page">
-  <div class="title-wrapper">
-    <div class="title-visual">
-      <h1 class="siori-title">{{ itinerary.title }}</h1>
-      {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
-      {% if first_date_str and last_date_str %}
-        <p class="siori-title-date">
-          {{ first_date_str }} ～ {{ last_date_str }}
-        </p>
-      {% endif %}
+  <div class="schedule-view-page">
+    <div class="title-wrapper">
+      <div class="title-visual">
+        <h1 class="siori-title">{{ itinerary.title }}</h1>
+        {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+        {% if first_date_str and last_date_str %}
+          <p class="siori-title-date">
+            {{ first_date_str }} ～ {{ last_date_str }}
+          </p>
+        {% endif %}
+        
+      </div>
     </div>
 
+    <div class="schedule-content-layout">
+    <div class="schedule-main-column">
+    <div class="schedule-table-box">
+      <div class="day-tabs" aria-label="日程を選択">
+        <div class="day-tabs-scroll" role="tablist">
+          {% for group in grouped_days %}
+            <button
+              type="button"
+              class="day-tab {% if forloop.first %}is-active{% endif %}"
+              role="tab"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              aria-controls="day-{{ forloop.counter0 }}"
+              data-day-tab-index="{{ forloop.counter0 }}"
+              data-calendar-date="{{ group.choice.calendar_date }}"
+              onclick="setActivePanelByIndex({{ forloop.counter0 }})"
+            >
+              <span class="day-tab-label">{{ group.choice.day_num }}日目</span>
+              {% if group.choice.calendar_date %}<span class="day-tab-date">{{ group.choice.calendar_date }}</span>{% endif %}
+            </button>
+          {% endfor %}
+        </div>
+        <div class="day-tab-menu">
+          <button
+            type="button"
+            class="day-tab-more"
+            aria-label="ほかの日程を選択"
+            aria-expanded="false"
+            onclick="toggleDayMenu()"
+          ><i class="fa-solid fa-chevron-down"></i></button>
+          <div class="day-tab-menu-list" role="menu">
+            {% for group in grouped_days %}
+              <button
+                type="button"
+                class="day-tab-menu-item {% if forloop.first %}is-active{% endif %}"
+                role="menuitem"
+                data-day-menu-index="{{ forloop.counter0 }}"
+                data-calendar-date="{{ group.choice.calendar_date }}"
+                onclick="setActivePanelByIndex({{ forloop.counter0 }})"
+              >
+                <span>{{ group.choice.day_num }}日目</span>
+                {% if group.choice.calendar_date %}<span class="day-tab-menu-date">{{ group.choice.calendar_date }}</span>{% endif %}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div id="scheduleView" class="box-content">
+        {% for group in grouped_days %}
+          <section class="day-panel {% if forloop.first %}is-active{% endif %}"
+                  id="day-{{ forloop.counter0 }}"
+                  data-day-key="{{ group.choice.value }}"
+                  data-calendar-date="{{ group.choice.calendar_date }}"
+                  data-day-num="{{ group.choice.day_num }}">
+            <div class="day-heading-nav">
+              <h2 class="day-heading">
+                {{ group.choice.day_num }}日目<br>
+                {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
+              </h2>
+            </div>
+
+            <div class="schedule-list">
+              {% if group.schedules %}
+                {% for s in group.schedules %}
+                  <div class="schedule-row"
+                      data-start-datetime="{% if group.choice.calendar_date and s.start_time %}{{ group.choice.calendar_date }}T{{ s.start_time|time:'H:i:s' }}{% endif %}">
+                    <div class="row-display">
+                      <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
+                        <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
+                        {% if s.end_time %}<span class="display-end-time">{{ s.end_time|time:'H:i' }}</span>{% endif %}
+                      </div>
+
+                      <div class="row-icon-column">
+                        <span class="schedule-icon {{ s.get_title_color_class }}" aria-hidden="true">
+                          <i class="fa-solid {{ s.get_icon_class }}"></i>
+                        </span>
+                      </div>
+
+                      <div class="row-main-text">
+                        <div class="display-title {{ s.get_title_color_class }}">{{ s.title }}</div>
+                        {% if s.place %}
+                          <div class="row-place-line display-place-line">
+                            <button
+                              type="button"
+                              class="place-open-btn"
+                              onclick="openPlaceModal({
+                                id: {{ s.place.id }},
+                                name: '{{ s.place.name|escapejs }}',
+                                address: '{{ s.place.address|default:''|escapejs }}',
+                                memo: '{{ s.place.memo|default:''|escapejs }}',
+                                planned_day: {{ s.place.planned_day|default:0 }},
+                                place_id: '{{ s.place.place_id|default:''|escapejs }}'
+                              })"
+                            >
+                              <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{{ s.place.name }}</span>
+                            </button>
+                          </div>
+                        {% endif %}
+
+                        {% if s.description %}
+                          <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+                <div class="edit-schedule-link-wrapper">
+                <a class="edit_button_content_under_schedule" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              {% else %}
+                <div class="empty-day-message">この日の予定はまだありません。</div>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              {% endif %}
+            </div>
+          </section>
+        {% endfor %}
+      </div>
+    </div>
+    </div>
+    <aside class="schedule-side-column">
     {% if itinerary.description %}
-      <div class="box5-6">
+      <div class="box5-6 schedule-overview-box">
         <h2 class="box-title">概要</h2>
         <div class="box-content">
           <p>{{ itinerary.description }}</p>
         </div>
       </div>
     {% endif %}
-  </div>
-
-  <div class="box5-6">
-    <h2 class="box-title">日程表</h2>
-    <div id="scheduleView" class="box-content">
-      {% for group in grouped_days %}
-        <section class="day-panel {% if forloop.first %}is-active{% endif %}"
-                 id="day-{{ forloop.counter0 }}"
-                 data-day-key="{{ group.choice.value }}"
-                 data-calendar-date="{{ group.choice.calendar_date }}"
-                 data-day-num="{{ group.choice.day_num }}">
-          <div class="day-heading-nav">
-            <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
-            <h2 class="day-heading">
-              {{ group.choice.label }}<br>
-              {% if group.choice.calendar_date %}<span class="day-heading-date">{{ group.choice.calendar_date }}</span>{% endif %}
-            </h2>
-            <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
-          </div>
-
-          <div class="schedule-list">
-            {% if group.schedules %}
-              {% for s in group.schedules %}
-                <div class="schedule-row"
-                     data-start-datetime="{% if group.choice.calendar_date and s.start_time %}{{ group.choice.calendar_date }}T{{ s.start_time|time:'H:i:s' }}{% endif %}">
-                  <div class="row-display">
-                    <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
-                      <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
-                      {% if s.end_time %}<span class="display-end-time">{{ s.end_time|time:'H:i' }}</span>{% endif %}
-                    </div>
-
-                    <div class="row-main-text">
-                      <div class="display-title">{{ s.title }}</div>
-
-                      {% if s.place %}
-                        <div class="row-place-line display-place-line">
-                          <button
-                            type="button"
-                            class="place-open-btn"
-                            onclick="openPlaceModal({
-                              id: {{ s.place.id }},
-                              name: '{{ s.place.name|escapejs }}',
-                              address: '{{ s.place.address|default:''|escapejs }}',
-                              memo: '{{ s.place.memo|default:''|escapejs }}',
-                              planned_day: {{ s.place.planned_day|default:0 }},
-                              place_id: '{{ s.place.place_id|default:''|escapejs }}'
-                            })"
-                          >
-                            <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{{ s.place.name }}</span>
-                          </button>
-                        </div>
-                      {% endif %}
-
-                      {% if s.description %}
-                        <div class="display-description"><i class="fa-regular fa-clipboard"></i>{{ s.description }}</div>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            {% else %}
-              <div class="empty-day-message">この日の予定はまだありません。</div>
-              <a class="edit_button_content" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}">予定を追加する</a>
-            {% endif %}
-          </div>
-        </section>
-      {% endfor %}
+    <div class="box5-6 schedule-share-box">
+      <h2 class="box-title">しおりを共有</h2>
+      <div class="box-content">
+        <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます）</p>
+        <p id="copy-url-box" class="copy-url-box">
+          <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ share_url }}</span>
+        </p>
+        <div class="share-qr-wrapper">
+          <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
+          <img class="share-qr-image" src="{{ qr_code_url }}" alt="しおり共有用QRコード" width="220" height="220" loading="lazy">
+        </div>
+      </div>
+    </div>
+    </aside>
     </div>
   </div>
-  <div class="box5-6">
-    <h2 class="box-title">しおりを共有</h2>
-    <div class="box-content">
-      <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます）</p>
-      <p id="copy-url-box" class="copy-url-box">
-        <i class="fa-solid fa-link"></i>  <span id="copy-url-text">{{ share_url }}</span>
-      </p>
-      <div class="share-qr-wrapper">
-        <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
-        <img class="share-qr-image" src="{{ qr_code_url }}" alt="しおり共有用QRコード" width="220" height="220" loading="lazy">
+
+  <div id="placeModal" class="modal">
+    <div class="modal-content" onclick="event.stopPropagation();">
+      <span class="close" onclick="closePlaceModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+
+      <div class="modal-memo">
+        <p><i class="fa-regular fa-clipboard"></i></p>
+        <p id="modalMemo"></p>
+      </div>
+
+      <div class="modal-adress">
+        <p><i class="fa-solid fa-location-dot"></i></p>
+        <p id="modalAdress"></p>
+      </div>
+
+      <div class="modal-date">
+        <p><i class="fa-regular fa-calendar-days"></i></p>
+        <p id="modalDay"></p>
+      </div>
+
+      <div class="modal-actions">
+        <a id="modalMapsButton" href="#" target="_blank" rel="noopener noreferrer" class="maps-button">
+          Google Mapsで開く
+        </a>
       </div>
     </div>
   </div>
-</div>
-
-<div id="placeModal" class="modal">
-  <div class="modal-content" onclick="event.stopPropagation();">
-    <span class="close" onclick="closePlaceModal()">&times;</span>
-    <h3 id="modalTitle"></h3>
-
-    <div class="modal-memo">
-      <p><i class="fa-regular fa-clipboard"></i></p>
-      <p id="modalMemo"></p>
-    </div>
-
-    <div class="modal-adress">
-      <p><i class="fa-solid fa-location-dot"></i></p>
-      <p id="modalAdress"></p>
-    </div>
-
-    <div class="modal-date">
-      <p><i class="fa-regular fa-calendar-days"></i></p>
-      <p id="modalDay"></p>
-    </div>
-
-    <div class="modal-actions">
-      <a id="modalMapsButton" href="#" target="_blank" rel="noopener noreferrer" class="maps-button">
-        Google Mapsで開く
-      </a>
-    </div>
-  </div>
-</div>
 </div>
 <script>
             document.addEventListener("DOMContentLoaded", function () {
@@ -161,12 +217,60 @@ function getPanels() {
   return [...document.querySelectorAll('.day-panel')];
 }
 
+function formatScheduleDates() {
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const dateEls = document.querySelectorAll('.day-tab-date, .day-tab-menu-date, .day-heading-date');
+
+  dateEls.forEach(el => {
+    const raw = el.closest('[data-calendar-date]')?.dataset.calendarDate;
+    if (!raw) return;
+
+    const date = new Date(`${raw}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return;
+
+    el.textContent = `${date.getMonth() + 1}/${date.getDate()}(${weekdays[date.getDay()]})`;
+  });
+}
+
+function closeDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const moreButton = document.querySelector('.day-tab-more');
+
+  if (menu) menu.classList.remove('is-open');
+  if (moreButton) moreButton.setAttribute('aria-expanded', 'false');
+}
+
+function toggleDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const moreButton = document.querySelector('.day-tab-more');
+  if (!menu || !moreButton) return;
+
+  const isOpen = menu.classList.toggle('is-open');
+  moreButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
 function setActivePanelByIndex(index) {
   const panels = getPanels();
   if (!panels.length) return;
+  if (index < 0 || index >= panels.length) return;
 
   panels.forEach(p => p.classList.remove('is-active'));
   panels[index].classList.add('is-active');
+
+  document.querySelectorAll('.day-tab').forEach((tab, tabIndex) => {
+    const isActive = tabIndex === index;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    if (isActive) {
+      tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  });
+
+  document.querySelectorAll('.day-tab-menu-item').forEach((item, itemIndex) => {
+    item.classList.toggle('is-active', itemIndex === index);
+  });
+
+  closeDayMenu();
 }
 
 function moveDay(direction) {
@@ -252,7 +356,7 @@ function openPlaceModal(place) {
   document.getElementById("modalMemo").textContent = place.memo || "メモなし";
 
   const dayVal = parseInt(place.planned_day) || 0;
-  document.getElementById("modalDay").textContent = dayVal === 0 ? "未定" : `Day ${dayVal}`;
+  document.getElementById("modalDay").textContent = dayVal === 0 ? "未定" : `${dayVal}日目`;
 
   const mapsButton = document.getElementById("modalMapsButton");
   if (place.place_id) {
@@ -275,7 +379,14 @@ document.getElementById("placeModal").addEventListener("click", function(e) {
   }
 });
 
+document.addEventListener("click", function(e) {
+  if (!e.target.closest('.day-tab-menu')) {
+    closeDayMenu();
+  }
+});
+
 document.addEventListener("DOMContentLoaded", function() {
+  formatScheduleDates();
   activateTodayPanelIfExists();
   highlightNextSchedule();
 });

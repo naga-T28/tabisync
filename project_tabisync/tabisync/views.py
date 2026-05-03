@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import ipaddress
+import re
 import urllib.parse
 import urllib.request
 
@@ -33,6 +34,15 @@ from .models import ChecklistV2, ConciergeChatLog, Itinerary, Item, Memo, MemoV2
 
 
 logger = logging.getLogger(__name__)
+
+CONCIERGE_USER_MESSAGE_MAX_LENGTH = 60
+MAX_ITINERARY_DAYS = 30
+MAX_SCHEDULES_PER_DAY = 15
+MAX_MEMOS_PER_ITINERARY = 15
+MAX_MEMO_WORDS = 1000
+MAX_CHECKLISTS_PER_ITINERARY = 10
+MAX_CHECKLIST_ITEMS_PER_LIST = 30
+MEMO_WORD_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30ff\u3400-\u9fff]")
 
 
 # =========================
@@ -130,6 +140,51 @@ def build_public_service_error_message(exc, default_message):
     if "timeout" in detail:
         return "現在アクセスが集中しています。しばらくしてから再度お試しください。"
     return default_message
+
+
+def get_inclusive_day_count(start_date, end_date):
+    return (end_date - start_date).days + 1
+
+
+def get_want_to_go_limit(itinerary):
+    return itinerary.get_want_to_go_limit()
+
+
+def can_add_want_to_go(itinerary):
+    return itinerary.want_to_go_list.count() < get_want_to_go_limit(itinerary)
+
+
+def build_want_to_go_limit_message(itinerary):
+    return f"行きたいとこリストは1つのしおりにつき{get_want_to_go_limit(itinerary)}件まで保存できます。"
+
+
+def count_memo_words(content):
+    text = strip_tags(str(content or ""))
+    return len(MEMO_WORD_PATTERN.findall(text))
+
+
+def validate_memo_notes_limits(notes):
+    if len(notes) > MAX_MEMOS_PER_ITINERARY:
+        return f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。"
+
+    for index, note in enumerate(notes, start=1):
+        if count_memo_words(note.get("content", "")) > MAX_MEMO_WORDS:
+            return f"メモ{index}は{MAX_MEMO_WORDS}語まで保存できます。"
+
+    return None
+
+
+def validate_checklist_limits(lists):
+    if len(lists) > MAX_CHECKLISTS_PER_ITINERARY:
+        return f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。"
+
+    for index, item_list in enumerate(lists, start=1):
+        items = item_list.get("items", [])
+        if len(items) > MAX_CHECKLIST_ITEMS_PER_LIST:
+            title = item_list.get("title") or f"リスト{index}"
+            return f"{title}は{MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。"
+
+    return None
 
 # =========================
 # 静的ページ・案内ページ
@@ -310,6 +365,11 @@ class CreateView(View):
                 "error": "終了日は開始日以降を指定してください。",
             }, status=400)
 
+        if get_inclusive_day_count(start_date_obj, end_date_obj) > MAX_ITINERARY_DAYS:
+            return render(request, self.template_name, {
+                "error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。",
+            }, status=400)
+
         # =====================
         # しおり作成
         # =====================
@@ -466,6 +526,7 @@ class WantToGoMapView(TemplateView):
         ).order_by("day_order", "id")
 
         context["itinerary_days"] = list(range(1, itinerary.total_days + 1))
+        context["want_to_go_limit"] = get_want_to_go_limit(itinerary)
 
         return context
     
@@ -479,6 +540,12 @@ class WantToGoMapView(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
+            if not can_add_want_to_go(itinerary):
+                return JsonResponse({
+                    "status": "error",
+                    "message": build_want_to_go_limit_message(itinerary),
+                }, status=400)
+
             place = WantToGo(itinerary=itinerary)
             apply_want_to_go_payload(place, data)
             place.save()
@@ -540,6 +607,7 @@ class WantToGoV2View(TemplateView):
         context["itinerary"] = itinerary
         context["places"] = WantToGo.objects.filter(itinerary=itinerary)
         context["itinerary_days"] = list(range(1, itinerary.total_days + 1))
+        context["want_to_go_limit"] = get_want_to_go_limit(itinerary)
 
         return context
 
@@ -554,6 +622,12 @@ class WantToGoV2View(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
+            if not can_add_want_to_go(itinerary):
+                return JsonResponse({
+                    "status": "error",
+                    "message": build_want_to_go_limit_message(itinerary),
+                }, status=400)
+
             place = WantToGo(itinerary=itinerary)
             apply_want_to_go_payload(place, data)
             place.save()
@@ -617,6 +691,19 @@ def reorder_schedules_for_day(itinerary, day_index):
         if schedule.order != i:
             schedule.order = i
             schedule.save(update_fields=["order"])
+
+
+def count_schedules_for_day(itinerary, day_index, exclude_schedule_id=None):
+    if day_index is None:
+        return 0
+
+    count = 0
+    for schedule in itinerary.schedules.all():
+        if exclude_schedule_id and schedule.id == exclude_schedule_id:
+            continue
+        if get_schedule_day_index(itinerary, schedule) == day_index:
+            count += 1
+    return count
 
 
 def build_day_choices(itinerary):
@@ -848,6 +935,20 @@ class EditContentFormV2View(View):
                 status=400,
             )
 
+        new_span_days = get_inclusive_day_count(new_start_date, new_end_date)
+        if new_span_days > MAX_ITINERARY_DAYS:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = new_start_date
+            itinerary.end_date = new_end_date
+            return self._render_form(
+                request,
+                itinerary,
+                {"error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。"},
+                status=400,
+            )
+
         schedule_max_day = 0
         for schedule in itinerary.schedules.all():
             day_index = get_schedule_day_index(itinerary, schedule)
@@ -861,22 +962,20 @@ class EditContentFormV2View(View):
 
         existing_max_day = max(schedule_max_day, place_max_day)
 
-        if new_start_date and new_end_date:
-            new_span_days = (new_end_date - new_start_date).days + 1
-            if existing_max_day > new_span_days:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.start_date = new_start_date
-                itinerary.end_date = new_end_date
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {
-                        "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、この日程には収まりません。",
-                    },
-                    status=400,
-                )
+        if existing_max_day > new_span_days:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = new_start_date
+            itinerary.end_date = new_end_date
+            return self._render_form(
+                request,
+                itinerary,
+                {
+                    "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、この日程には収まりません。",
+                },
+                status=400,
+            )
 
         schedules = list(itinerary.schedules.all())
         existing_schedule_day_indexes = {
@@ -1010,12 +1109,19 @@ class ScheduleV2EditView(View):
             })
 
         want_to_go_places = itinerary.want_to_go_list.all().order_by("planned_day", "id")
+        first_date_str = None
+        last_date_str = None
+        if itinerary.start_date and itinerary.end_date:
+            first_date_str = itinerary.start_date.strftime("%Y.%m.%d")
+            last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
         response = render(request, self.template_name, {
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
             "want_to_go_places": want_to_go_places,
+            "first_date_str": first_date_str,
+            "last_date_str": last_date_str,
         })
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
@@ -1040,6 +1146,10 @@ def schedule_v2_row_save(request, pk, token):
     end_time_str = (data.get("end_time") or "").strip()
     date_str = (data.get("date") or "").strip()
     place_id = data.get("place_id")
+    icon = (data.get("icon") or ScheduleV2.ICON_DEFAULT).strip()
+    allowed_icons = {choice[0] for choice in ScheduleV2.ICON_CHOICES}
+    if icon not in allowed_icons:
+        icon = ScheduleV2.ICON_DEFAULT
 
     if not title or not start_time_str or not date_str:
         return JsonResponse({"status": "error", "message": "必須項目が不足しています"}, status=400)
@@ -1070,6 +1180,19 @@ def schedule_v2_row_save(request, pk, token):
     if not day_index or not itinerary.total_days or day_index < 1 or day_index > itinerary.total_days:
         return JsonResponse({"status": "error", "message": "存在しないDayです"}, status=400)
 
+    exclude_schedule_id = None
+    if row_id:
+        try:
+            exclude_schedule_id = int(row_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "予定IDが不正です"}, status=400)
+
+    if count_schedules_for_day(itinerary, day_index, exclude_schedule_id) >= MAX_SCHEDULES_PER_DAY:
+        return JsonResponse({
+            "status": "error",
+            "message": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
+        }, status=400)
+
     date_obj = get_schedule_display_date(itinerary, day_index)
     if not date_obj:
         date_obj = itinerary.created_at.date() + timedelta(days=day_index - 1)
@@ -1085,6 +1208,7 @@ def schedule_v2_row_save(request, pk, token):
         schedule.date = date_obj
         schedule.day_index = day_index
         schedule.title = title
+        schedule.icon = icon
         schedule.description = description
         schedule.start_time = start_time
         schedule.end_time = end_time
@@ -1097,6 +1221,7 @@ def schedule_v2_row_save(request, pk, token):
             date=date_obj,
             day_index=day_index,
             title=title,
+            icon=icon,
             description=description,
             start_time=start_time,
             end_time=end_time,
@@ -1118,6 +1243,9 @@ def schedule_v2_row_save(request, pk, token):
         "created": created,
         "id": schedule.id,
         "title": schedule.title,
+        "icon": schedule.icon,
+        "icon_class": schedule.get_icon_class(),
+        "title_color_class": schedule.get_title_color_class(),
         "description": schedule.description,
         "start_time": schedule.start_time.strftime("%H:%M"),
         "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
@@ -1230,6 +1358,10 @@ class MemoV2EditView(View):
         else:
             notes = normalize_memo_v2_notes(data.get("content", ""))
 
+        limit_error = validate_memo_notes_limits(notes)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
         memo.content = json.dumps(notes, ensure_ascii=False)
         memo.save()
         return JsonResponse({"status": "ok", "notes_count": len(notes), "notes": notes})
@@ -1267,7 +1399,21 @@ class ChecklistV2View(View):
         })
 
     def post(self, request, pk, token):
-        return JsonResponse({"status": "error", "message": "編集ページから更新してください。"}, status=405)
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+
+        try:
+            data = json.loads(request.body)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+
+        lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        limit_error = validate_checklist_limits(lists)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
+        checklist.content = json.dumps(lists, ensure_ascii=False)
+        checklist.save()
+        return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
@@ -1309,6 +1455,11 @@ class ConciergeV2View(View):
         user_message = str(body.get("message") or "").strip()
         if not user_message:
             return JsonResponse({"status": "error", "message": "メッセージを入力してください。"}, status=400)
+        if len(user_message) > CONCIERGE_USER_MESSAGE_MAX_LENGTH:
+            return JsonResponse({
+                "status": "error",
+                "message": f"メッセージは{CONCIERGE_USER_MESSAGE_MAX_LENGTH}字以内で入力してください。",
+            }, status=400)
 
         if user_message == "__ping__":
             return JsonResponse({
@@ -1344,7 +1495,7 @@ class ConciergeV2View(View):
             }, status=429)
 
         try:
-            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message)
+            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message, history)
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge moderation failed for itinerary_id=%s: %s",
@@ -1407,7 +1558,7 @@ class ConciergeV2View(View):
             return JsonResponse({"status": "error", "message": "AIコンシェルジュ用の旅程データを組み立てられませんでした。"}, status=500)
 
         try:
-            answer_prompt, answer_payload, assistant_message = run_answer(history, user_message, selected_context)
+            answer_prompt, answer_payload, assistant_message, edit_actions = run_answer(history, user_message, selected_context)
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge answer generation failed for itinerary_id=%s: %s",
@@ -1442,10 +1593,55 @@ class ConciergeV2View(View):
             "status": "ok",
             "conversation_id": str(conversation_id),
             "reply": assistant_message,
+            "edit_actions": self._normalize_edit_actions_for_response(edit_actions),
             "required_data": required_data,
             "daily_limit": daily_limit,
             "remaining_count": max(daily_limit - (today_count + 1), 0),
         })
+
+    def _normalize_edit_actions_for_response(self, raw_actions):
+        if not isinstance(raw_actions, list):
+            return []
+
+        allowed_actions = {
+            "schedule_create",
+            "schedule_update",
+            "schedule_delete",
+            "want_create",
+            "want_update",
+            "want_delete",
+            "memo_append",
+            "checklist_add_item",
+        }
+        normalized = []
+        for raw_action in raw_actions[:12]:
+            if not isinstance(raw_action, dict):
+                continue
+            action = str(raw_action.get("action") or "").strip()
+            if action not in allowed_actions:
+                continue
+
+            normalized.append({
+                "action": action,
+                "id": raw_action.get("id"),
+                "day": raw_action.get("day"),
+                "title": str(raw_action.get("title") or "").strip(),
+                "description": str(raw_action.get("description") or "").strip(),
+                "start_time": str(raw_action.get("start_time") or "").strip(),
+                "end_time": str(raw_action.get("end_time") or "").strip(),
+                "icon": str(raw_action.get("icon") or "").strip(),
+                "place_name": str(raw_action.get("place_name") or "").strip(),
+                "address": str(raw_action.get("address") or "").strip(),
+                "memo": str(raw_action.get("memo") or "").strip(),
+                "priority": raw_action.get("priority"),
+                "content": str(raw_action.get("content") or "").strip(),
+                "items": [
+                    str(item).strip()
+                    for item in raw_action.get("items", [])
+                    if str(item).strip()
+                ][:20] if isinstance(raw_action.get("items"), list) else [],
+            })
+        return normalized
 
     def _parse_conversation_id(self, raw_value):
         try:
@@ -1458,7 +1654,7 @@ class ConciergeV2View(View):
             return []
 
         normalized_history = []
-        for item in raw_history[-12:]:
+        for item in raw_history[-8:]:
             if not isinstance(item, dict):
                 continue
             role = str(item.get("role") or "").strip()
@@ -1467,7 +1663,7 @@ class ConciergeV2View(View):
                 continue
             normalized_history.append({
                 "role": role,
-                "content": content[:4000],
+                "content": content[:1500],
             })
         return normalized_history
 
@@ -1496,6 +1692,7 @@ class ConciergeV2View(View):
                 self.itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id")
             )
             context["schedule"] = [{
+                "id": schedule.id,
                 "day_index": get_schedule_day_index(self.itinerary, schedule) or schedule.day_index or 0,
                 "date": schedule.date.strftime("%Y-%m-%d") if schedule.date else "",
                 "title": schedule.title,
@@ -1508,6 +1705,7 @@ class ConciergeV2View(View):
         if "want_to_go" in requested:
             places = list(self.itinerary.want_to_go_list.all().order_by("-priority", "planned_day", "id"))
             context["want_to_go"] = [{
+                "id": place.id,
                 "name": place.name,
                 "planned_day": place.planned_day or 0,
                 "priority": place.priority or 3,
@@ -1574,6 +1772,322 @@ class ConciergeV2View(View):
             logger.exception("Failed to save concierge chat log for itinerary_id=%s", self.itinerary.pk)
 
 
+@require_POST
+@ratelimit(key=ratelimit_client_ip, rate='20/m', block=True)
+def concierge_v2_apply_changes(request, pk, token):
+    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+
+    if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
+        return JsonResponse({"status": "error", "message": "閲覧認証が必要です。"}, status=403)
+
+    session_key = f"edit_auth_{itinerary.pk}"
+    if itinerary.edit_password and not request.session.get(session_key):
+        return JsonResponse({"status": "error", "message": "編集認証が必要です。編集ページで認証してから再度お試しください。"}, status=403)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({"status": "error", "message": "不正なJSONです。"}, status=400)
+
+    actions = data.get("edit_actions", [])
+    if not isinstance(actions, list) or not actions:
+        return JsonResponse({"status": "error", "message": "適用する変更がありません。"}, status=400)
+
+    if len(actions) > 12:
+        return JsonResponse({"status": "error", "message": "一度に適用できる変更は12件までです。"}, status=400)
+
+    try:
+        with transaction.atomic():
+            results = []
+            touched_schedule_days = set()
+            for raw_action in actions:
+                result = _apply_concierge_edit_action(itinerary, raw_action, touched_schedule_days)
+                if result:
+                    results.append(result)
+
+            for day_index in touched_schedule_days:
+                reorder_schedules_for_day(itinerary, day_index)
+    except ValueError as exc:
+        return JsonResponse({"status": "error", "message": str(exc)}, status=400)
+
+    return JsonResponse({
+        "status": "ok",
+        "applied_count": len(results),
+        "results": results,
+    })
+
+
+def _apply_concierge_edit_action(itinerary, raw_action, touched_schedule_days):
+    if not isinstance(raw_action, dict):
+        raise ValueError("変更データの形式が不正です。")
+
+    action = str(raw_action.get("action") or "").strip()
+    if action in {"schedule_create", "schedule_update", "schedule_delete"}:
+        return _apply_concierge_schedule_action(itinerary, action, raw_action, touched_schedule_days)
+    if action in {"want_create", "want_update", "want_delete"}:
+        return _apply_concierge_want_action(itinerary, action, raw_action)
+    if action == "memo_append":
+        return _apply_concierge_memo_action(itinerary, raw_action)
+    if action == "checklist_add_item":
+        return _apply_concierge_checklist_action(itinerary, raw_action)
+
+    raise ValueError("対応していない変更です。")
+
+
+def _parse_concierge_positive_int(value, field_name):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name}が不正です。")
+    if parsed < 1:
+        raise ValueError(f"{field_name}が不正です。")
+    return parsed
+
+
+def _parse_concierge_day(itinerary, value):
+    day_index = _parse_concierge_positive_int(value, "Day")
+    if not itinerary.total_days or day_index > itinerary.total_days:
+        raise ValueError("存在しないDayです。")
+    return day_index
+
+
+def _parse_concierge_time(value, field_name, required=False):
+    text = str(value or "").strip()
+    if not text:
+        if required:
+            raise ValueError(f"{field_name}が不足しています。")
+        return None
+    try:
+        return datetime.strptime(text, "%H:%M").time()
+    except ValueError:
+        raise ValueError(f"{field_name}はHH:MM形式で指定してください。")
+
+
+def _clean_concierge_text(value, max_length, field_name="", required=False):
+    text = str(value or "").strip()
+    if required and not text:
+        raise ValueError(f"{field_name or '必須項目'}が不足しています。")
+    return text[:max_length]
+
+
+def _apply_concierge_schedule_action(itinerary, action, raw_action, touched_schedule_days):
+    if action == "schedule_delete":
+        schedule_id = _parse_concierge_positive_int(raw_action.get("id"), "予定ID")
+        schedule = ScheduleV2.objects.filter(pk=schedule_id, itinerary=itinerary).first()
+        if not schedule:
+            raise ValueError("対象の予定が見つかりません。")
+        day_index = get_schedule_day_index(itinerary, schedule)
+        schedule.delete()
+        if day_index:
+            touched_schedule_days.add(day_index)
+        return {"action": action, "id": schedule_id, "label": "予定を削除しました"}
+
+    allowed_icons = {choice[0] for choice in ScheduleV2.ICON_CHOICES}
+    icon = str(raw_action.get("icon") or ScheduleV2.ICON_DEFAULT).strip()
+    if icon not in allowed_icons:
+        icon = ScheduleV2.ICON_DEFAULT
+
+    if action == "schedule_create":
+        day_index = _parse_concierge_day(itinerary, raw_action.get("day"))
+        if count_schedules_for_day(itinerary, day_index) >= MAX_SCHEDULES_PER_DAY:
+            raise ValueError(f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。")
+        title = _clean_concierge_text(raw_action.get("title"), 30, "予定名", required=True)
+        start_time = _parse_concierge_time(raw_action.get("start_time"), "開始時刻", required=True)
+        end_time = _parse_concierge_time(raw_action.get("end_time"), "終了時刻")
+        description = _clean_concierge_text(raw_action.get("description"), 100)
+        place = _find_or_create_concierge_place(itinerary, raw_action)
+        date_obj = get_schedule_display_date(itinerary, day_index) or itinerary.created_at.date() + timedelta(days=day_index - 1)
+        schedule = ScheduleV2.objects.create(
+            itinerary=itinerary,
+            date=date_obj,
+            day_index=day_index,
+            title=title,
+            icon=icon,
+            description=description,
+            start_time=start_time,
+            end_time=end_time,
+            place=place,
+            order=0,
+        )
+        touched_schedule_days.add(day_index)
+        return {"action": action, "id": schedule.id, "label": f"Day{day_index}に予定を追加しました"}
+
+    if action == "schedule_update":
+        schedule_id = _parse_concierge_positive_int(raw_action.get("id"), "予定ID")
+        schedule = ScheduleV2.objects.filter(pk=schedule_id, itinerary=itinerary).first()
+        if not schedule:
+            raise ValueError("対象の予定が見つかりません。")
+        old_day_index = get_schedule_day_index(itinerary, schedule)
+        new_day_index = old_day_index
+
+        if raw_action.get("day"):
+            new_day_index = _parse_concierge_day(itinerary, raw_action.get("day"))
+            if count_schedules_for_day(itinerary, new_day_index, schedule.id) >= MAX_SCHEDULES_PER_DAY:
+                raise ValueError(f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。")
+            schedule.day_index = new_day_index
+            schedule.date = get_schedule_display_date(itinerary, new_day_index) or itinerary.created_at.date() + timedelta(days=new_day_index - 1)
+
+        title = str(raw_action.get("title") or "").strip()
+        if title:
+            schedule.title = title[:30]
+
+        description = str(raw_action.get("description") or "").strip()
+        if description:
+            schedule.description = description[:100]
+
+        if raw_action.get("start_time"):
+            schedule.start_time = _parse_concierge_time(raw_action.get("start_time"), "開始時刻", required=True)
+        if raw_action.get("end_time") is not None:
+            schedule.end_time = _parse_concierge_time(raw_action.get("end_time"), "終了時刻")
+
+        schedule.icon = icon
+        place = _find_or_create_concierge_place(itinerary, raw_action)
+        if place:
+            schedule.place = place
+        schedule.save()
+
+        if old_day_index:
+            touched_schedule_days.add(old_day_index)
+        if new_day_index:
+            touched_schedule_days.add(new_day_index)
+        return {"action": action, "id": schedule.id, "label": "予定を更新しました"}
+
+    raise ValueError("対応していない予定変更です。")
+
+
+def _find_or_create_concierge_place(itinerary, raw_action):
+    place_name = str(raw_action.get("place_name") or "").strip()
+    if not place_name:
+        return None
+
+    existing = WantToGo.objects.filter(itinerary=itinerary, name=place_name).order_by("id").first()
+    if existing:
+        return existing
+
+    if not can_add_want_to_go(itinerary):
+        raise ValueError(build_want_to_go_limit_message(itinerary))
+
+    return WantToGo.objects.create(
+        itinerary=itinerary,
+        name=place_name[:200],
+        address=str(raw_action.get("address") or "").strip()[:300],
+        memo=str(raw_action.get("memo") or "").strip(),
+        planned_day=parse_optional_int(raw_action.get("day"), default=0) or 0,
+        priority=parse_optional_int(raw_action.get("priority"), default=3) or 3,
+    )
+
+
+def _apply_concierge_want_action(itinerary, action, raw_action):
+    if action == "want_delete":
+        place_id = _parse_concierge_positive_int(raw_action.get("id"), "場所ID")
+        place = WantToGo.objects.filter(pk=place_id, itinerary=itinerary).first()
+        if not place:
+            raise ValueError("対象の場所が見つかりません。")
+        place.delete()
+        return {"action": action, "id": place_id, "label": "行きたい場所を削除しました"}
+
+    if action == "want_create":
+        if not can_add_want_to_go(itinerary):
+            raise ValueError(build_want_to_go_limit_message(itinerary))
+
+        name = _clean_concierge_text(raw_action.get("place_name") or raw_action.get("title"), 200, "場所名", required=True)
+        place = WantToGo.objects.create(
+            itinerary=itinerary,
+            name=name,
+            address=str(raw_action.get("address") or "").strip()[:300],
+            memo=str(raw_action.get("memo") or raw_action.get("description") or "").strip(),
+            planned_day=parse_optional_int(raw_action.get("day"), default=0) or 0,
+            priority=parse_optional_int(raw_action.get("priority"), default=3) or 3,
+        )
+        return {"action": action, "id": place.id, "label": "行きたい場所を追加しました"}
+
+    if action == "want_update":
+        place_id = _parse_concierge_positive_int(raw_action.get("id"), "場所ID")
+        place = WantToGo.objects.filter(pk=place_id, itinerary=itinerary).first()
+        if not place:
+            raise ValueError("対象の場所が見つかりません。")
+        name = str(raw_action.get("place_name") or raw_action.get("title") or "").strip()
+        if name:
+            place.name = name[:200]
+        address = str(raw_action.get("address") or "").strip()
+        if address:
+            place.address = address[:300]
+        memo = str(raw_action.get("memo") or raw_action.get("description") or "").strip()
+        if memo:
+            place.memo = memo
+        if raw_action.get("day") is not None:
+            place.planned_day = parse_optional_int(raw_action.get("day"), default=0) or 0
+        if raw_action.get("priority") is not None:
+            place.priority = parse_optional_int(raw_action.get("priority"), default=3) or 3
+        place.save()
+        return {"action": action, "id": place.id, "label": "行きたい場所を更新しました"}
+
+    raise ValueError("対応していない場所変更です。")
+
+
+def _apply_concierge_memo_action(itinerary, raw_action):
+    content = _clean_concierge_text(raw_action.get("content") or raw_action.get("memo"), 4000, "メモ内容", required=True)
+    memo, _ = MemoV2.objects.get_or_create(itinerary=itinerary)
+    notes = normalize_memo_v2_notes(memo.content)
+    if len(notes) >= MAX_MEMOS_PER_ITINERARY:
+        raise ValueError(f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。")
+    if count_memo_words(content) > MAX_MEMO_WORDS:
+        raise ValueError(f"メモは1件につき{MAX_MEMO_WORDS}語まで保存できます。")
+
+    notes.append({"content": content})
+    memo.content = json.dumps(notes, ensure_ascii=False)
+    memo.save()
+    return {"action": "memo_append", "label": "メモを追加しました"}
+
+
+def _apply_concierge_checklist_action(itinerary, raw_action):
+    items = [
+        str(item).strip()[:100]
+        for item in raw_action.get("items", [])
+        if str(item).strip()
+    ] if isinstance(raw_action.get("items"), list) else []
+    content = str(raw_action.get("content") or "").strip()
+    if content:
+        items.append(content[:100])
+    if not items:
+        raise ValueError("追加するリスト項目がありません。")
+
+    checklist, _ = ChecklistV2.objects.get_or_create(itinerary=itinerary)
+    lists = normalize_checklist_v2_content(checklist.content)
+    if not lists:
+        lists = build_default_checklist_v2_lists()
+
+    list_title = str(raw_action.get("title") or "持ち物リスト").strip()
+    target_list = next((item_list for item_list in lists if item_list.get("title") == list_title), None)
+    if not target_list:
+        if len(lists) >= MAX_CHECKLISTS_PER_ITINERARY:
+            raise ValueError(f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。")
+
+        target_list = {
+            "id": f"list-{uuid4().hex[:10]}",
+            "title": list_title,
+            "items": [],
+        }
+        lists.append(target_list)
+
+    available_slots = MAX_CHECKLIST_ITEMS_PER_LIST - len(target_list.get("items", []))
+    if available_slots <= 0:
+        raise ValueError(f"{target_list.get('title') or 'リスト'}は{MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。")
+    if len(items) > available_slots:
+        raise ValueError(f"{target_list.get('title') or 'リスト'}に追加できる項目はあと{available_slots}個です。")
+
+    for item_text in items:
+        target_list["items"].append({
+            "id": f"item-{uuid4().hex[:10]}",
+            "text": item_text,
+            "checked": False,
+        })
+
+    checklist.content = json.dumps(lists, ensure_ascii=False)
+    checklist.save()
+    return {"action": "checklist_add_item", "label": "リスト項目を追加しました"}
+
+
 # v2リスト編集ページ
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ChecklistV2EditView(View):
@@ -1621,6 +2135,10 @@ class ChecklistV2EditView(View):
             return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
 
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        limit_error = validate_checklist_limits(lists)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
         checklist.content = json.dumps(lists, ensure_ascii=False)
         checklist.save()
         return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
@@ -1872,6 +2390,26 @@ class EditView(View):
             if key.startswith("dates[") and "[date]" in key
         }, key=int)
 
+        if len(travel_date_indices) > MAX_ITINERARY_DAYS:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。",
+            }, status=400)
+
+        for i_str in travel_date_indices:
+            i = int(i_str)
+            schedule_indices = sorted({
+                key.split("[")[3].split("]")[0]
+                for key in request.POST.keys()
+                if key.startswith(f"dates[{i}][schedules][") and "[title]" in key
+            }, key=int)
+
+            if len(schedule_indices) > MAX_SCHEDULES_PER_DAY:
+                return render(request, self.template_name, {
+                    "itinerary": itinerary,
+                    "error": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
+                }, status=400)
+
         used_date_pks = []
 
         for idx, i_str in enumerate(travel_date_indices):
@@ -1961,6 +2499,21 @@ class EditView(View):
             if key.startswith("memos[") and "[title]" in key
         }, key=int)
 
+        if len(memo_indices) > MAX_MEMOS_PER_ITINERARY:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。",
+            }, status=400)
+
+        for i_str in memo_indices:
+            i = int(i_str)
+            content = request.POST.get(f"memos[{i}][content]", "")
+            if count_memo_words(content) > MAX_MEMO_WORDS:
+                return render(request, self.template_name, {
+                    "itinerary": itinerary,
+                    "error": f"メモは1件につき{MAX_MEMO_WORDS}語まで保存できます。",
+                }, status=400)
+
         used_memo_pks = []
 
         for idx, i_str in enumerate(memo_indices):
@@ -1995,6 +2548,12 @@ class EditView(View):
             for key in request.POST.keys()
             if key.startswith("items[") and "[title]" in key
         }, key=int)
+
+        if len(item_indices) > MAX_CHECKLISTS_PER_ITINERARY:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。",
+            }, status=400)
 
         used_item_pks = []
 

@@ -1,3 +1,5 @@
+@use "../base/variables" as variables;
+
 /*----------------------------------------
   全体のの設定
 ----------------------------------------*/
@@ -11,7 +13,7 @@ body, html {
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
-    color:rgb(95,96,97);
+    color:rgb(95,95,95);
     margin: 0;
     padding: 0;
 }
@@ -27,7 +29,7 @@ body {
   margin-bottom: 100px;
 }
 main{
-    font-family: 'Yusei Magic', sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
 }
 main#edit-main{
     font-family: "Noto Sans JP", sans-serif;
@@ -159,6 +161,9 @@ article.privacy-policy,
     width: 100%;      /* 横幅を画面いっぱいに */
     z-index: 1000; 
     padding-bottom: 5px;
+    &.--only-pc{
+      display: none;
+    }
 }
 .header-logo a{
     text-decoration: none;
@@ -166,8 +171,12 @@ article.privacy-policy,
     font-size: 1.5rem;
 }
 .logo-image{
-  height: 40px; /* 高さは自動調整 */
+  height: 50px; /* 高さは自動調整 */
   width: auto; /* ロゴの幅を調整 */
+  &.content-side-nav-logo-expanded{
+    width: 200px;
+    height: auto;
+  }
 }
 .header-wrapper{
     width:95%;
@@ -194,8 +203,8 @@ article.privacy-policy,
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 50px;
-  padding-bottom: 15px;
+  height: 70px;
+  padding-bottom: 25px;
   background-color: #fff; /* 背景色を必要に応じて変更 */
   /*border-top: 1px solid #ccc;*/
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
@@ -203,10 +212,6 @@ article.privacy-policy,
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  &.--concierge-footer{
-    height: 80px;
-    box-shadow: none;
-  }
 }
 
 .footer-nav-ul {
@@ -278,7 +283,7 @@ article.privacy-policy,
 
 }
 
-@media screen and (min-width: 960px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   body {
     display: flex;
     flex-direction: column;
@@ -361,15 +366,187 @@ article.privacy-policy,
     align-content: space-between;
   }
   .page-header{
+    &.--only-pc{
+      display: block;
+      width: 240px;
+      height: 100vh;
+      padding-bottom: 0;
+      background-color: #ffffff;
+      position: fixed;  /* 固定位置 */
+      top: 0;           /* 画面上部に配置 */
+      left: 0;          /* 左端に配置 */
+      z-index: 1000; 
+    }
+    &.--only-sp{
+      display: none;
+    }
+  }
+  .content-side-nav {
+    border-right: 1px solid #ececec;
+    transition: width .24s ease;
+  }
+  .content-side-nav-inner {
+    height: 100%;
+    padding: 26px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    overflow: hidden;
+  }
+  .content-side-nav-logo a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .content-side-nav-logo-collapsed {
+    display: none;
+  }
+  .content-side-nav-toggle {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ececec;
+    border-radius: 999px;
+    background: #fff;
+    color: rgb(95,96,97);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+  .content-side-nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .content-side-nav-link {
+    min-height: 48px;
+    padding: 0 12px;
+    border-radius: 8px;
+    color: rgb(95,96,97);
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) 12px;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .content-side-nav-icon,
+  .content-side-nav-chevron {
+    font-size: 12px;
+  }
+  .content-side-nav-icon {
+    font-size: 16px;
+    text-align: center;
+  }
+  .content-side-nav-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .content-side-nav-link:hover,
+  .content-side-nav-link.is-active {
+    background: #f2f3f7;
+    color: rgb(175, 41, 187);
+  }
+  .content-side-nav-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .content-side-nav-legal {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .content-side-nav-legal a {
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: rgb(95,96,97);
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .content-side-nav-legal a:hover {
+    background: #f2f3f7;
+    color: rgb(175, 41, 187);
+  }
+  .content-side-nav-legal-icon {
+    font-size: 13px;
+    text-align: center;
+  }
+  body#content-body .content-main,
+  body#concierge-body .content-main-concierge ,
+  body#content-body .content-main-map{
+    width: calc(100% - 240px);
+    margin-left: 240px;
+    padding-left: 0;
+    transition: width .24s ease, margin-left .24s ease;
+  }
+  body.is-side-nav-collapsed .content-side-nav {
+    width: 72px;
+  }
+  body.is-side-nav-collapsed .content-side-nav-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: center;
+  }
+  body.is-side-nav-collapsed .content-side-nav-logo .logo-image {
+    max-width: 42px;
+    object-fit: contain;
+  }
+  body.is-side-nav-collapsed .content-side-nav-logo-expanded {
+    display: none;
+  }
+  body.is-side-nav-collapsed .content-side-nav-logo-collapsed {
+    display: block;
+  }
+  body.is-side-nav-collapsed .content-side-nav-bottom {
     width: 100%;
-    height: 50px;
-    padding-bottom: 10px;
-    background-color: #ffffff;
-    position: fixed;  /* 固定位置 */
-    top: 0;           /* 画面上部に配置 */
-    left: 0;          /* 左端に配置 */
-    width: 100%;      /* 横幅を画面いっぱいに */
-    z-index: 1000; 
+    align-items: center;
+  }
+  body.is-side-nav-collapsed .content-side-nav-toggle {
+    align-self: center;
+  }
+  body.is-side-nav-collapsed .content-side-nav-menu {
+    width: 100%;
+  }
+  body.is-side-nav-collapsed .content-side-nav-link {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 0;
+  }
+  body.is-side-nav-collapsed .content-side-nav-legal {
+    width: 100%;
+  }
+  body.is-side-nav-collapsed .content-side-nav-legal a {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 0;
+  }
+  body.is-side-nav-collapsed .content-side-nav-label,
+  body.is-side-nav-collapsed .content-side-nav-chevron {
+    display: none;
+  }
+  body#content-body.is-side-nav-collapsed .content-main,
+  body#concierge-body.is-side-nav-collapsed .content-main-concierge,
+  body#content-body.is-side-nav-collapsed .content-main-map {
+    width: calc(100% - 72px);
+    margin-left: 72px;
+  }
+  body#content-body .footer-nav {
+    display: none;
+  }
+  body#content-body > footer {
+    display: none;
   }
   .logo-image{
     margin-top: 10px;

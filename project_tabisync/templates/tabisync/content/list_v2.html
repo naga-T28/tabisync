@@ -20,12 +20,27 @@
 document.addEventListener("DOMContentLoaded", function () {
   const board = document.getElementById("checklistBoard");
   const dataEl = document.getElementById("checklists-data");
+  const csrfToken = getCookie("csrftoken");
   let lists = [];
+  let activeListId = "";
+  let saveTimer = null;
 
   try {
     lists = JSON.parse(dataEl.textContent || "[]");
   } catch (error) {
     lists = [];
+  }
+  activeListId = lists[0]?.id || "";
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
   }
 
   function escapeHtml(text) {
@@ -35,6 +50,64 @@ document.addEventListener("DOMContentLoaded", function () {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function buildSanitizedLists() {
+    return lists
+      .map((list) => ({
+        id: list.id || createId("list"),
+        title: String(list.title || "").trim(),
+        items: Array.isArray(list.items)
+          ? list.items
+              .map((item) => ({
+                id: item.id || createId("item"),
+                text: String(item.text || "").trim(),
+                checked: Boolean(item.checked),
+              }))
+              .filter((item) => item.text)
+          : [],
+      }))
+      .filter((list) => list.title || list.items.length);
+  }
+
+  function getActiveList() {
+    return lists.find((list) => list.id === activeListId) || lists[0] || null;
+  }
+
+  async function saveLists() {
+    const payloadLists = buildSanitizedLists();
+
+    try {
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ lists: payloadLists }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data.lists)) {
+        lists = data.lists;
+        if (!lists.some((list) => list.id === activeListId)) {
+          activeListId = lists[0]?.id || "";
+        }
+        renderBoard();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  function queueSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveLists, 350);
   }
 
   function renderBoard() {
@@ -50,17 +123,38 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    board.innerHTML = lists.map((list, listIndex) => `
-      <article class="checklist-card" data-list-id="${list.id}">
+    const activeList = getActiveList();
+    const activeIndex = Math.max(lists.findIndex((list) => list.id === activeList.id), 0);
+
+    board.innerHTML = `
+      <nav class="checklist-tabs" aria-label="チェックリスト切り替え">
+        ${lists.map((list) => `
+          <button
+            type="button"
+            class="checklist-tab ${list.id === activeList.id ? "is-active" : ""}"
+            data-action="select-list"
+            data-list-id="${list.id}"
+          >
+            ${escapeHtml(list.title || "リスト")}
+          </button>
+        `).join("")}
+      </nav>
+      <article class="checklist-card" data-list-id="${activeList.id}">
         <div class="box5-6 checklist-box">
-          <h3 class="checklist-tape checklist-tape-${listIndex % 4}">${escapeHtml(list.title || "リスト")}</h3>
+          <h3 class="checklist-tape checklist-tape-${activeIndex % 4}">${escapeHtml(activeList.title || "リスト")}</h3>
           <div class="box-content">
-            ${(list.items || []).length ? `
+            ${(activeList.items || []).length ? `
               <ul class="checklist-items">
-                ${(list.items || []).map((item) => `
+                ${(activeList.items || []).map((item) => `
                   <li class="checklist-item">
                     <label class="checklist-label">
-                      <input type="checkbox" ${item.checked ? "checked" : ""} disabled>
+                      <input
+                        type="checkbox"
+                        data-action="toggle-item"
+                        data-list-id="${activeList.id}"
+                        data-item-id="${item.id}"
+                        ${item.checked ? "checked" : ""}
+                      >
                       <span>${escapeHtml(item.text || "")}</span>
                     </label>
                   </li>
@@ -72,8 +166,36 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
         </div>
       </article>
-    `).join("");
+    `;
   }
+
+  board.addEventListener("click", function (event) {
+    const actionEl = event.target.closest("[data-action]");
+    if (!actionEl) return;
+
+    const { action, listId } = actionEl.dataset;
+
+    if (action === "select-list") {
+      activeListId = listId || activeListId;
+      renderBoard();
+      return;
+    }
+
+  });
+
+  board.addEventListener("change", function (event) {
+    const target = event.target;
+    if (target.dataset.action !== "toggle-item") return;
+
+    const list = lists.find((entry) => entry.id === target.dataset.listId);
+    if (!list) return;
+
+    const item = (list.items || []).find((entry) => entry.id === target.dataset.itemId);
+    if (!item) return;
+
+    item.checked = target.checked;
+    queueSave();
+  });
 
   renderBoard();
 });

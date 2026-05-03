@@ -1,7 +1,10 @@
+@use "../base/variables" as variables;
+
 :root {
-  --concierge-header-offset: 68px;
-  --concierge-page-gutter: 18px;
-  --concierge-footer-height: 84px;
+  --concierge-header-offset: 64px;
+  --concierge-page-gutter: 12px;
+  --concierge-input-dock-height: 80px;
+  --concierge-input-dock-bottom: 0px;
 }
 .content-main-concierge{
     width: 100%;
@@ -36,7 +39,7 @@ body#concierge-body {
 }
 
 .concierge-page {
-  width: 100%;
+  width: calc(100% - 20px);
   height: 100%;
   margin: 0 auto;
   margin-right: 0;
@@ -53,7 +56,8 @@ body#concierge-body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 24px;
+  padding: 0 18px;
+  border-radius: 22px;
   background: #fff;
   height: auto;
 }
@@ -179,7 +183,7 @@ body#concierge-body {
 
 .concierge-panel,
 .concierge-chat-shell {
-  border-radius: 28px;
+  border-radius: 22px;
   background: #fff;
 }
 
@@ -249,6 +253,7 @@ body#concierge-body {
   min-height: 0;
   padding: 0;
   overflow: hidden;
+  border-radius: 0;
 }
 
 .concierge-messages {
@@ -258,8 +263,7 @@ body#concierge-body {
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
-  padding-bottom:calc(var(--concierge-footer-height) + 18px);
-  padding-right: 5px;
+  padding-bottom:calc(var(--concierge-input-dock-height) + 18px);
   padding-right: 5px;
   margin-right: 5px;
 
@@ -323,7 +327,7 @@ body#concierge-body {
   padding: 0.1em 0.4em;
   border-radius: 6px;
   background: rgba(47, 55, 71, 0.08);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "Noto Sans JP", sans-serif;
   font-size: 0.92em;
 }
 
@@ -339,24 +343,81 @@ body#concierge-body {
   border-top-right-radius: 8px;
 }
 
-.concierge-form {
-  display: block;
-  padding: 14px;
-  background: #fff;
-  position: static;
-  width: 100%;
-  box-sizing: border-box;
-  border-radius: 50%;
+.concierge-apply-box {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #e4e8ef;
+  border-radius: 14px;
+  background: #fbfcfe;
 }
 
-.footer-nav.--concierge-footer {
+.concierge-apply-summary {
+  margin: 0 0 8px;
+  color: #5d6675;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.concierge-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: #2f3747;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.concierge-apply-btn:disabled {
+  cursor: wait;
+  opacity: 0.82;
+}
+
+.concierge-apply-btn.is-applied {
+  background: #26745f;
+  cursor: default;
+}
+
+.concierge-apply-status {
+  margin: 8px 0 0;
+  color: #6f7783;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.concierge-form {
+  display: block;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 10px;
+  background: #fff;
+  position: static;
+  box-sizing: border-box;
+  border: 1px solid rgba(47, 55, 71, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 12px 34px rgba(28, 36, 51, 0.14);
+}
+
+.concierge-input-dock {
   position: fixed;
-  bottom: 0;
+  bottom: var(--concierge-input-dock-bottom);
   left: 50%;
   transform: translateX(-50%);
-  width: min(90%, 1200px);
-  z-index: 2;
-  background: #fff;
+  width: calc(100% - 20px);
+  z-index: 100;
+  box-sizing: border-box;
+  padding: 0 0 max(10px, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.concierge-input-dock .concierge-form {
+  pointer-events: auto;
 }
 
 .concierge-input-wrap {
@@ -450,10 +511,10 @@ body#concierge-body {
 
 .concierge-detail-dialog {
   position: relative;
-  width: min(100% - 24px, 560px);
-  max-height: min(80dvh, 720px);
-  margin: 10dvh auto 0;
-  padding: 24px 18px 18px;
+  width: calc(100% - 20px);
+  max-height: calc(100dvh - 40px);
+  margin: 20px auto 0;
+  padding: 22px 16px 16px;
   overflow-y: auto;
   border-radius: 24px;
   background: #fffdf9;
@@ -493,54 +554,76 @@ body.is-concierge-modal-open {
   overflow: hidden;
 }
 
-@media (max-width: 900px) {
-  .concierge-hero,
-  .concierge-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .concierge-layout { height: 100%; }
-}
-
-@media (max-width: 640px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   :root {
-    --concierge-header-offset: 64px;
-    --concierge-page-gutter: 12px;
-    --concierge-footer-height: 80px;
+    --concierge-header-offset: 68px;
+    --concierge-page-gutter: 18px;
+    --concierge-input-dock-height: 84px;
+    --concierge-input-dock-bottom: 18px;
   }
 
   .concierge-page {
-    width: calc(100% - 20px);
+    width: 100%;
   }
 
   .concierge-hero {
-    padding: 0 18px;
-    border-radius: 22px;
-  }
-
-  .concierge-chat-shell{
+    padding: 24px;
     border-radius: 0;
   }
-  .concierge-panel {
-    border-radius: 22px;
+
+  .concierge-panel,
+  .concierge-chat-shell {
+    border-radius: 28px;
   }
 
   .concierge-chat-shell {
-    min-height: 0;
+    border-radius: 28px;
+  }
+
+  .concierge-layout {
+    height: 100%;
+  }
+
+  .concierge-main {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .concierge-messages {
+    padding: 12px 18px calc(var(--concierge-input-dock-height) + 28px);
   }
 
   .concierge-form {
     padding: 12px;
+    border-radius: 18px;
   }
 
-  .footer-nav.--concierge-footer {
-    width: calc(100% - 20px);
+  .concierge-input-dock {
+    left: 240px;
+    right: 0;
+    width: auto;
+    transform: none;
+    padding: 0 32px;
+    transition: left .24s ease;
+  }
+
+  body.is-side-nav-collapsed .concierge-input-dock {
+    left: 72px;
+  }
+
+  .concierge-input-wrap {
+    min-height: 58px;
+    padding-left: 18px;
+  }
+
+  .concierge-input-wrap input {
+    height: 58px;
   }
 
   .concierge-detail-dialog {
-    width: calc(100% - 20px);
-    max-height: calc(100dvh - 40px);
-    margin-top: 20px;
-    padding: 22px 16px 16px;
+    width: min(100% - 24px, 560px);
+    max-height: min(80dvh, 720px);
+    margin-top: 10dvh;
+    padding: 24px 18px 18px;
   }
 }
