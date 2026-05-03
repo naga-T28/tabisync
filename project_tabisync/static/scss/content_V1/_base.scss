@@ -1,3 +1,5 @@
+@use "../base/variables" as variables;
+
 /*----------------------------------------
   content全体の設定
 ----------------------------------------*/
@@ -692,7 +694,7 @@ url-content a{
   text-decoration: underline;
 }
 
-@media screen and (min-width: 960px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   body {
     display: flex;
     flex-direction: column;

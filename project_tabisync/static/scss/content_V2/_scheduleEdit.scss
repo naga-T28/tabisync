@@ -1,3 +1,5 @@
+@use "../base/variables" as variables;
+
 .schedule-edit-page {
   width: 95%;
   max-width: 750px;
@@ -22,7 +24,11 @@
     width: 95%;
   }
 
+  /* =========================
+     Schedule edit rows
+     ========================= */
   .schedule-row {
+    min-height: 55px;
     position: relative;
     border-bottom: 1px solid #c4c4c4;
     padding: 14px 36px 14px 0;
@@ -59,9 +65,13 @@
     color: #222;
   }
 
+  /* =========================
+     Schedule edit time column
+     ========================= */
   .row-display {
     display: grid;
-    grid-template-columns: 84px 1fr;
+    grid-template-columns: 55px 40px minmax(0, 1fr);
+    column-gap: 8px;
     align-items: stretch;
   }
 
@@ -77,8 +87,6 @@
   }
 
   .row-time-text span {
-    background-color: #666;
-    color: #fff;
     padding: 2px 4px;
     border-radius: 4px;
     display: flex;
@@ -95,22 +103,34 @@
   }
 
   .row-time-text::before {
-    content: none;
-  }
-
-  .row-time-text.has-end-time::before {
     content: "";
     position: absolute;
-    top: 12px;
-    bottom: 12px;
+    top: 32px;
     left: 50%;
+    width: 0;
+    height: 24px;
     transform: translateX(-50%);
-    border-left: 2px dashed #5e5e5e;
+    border-left: 2px dotted #5e5e5e;
+    border-radius: 999px;
     z-index: 0;
   }
 
+  .row-time-text.has-end-time::before {
+    border-left-style: solid;
+  }
+
+  /* =========================
+     Schedule edit content
+     ========================= */
+  .row-icon-column {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 0;
+  }
+
   .row-main-text {
-    min-width: calc(100% - 84px);
+    min-width: 0;
   }
 
   .display-title {
@@ -165,6 +185,72 @@
   }
 }
 
+.modal-place-line {
+  margin: 14px 0 0;
+}
+
+.modal-place-line .place-open-btn {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d8dde6;
+  border-radius: 16px;
+  background: #f8f7fb;
+  color: #2f3747;
+  box-sizing: border-box;
+  box-shadow: 0 8px 18px rgba(47, 55, 71, 0.06);
+}
+
+.modal-place-line .place-open-btn:hover {
+  border-color: #7b4bb2;
+  background: #f4eefc;
+}
+
+.modal-place-icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eee3fb;
+  color: #7b4bb2;
+}
+
+.modal-place-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.modal-place-label {
+  color: #8a8a8a;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.modal-place-name {
+  overflow: hidden;
+  color: #2f3747;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-place-chevron {
+  color: #9a8ab0;
+  font-size: 0.85rem;
+}
+
+/* =========================
+   Modal fields
+   ========================= */
 .time-input,
 .title-input,
 .description-input,
@@ -178,6 +264,7 @@
 #editEndTime,
 #editTitle,
 #editDescription,
+#searchInput,
 #placeName,
 #placeAddress,
 #memoInput {
@@ -188,6 +275,7 @@
   min-height: 48px;
   padding: 0 12px;
   background: #fff;
+  color: #2f3747;
   font-size: 16px;
 }
 
@@ -206,7 +294,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   z-index: 3000;
-  padding: 16px;
+  padding: 12px;
   box-sizing: border-box;
 }
 
@@ -217,14 +305,15 @@
 }
 
 .edit-modal-content {
-  width: min(720px, 100%);
-  height: min(80vh, 720px);
+  width: min(720px, calc(100vw - 24px));
+  height: min(88dvh, 720px);
   background: #fff;
   border-radius: 18px;
-  padding: 20px;
+  padding: 18px;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
 }
 
 .edit-modal-content > .modal-field,
@@ -235,7 +324,7 @@
 }
 
 .edit-modal-header,
-.search-wrapper {
+.place-search-wrapper {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -244,6 +333,12 @@
 .edit-modal-header {
   justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.edit-modal-header h3 {
+  margin: 0;
+  color: #2f3747;
+  font-size: 1.08rem;
 }
 
 .modal-time-grid {
@@ -275,12 +370,61 @@
   font-size: 16px;
 }
 
-.search-wrapper {
+/* =========================
+   Schedule icon picker
+   ========================= */
+.schedule-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 38px);
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.schedule-icon-option {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #d8dde6;
+  border-radius: 999px;
+  background: #fff;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.schedule-icon-option:hover,
+.schedule-icon-option.is-active {
+  border-color: #2f3747;
+  background: #2f3747;
+  color: #fff;
+}
+
+.place-search-wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
   margin: 12px 0;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  background: transparent;
 }
 
 #searchInput {
-  flex: 1;
+  min-width: 0;
+}
+
+#searchBtn {
+  min-width: 72px;
+  min-height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: #2f3747;
+  color: #fff;
+  cursor: pointer;
 }
 
 .suggestions-box {
@@ -288,40 +432,57 @@
 }
 
 .suggestion-item {
-  padding: 10px 12px;
-  border: 1px solid #e9edf2;
-  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #d8dde6;
+  border-radius: 14px;
   margin-bottom: 8px;
   cursor: pointer;
-  background: #fff;
+  background: #f8f7fb;
+  color: #2f3747;
+}
+
+.suggestion-item:hover {
+  border-color: #7b4bb2;
+  background: #f4eefc;
 }
 
 .existing-place-section {
   margin: 16px 0 12px;
+  padding: 12px;
+  border: 1px solid #e6e1ed;
+  border-radius: 16px;
+  background: #fbfafc;
 }
 
 .existing-place-section h4 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  color: #2f3747;
+  font-size: 0.92rem;
 }
 
 .existing-place-list {
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid #e9edf2;
-  border-radius: 12px;
-  padding: 8px;
-  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .existing-place-item {
   width: 100%;
   text-align: left;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #d8dde6;
   background: #fff;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 12px;
   margin-bottom: 8px;
   cursor: pointer;
+}
+
+.existing-place-item:hover {
+  border-color: #7b4bb2;
+  background: #f8f7fb;
 }
 
 .existing-place-item:last-child {
@@ -337,9 +498,14 @@
 }
 
 .edit-modal-footer {
-  margin-top: 14px;
+  position: sticky;
+  bottom: -18px;
+  margin: 18px -18px -18px;
+  padding: 12px 18px;
   display: flex;
   justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid #ece8f1;
 }
 
 .btn-primary,
@@ -352,12 +518,14 @@
 }
 
 .btn-primary {
-  min-width: 96px;
+  min-width: 112px;
+  min-height: 44px;
   background: #2f3747;
   color: #fff;
+  font-weight: 700;
 }
 
-@media screen and (min-width: 960px) {
+@media screen and (min-width: variables.$breakpoint-md) {
   .schedule-edit-page {
     width: min(100% - 48px, 1180px);
     max-width: none;
@@ -382,18 +550,48 @@
   }
 }
 
-@media (max-width: 640px) {
-  .schedule-edit-page {
-    .row-display {
-      grid-template-columns: 72px 1fr;
-    }
+.schedule-edit-page {
+  .row-display {
+    grid-template-columns: 55px 40px minmax(0, 1fr);
   }
+}
 
   .modal-time-grid {
     gap: 8px;
   }
 
+  .schedule-icon-picker {
+    grid-template-columns: repeat(5, minmax(32px, 1fr));
+    gap: 6px;
+  }
+
+  .schedule-icon-option {
+    width: 100%;
+    min-width: 32px;
+  }
+
   .edit-modal-content {
     height: min(88vh, 720px);
+  }
+
+@media screen and (min-width: variables.$breakpoint-md) {
+  .schedule-edit-page {
+    .row-display {
+      grid-template-columns: 84px 40px minmax(0, 1fr);
+    }
+  }
+
+  .schedule-icon-picker {
+    grid-template-columns: repeat(auto-fit, 38px);
+    gap: 8px;
+  }
+
+  .schedule-icon-option {
+    width: 38px;
+    min-width: 0;
+  }
+
+  .edit-modal-content {
+    height: min(80vh, 720px);
   }
 }

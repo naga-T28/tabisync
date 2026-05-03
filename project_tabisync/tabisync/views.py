@@ -1047,6 +1047,10 @@ def schedule_v2_row_save(request, pk, token):
     end_time_str = (data.get("end_time") or "").strip()
     date_str = (data.get("date") or "").strip()
     place_id = data.get("place_id")
+    icon = (data.get("icon") or ScheduleV2.ICON_DEFAULT).strip()
+    allowed_icons = {choice[0] for choice in ScheduleV2.ICON_CHOICES}
+    if icon not in allowed_icons:
+        icon = ScheduleV2.ICON_DEFAULT
 
     if not title or not start_time_str or not date_str:
         return JsonResponse({"status": "error", "message": "必須項目が不足しています"}, status=400)
@@ -1092,6 +1096,7 @@ def schedule_v2_row_save(request, pk, token):
         schedule.date = date_obj
         schedule.day_index = day_index
         schedule.title = title
+        schedule.icon = icon
         schedule.description = description
         schedule.start_time = start_time
         schedule.end_time = end_time
@@ -1104,6 +1109,7 @@ def schedule_v2_row_save(request, pk, token):
             date=date_obj,
             day_index=day_index,
             title=title,
+            icon=icon,
             description=description,
             start_time=start_time,
             end_time=end_time,
@@ -1125,6 +1131,9 @@ def schedule_v2_row_save(request, pk, token):
         "created": created,
         "id": schedule.id,
         "title": schedule.title,
+        "icon": schedule.icon,
+        "icon_class": schedule.get_icon_class(),
+        "title_color_class": schedule.get_title_color_class(),
         "description": schedule.description,
         "start_time": schedule.start_time.strftime("%H:%M"),
         "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
