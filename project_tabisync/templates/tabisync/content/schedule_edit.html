@@ -396,6 +396,8 @@
 </template>
 
 <script>
+const MAX_SCHEDULES_PER_DAY = 15;
+
 const dayChoicesMap = {
   {% for choice in day_choices %}
     "{{ choice.value }}": {{ choice.day_num }}{% if not forloop.last %},{% endif %}
@@ -500,6 +502,12 @@ function closeDayMenu() {
   button.setAttribute('aria-expanded', 'false');
 }
 
+function countScheduleRowsForDay(dateValue, excludeRow = null) {
+  const panel = document.querySelector(`.day-panel[data-day-key="${dateValue}"]`);
+  if (!panel) return 0;
+  return [...panel.querySelectorAll(".schedule-row")].filter(row => row !== excludeRow).length;
+}
+
 function moveDay(direction) {
   const panels = getPanels();
   const activeIndex = panels.findIndex(panel => panel.classList.contains('is-active'));
@@ -517,8 +525,14 @@ document.getElementById('addRowBtn').addEventListener('click', () => {
 
 function openAddScheduleModal() {
   const activePanel = document.querySelector('.day-panel.is-active');
+  const activeDateValue = activePanel?.dataset.dayKey || "{{ day_choices.0.value|default:'' }}";
 
-  document.getElementById("newDate").value = activePanel?.dataset.dayKey || "{{ day_choices.0.value|default:'' }}";
+  if (countScheduleRowsForDay(activeDateValue) >= MAX_SCHEDULES_PER_DAY) {
+    alert(`予定は1日につき${MAX_SCHEDULES_PER_DAY}件まで保存できます。`);
+    return;
+  }
+
+  document.getElementById("newDate").value = activeDateValue;
   document.getElementById("newStartTime").value = "";
   document.getElementById("newEndTime").value = "";
   document.getElementById("newTitle").value = "";
@@ -647,6 +661,11 @@ async function createScheduleFromModal() {
     return;
   }
 
+  if (countScheduleRowsForDay(payload.date) >= MAX_SCHEDULES_PER_DAY) {
+    alert(`予定は1日につき${MAX_SCHEDULES_PER_DAY}件まで保存できます。`);
+    return;
+  }
+
   const result = await saveScheduleRow(payload);
   if (!result || result.status !== "saved") return;
 
@@ -700,6 +719,11 @@ async function saveEditScheduleModal() {
 
   if (!payload.title || !payload.start_time || !payload.date) {
     alert("日付・開始時間・タイトルは必須です。");
+    return;
+  }
+
+  if (countScheduleRowsForDay(payload.date, editingRow) >= MAX_SCHEDULES_PER_DAY) {
+    alert(`予定は1日につき${MAX_SCHEDULES_PER_DAY}件まで保存できます。`);
     return;
   }
 
