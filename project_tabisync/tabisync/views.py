@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import ipaddress
+import re
 import urllib.parse
 import urllib.request
 
@@ -37,6 +38,11 @@ logger = logging.getLogger(__name__)
 CONCIERGE_USER_MESSAGE_MAX_LENGTH = 60
 MAX_ITINERARY_DAYS = 30
 MAX_SCHEDULES_PER_DAY = 15
+MAX_MEMOS_PER_ITINERARY = 15
+MAX_MEMO_WORDS = 1000
+MAX_CHECKLISTS_PER_ITINERARY = 10
+MAX_CHECKLIST_ITEMS_PER_LIST = 30
+MEMO_WORD_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30ff\u3400-\u9fff]")
 
 
 # =========================
@@ -150,6 +156,35 @@ def can_add_want_to_go(itinerary):
 
 def build_want_to_go_limit_message(itinerary):
     return f"行きたいとこリストは1つのしおりにつき{get_want_to_go_limit(itinerary)}件まで保存できます。"
+
+
+def count_memo_words(content):
+    text = strip_tags(str(content or ""))
+    return len(MEMO_WORD_PATTERN.findall(text))
+
+
+def validate_memo_notes_limits(notes):
+    if len(notes) > MAX_MEMOS_PER_ITINERARY:
+        return f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。"
+
+    for index, note in enumerate(notes, start=1):
+        if count_memo_words(note.get("content", "")) > MAX_MEMO_WORDS:
+            return f"メモ{index}は{MAX_MEMO_WORDS}語まで保存できます。"
+
+    return None
+
+
+def validate_checklist_limits(lists):
+    if len(lists) > MAX_CHECKLISTS_PER_ITINERARY:
+        return f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。"
+
+    for index, item_list in enumerate(lists, start=1):
+        items = item_list.get("items", [])
+        if len(items) > MAX_CHECKLIST_ITEMS_PER_LIST:
+            title = item_list.get("title") or f"リスト{index}"
+            return f"{title}は{MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。"
+
+    return None
 
 # =========================
 # 静的ページ・案内ページ
@@ -1323,6 +1358,10 @@ class MemoV2EditView(View):
         else:
             notes = normalize_memo_v2_notes(data.get("content", ""))
 
+        limit_error = validate_memo_notes_limits(notes)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
         memo.content = json.dumps(notes, ensure_ascii=False)
         memo.save()
         return JsonResponse({"status": "ok", "notes_count": len(notes), "notes": notes})
@@ -1368,6 +1407,10 @@ class ChecklistV2View(View):
             return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
 
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        limit_error = validate_checklist_limits(lists)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
         checklist.content = json.dumps(lists, ensure_ascii=False)
         checklist.save()
         return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
@@ -1983,9 +2026,14 @@ def _apply_concierge_want_action(itinerary, action, raw_action):
 
 
 def _apply_concierge_memo_action(itinerary, raw_action):
-    content = _clean_concierge_text(raw_action.get("content") or raw_action.get("memo"), 2000, "メモ内容", required=True)
+    content = _clean_concierge_text(raw_action.get("content") or raw_action.get("memo"), 4000, "メモ内容", required=True)
     memo, _ = MemoV2.objects.get_or_create(itinerary=itinerary)
     notes = normalize_memo_v2_notes(memo.content)
+    if len(notes) >= MAX_MEMOS_PER_ITINERARY:
+        raise ValueError(f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。")
+    if count_memo_words(content) > MAX_MEMO_WORDS:
+        raise ValueError(f"メモは1件につき{MAX_MEMO_WORDS}語まで保存できます。")
+
     notes.append({"content": content})
     memo.content = json.dumps(notes, ensure_ascii=False)
     memo.save()
@@ -2012,6 +2060,9 @@ def _apply_concierge_checklist_action(itinerary, raw_action):
     list_title = str(raw_action.get("title") or "持ち物リスト").strip()
     target_list = next((item_list for item_list in lists if item_list.get("title") == list_title), None)
     if not target_list:
+        if len(lists) >= MAX_CHECKLISTS_PER_ITINERARY:
+            raise ValueError(f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。")
+
         target_list = {
             "id": f"list-{uuid4().hex[:10]}",
             "title": list_title,
@@ -2019,7 +2070,13 @@ def _apply_concierge_checklist_action(itinerary, raw_action):
         }
         lists.append(target_list)
 
-    for item_text in items[:20]:
+    available_slots = MAX_CHECKLIST_ITEMS_PER_LIST - len(target_list.get("items", []))
+    if available_slots <= 0:
+        raise ValueError(f"{target_list.get('title') or 'リスト'}は{MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。")
+    if len(items) > available_slots:
+        raise ValueError(f"{target_list.get('title') or 'リスト'}に追加できる項目はあと{available_slots}個です。")
+
+    for item_text in items:
         target_list["items"].append({
             "id": f"item-{uuid4().hex[:10]}",
             "text": item_text,
@@ -2078,6 +2135,10 @@ class ChecklistV2EditView(View):
             return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
 
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        limit_error = validate_checklist_limits(lists)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
         checklist.content = json.dumps(lists, ensure_ascii=False)
         checklist.save()
         return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
@@ -2438,6 +2499,21 @@ class EditView(View):
             if key.startswith("memos[") and "[title]" in key
         }, key=int)
 
+        if len(memo_indices) > MAX_MEMOS_PER_ITINERARY:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"メモは最大{MAX_MEMOS_PER_ITINERARY}件まで保存できます。",
+            }, status=400)
+
+        for i_str in memo_indices:
+            i = int(i_str)
+            content = request.POST.get(f"memos[{i}][content]", "")
+            if count_memo_words(content) > MAX_MEMO_WORDS:
+                return render(request, self.template_name, {
+                    "itinerary": itinerary,
+                    "error": f"メモは1件につき{MAX_MEMO_WORDS}語まで保存できます。",
+                }, status=400)
+
         used_memo_pks = []
 
         for idx, i_str in enumerate(memo_indices):
@@ -2472,6 +2548,12 @@ class EditView(View):
             for key in request.POST.keys()
             if key.startswith("items[") and "[title]" in key
         }, key=int)
+
+        if len(item_indices) > MAX_CHECKLISTS_PER_ITINERARY:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"リストは最大{MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。",
+            }, status=400)
 
         used_item_pks = []
 
