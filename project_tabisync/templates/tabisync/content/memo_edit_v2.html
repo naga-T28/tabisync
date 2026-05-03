@@ -40,6 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveStatusText = saveStatus ? saveStatus.querySelector(".memo-v2-save-status-text") : null;
   const notesScript = document.getElementById("memo-notes-data");
   const csrfToken = getCookie("csrftoken");
+  const MAX_MEMOS_PER_ITINERARY = 15;
+  const MAX_MEMO_WORDS = 1000;
 
   let notes = [];
   let saveTimer = null;
@@ -60,6 +62,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function createNoteId() {
     return `note-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  }
+
+  function countMemoWords(content) {
+    const matches = String(content || "").match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30ff\u3400-\u9fff]/g);
+    return matches ? matches.length : 0;
+  }
+
+  function validateNoteLimits(targetNotes) {
+    if (targetNotes.length > MAX_MEMOS_PER_ITINERARY) {
+      return `メモは最大${MAX_MEMOS_PER_ITINERARY}件まで保存できます。`;
+    }
+
+    for (let index = 0; index < targetNotes.length; index += 1) {
+      if (countMemoWords(targetNotes[index].content) > MAX_MEMO_WORDS) {
+        return `メモ${index + 1}は${MAX_MEMO_WORDS}語まで保存できます。`;
+      }
+    }
+
+    return "";
   }
 
   function escapeHtml(text) {
@@ -234,6 +255,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }))
       .filter((note) => note.content);
 
+    const limitError = validateNoteLimits(payload);
+    if (limitError) {
+      setSaveStatus("error", limitError);
+      return;
+    }
+
     try {
       const response = await fetch(window.location.href, {
         method: "POST",
@@ -245,19 +272,25 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify({ notes: payload }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(data.message || `HTTP ${response.status}`);
       }
 
-      await response.json();
       setSaveStatus("saved", "保存済み");
     } catch (error) {
       console.error(error);
-      setSaveStatus("error", "保存に失敗しました");
+      setSaveStatus("error", error.message || "保存に失敗しました");
     }
   }
 
   addNoteBtn.addEventListener("click", function () {
+    if (notes.length >= MAX_MEMOS_PER_ITINERARY) {
+      setSaveStatus("error", `メモは最大${MAX_MEMOS_PER_ITINERARY}件まで保存できます。`);
+      return;
+    }
+
     const newNote = createEmptyNote();
     notes.unshift(newNote);
     editingNoteIds.add(newNote.id);

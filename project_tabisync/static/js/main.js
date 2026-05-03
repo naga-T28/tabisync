@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     const MAX_ITINERARY_DAYS = 30;
     const MAX_SCHEDULES_PER_DAY = 15;
+    const MAX_MEMOS_PER_ITINERARY = 15;
+    const MAX_CHECKLISTS_PER_ITINERARY = 10;
     // --- インデックス最大値取得関数 ---
     function getMaxIndex(prefix) {
         const inputs = document.querySelectorAll(`input[name^="${prefix}["]`);
@@ -175,6 +177,11 @@ addDateBtn.addEventListener("click", function () {
   
 // 「メモを追加」ボタン
 document.getElementById("add-memo-btn").addEventListener("click", function () {
+  if (memosContainer.querySelectorAll(".memo-block").length >= MAX_MEMOS_PER_ITINERARY) {
+    alert(`メモは最大${MAX_MEMOS_PER_ITINERARY}件まで保存できます。`);
+    return;
+  }
+
   const html = `
     <div class="memo-block">
       <p class="memo-title-next">メモ${memoIndex + 1}</p>
@@ -196,6 +203,11 @@ document.getElementById("add-memo-btn").addEventListener("click", function () {
 
 // 「リストを追加」ボタン
 document.getElementById("add-item-btn").addEventListener("click", function () {
+  if (itemsContainer.querySelectorAll(".item-block").length >= MAX_CHECKLISTS_PER_ITINERARY) {
+    alert(`リストは最大${MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。`);
+    return;
+  }
+
   const html = `
     <div class="item-block">
       <p class="memo-title-next">リスト${itemIndex + 1}</p>
