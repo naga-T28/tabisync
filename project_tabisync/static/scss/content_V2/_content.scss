@@ -522,22 +522,25 @@
 }
 
 .display-description {
-  margin-top: 6px;
+  margin-top: 10px;
   color: #666;
   white-space: pre-wrap;
   gap: 10px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  i{
+    margin-top: 5px;
+  }
 }
 
 .row-place-line {
-  margin-top: 6px;
+  margin-top: 10px;
   gap: 10px;
 }
 
 .place-open-btn {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap:10px;
   border: none;
   background: none;
@@ -546,6 +549,9 @@
   cursor: pointer;
   color: inherit;
   font: inherit;
+  i{
+    margin-top: 5px;
+  }
 }
 
 .place-open-btn:hover .place-name-text {
