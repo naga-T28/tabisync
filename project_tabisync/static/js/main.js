@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const MAX_ITINERARY_DAYS = 30;
+    const MAX_SCHEDULES_PER_DAY = 15;
     // --- インデックス最大値取得関数 ---
     function getMaxIndex(prefix) {
         const inputs = document.querySelectorAll(`input[name^="${prefix}["]`);
@@ -27,6 +29,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // 「日付を追加」ボタン
 // 「日付を追加」ボタン
 addDateBtn.addEventListener("click", function () {
+  if (datesContainer.querySelectorAll(".date-block").length >= MAX_ITINERARY_DAYS) {
+    alert(`日程は最大${MAX_ITINERARY_DAYS}日間まで登録できます。`);
+    return;
+  }
+
   const html = `
     <div class="date-block" data-date-index="${dateIndex}">
       <div class="input-date">
@@ -95,13 +102,18 @@ addDateBtn.addEventListener("click", function () {
   
     // イベント委任：スケジュール追加・削除・日付削除
     datesContainer.addEventListener("click", function (e) {
-      if (e.target.classList.contains("add-schedule-btn")) {
-        const dateIdx = e.target.getAttribute("data-date-index");
-        const dateBlock = e.target.closest(".date-block");
+      const addScheduleBtn = e.target.closest(".add-schedule-btn");
+      if (addScheduleBtn) {
+        const dateIdx = addScheduleBtn.getAttribute("data-date-index");
+        const dateBlock = addScheduleBtn.closest(".date-block");
         const wrapper = dateBlock.querySelector(".schedules-container-wrapper");
   
         // スケジュールのインデックスを計算
         const currentSchedules = wrapper.querySelectorAll(".schedule-block");
+        if (currentSchedules.length >= MAX_SCHEDULES_PER_DAY) {
+          alert(`予定は1日につき${MAX_SCHEDULES_PER_DAY}件まで保存できます。`);
+          return;
+        }
         const scheduleIdx = currentSchedules.length;
   
         const html = `

@@ -67,6 +67,9 @@
             <div class="create-title-wrapper-sub">
                 <h2 class="create-title">しおりを編集</h2>
                 <div>
+                    {% if error %}
+                    <p class="input-item-description" style="color: #c0392b;">{{ error }}</p>
+                    {% endif %}
                     <input class="input-title" type="text" name="title" placeholder="タイトル" required value="{{ itinerary.title }}">
                     <input class="input-title" type="text" name="subtitle" placeholder="サブタイトル" value="{{ itinerary.subtitle }}">
                     <textarea class="input-description input-description-under" name="description" placeholder="概要">{{ itinerary.description }}</textarea>

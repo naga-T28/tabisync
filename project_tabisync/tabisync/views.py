@@ -35,6 +35,8 @@ from .models import ChecklistV2, ConciergeChatLog, Itinerary, Item, Memo, MemoV2
 logger = logging.getLogger(__name__)
 
 CONCIERGE_USER_MESSAGE_MAX_LENGTH = 60
+MAX_ITINERARY_DAYS = 30
+MAX_SCHEDULES_PER_DAY = 15
 
 
 # =========================
@@ -132,6 +134,22 @@ def build_public_service_error_message(exc, default_message):
     if "timeout" in detail:
         return "現在アクセスが集中しています。しばらくしてから再度お試しください。"
     return default_message
+
+
+def get_inclusive_day_count(start_date, end_date):
+    return (end_date - start_date).days + 1
+
+
+def get_want_to_go_limit(itinerary):
+    return itinerary.get_want_to_go_limit()
+
+
+def can_add_want_to_go(itinerary):
+    return itinerary.want_to_go_list.count() < get_want_to_go_limit(itinerary)
+
+
+def build_want_to_go_limit_message(itinerary):
+    return f"行きたいとこリストは1つのしおりにつき{get_want_to_go_limit(itinerary)}件まで保存できます。"
 
 # =========================
 # 静的ページ・案内ページ
@@ -312,6 +330,11 @@ class CreateView(View):
                 "error": "終了日は開始日以降を指定してください。",
             }, status=400)
 
+        if get_inclusive_day_count(start_date_obj, end_date_obj) > MAX_ITINERARY_DAYS:
+            return render(request, self.template_name, {
+                "error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。",
+            }, status=400)
+
         # =====================
         # しおり作成
         # =====================
@@ -468,6 +491,7 @@ class WantToGoMapView(TemplateView):
         ).order_by("day_order", "id")
 
         context["itinerary_days"] = list(range(1, itinerary.total_days + 1))
+        context["want_to_go_limit"] = get_want_to_go_limit(itinerary)
 
         return context
     
@@ -481,6 +505,12 @@ class WantToGoMapView(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
+            if not can_add_want_to_go(itinerary):
+                return JsonResponse({
+                    "status": "error",
+                    "message": build_want_to_go_limit_message(itinerary),
+                }, status=400)
+
             place = WantToGo(itinerary=itinerary)
             apply_want_to_go_payload(place, data)
             place.save()
@@ -542,6 +572,7 @@ class WantToGoV2View(TemplateView):
         context["itinerary"] = itinerary
         context["places"] = WantToGo.objects.filter(itinerary=itinerary)
         context["itinerary_days"] = list(range(1, itinerary.total_days + 1))
+        context["want_to_go_limit"] = get_want_to_go_limit(itinerary)
 
         return context
 
@@ -556,6 +587,12 @@ class WantToGoV2View(TemplateView):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
 
         if action == "save_want_to_go":
+            if not can_add_want_to_go(itinerary):
+                return JsonResponse({
+                    "status": "error",
+                    "message": build_want_to_go_limit_message(itinerary),
+                }, status=400)
+
             place = WantToGo(itinerary=itinerary)
             apply_want_to_go_payload(place, data)
             place.save()
@@ -619,6 +656,19 @@ def reorder_schedules_for_day(itinerary, day_index):
         if schedule.order != i:
             schedule.order = i
             schedule.save(update_fields=["order"])
+
+
+def count_schedules_for_day(itinerary, day_index, exclude_schedule_id=None):
+    if day_index is None:
+        return 0
+
+    count = 0
+    for schedule in itinerary.schedules.all():
+        if exclude_schedule_id and schedule.id == exclude_schedule_id:
+            continue
+        if get_schedule_day_index(itinerary, schedule) == day_index:
+            count += 1
+    return count
 
 
 def build_day_choices(itinerary):
@@ -850,6 +900,20 @@ class EditContentFormV2View(View):
                 status=400,
             )
 
+        new_span_days = get_inclusive_day_count(new_start_date, new_end_date)
+        if new_span_days > MAX_ITINERARY_DAYS:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = new_start_date
+            itinerary.end_date = new_end_date
+            return self._render_form(
+                request,
+                itinerary,
+                {"error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。"},
+                status=400,
+            )
+
         schedule_max_day = 0
         for schedule in itinerary.schedules.all():
             day_index = get_schedule_day_index(itinerary, schedule)
@@ -863,22 +927,20 @@ class EditContentFormV2View(View):
 
         existing_max_day = max(schedule_max_day, place_max_day)
 
-        if new_start_date and new_end_date:
-            new_span_days = (new_end_date - new_start_date).days + 1
-            if existing_max_day > new_span_days:
-                itinerary.title = title
-                itinerary.subtitle = subtitle
-                itinerary.description = description
-                itinerary.start_date = new_start_date
-                itinerary.end_date = new_end_date
-                return self._render_form(
-                    request,
-                    itinerary,
-                    {
-                        "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、この日程には収まりません。",
-                    },
-                    status=400,
-                )
+        if existing_max_day > new_span_days:
+            itinerary.title = title
+            itinerary.subtitle = subtitle
+            itinerary.description = description
+            itinerary.start_date = new_start_date
+            itinerary.end_date = new_end_date
+            return self._render_form(
+                request,
+                itinerary,
+                {
+                    "error": f"既存の予定または行きたい場所がDay {existing_max_day}まで入っているため、この日程には収まりません。",
+                },
+                status=400,
+            )
 
         schedules = list(itinerary.schedules.all())
         existing_schedule_day_indexes = {
@@ -1082,6 +1144,19 @@ def schedule_v2_row_save(request, pk, token):
 
     if not day_index or not itinerary.total_days or day_index < 1 or day_index > itinerary.total_days:
         return JsonResponse({"status": "error", "message": "存在しないDayです"}, status=400)
+
+    exclude_schedule_id = None
+    if row_id:
+        try:
+            exclude_schedule_id = int(row_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "予定IDが不正です"}, status=400)
+
+    if count_schedules_for_day(itinerary, day_index, exclude_schedule_id) >= MAX_SCHEDULES_PER_DAY:
+        return JsonResponse({
+            "status": "error",
+            "message": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
+        }, status=400)
 
     date_obj = get_schedule_display_date(itinerary, day_index)
     if not date_obj:
@@ -1771,6 +1846,8 @@ def _apply_concierge_schedule_action(itinerary, action, raw_action, touched_sche
 
     if action == "schedule_create":
         day_index = _parse_concierge_day(itinerary, raw_action.get("day"))
+        if count_schedules_for_day(itinerary, day_index) >= MAX_SCHEDULES_PER_DAY:
+            raise ValueError(f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。")
         title = _clean_concierge_text(raw_action.get("title"), 30, "予定名", required=True)
         start_time = _parse_concierge_time(raw_action.get("start_time"), "開始時刻", required=True)
         end_time = _parse_concierge_time(raw_action.get("end_time"), "終了時刻")
@@ -1802,6 +1879,8 @@ def _apply_concierge_schedule_action(itinerary, action, raw_action, touched_sche
 
         if raw_action.get("day"):
             new_day_index = _parse_concierge_day(itinerary, raw_action.get("day"))
+            if count_schedules_for_day(itinerary, new_day_index, schedule.id) >= MAX_SCHEDULES_PER_DAY:
+                raise ValueError(f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。")
             schedule.day_index = new_day_index
             schedule.date = get_schedule_display_date(itinerary, new_day_index) or itinerary.created_at.date() + timedelta(days=new_day_index - 1)
 
@@ -1842,6 +1921,9 @@ def _find_or_create_concierge_place(itinerary, raw_action):
     if existing:
         return existing
 
+    if not can_add_want_to_go(itinerary):
+        raise ValueError(build_want_to_go_limit_message(itinerary))
+
     return WantToGo.objects.create(
         itinerary=itinerary,
         name=place_name[:200],
@@ -1862,6 +1944,9 @@ def _apply_concierge_want_action(itinerary, action, raw_action):
         return {"action": action, "id": place_id, "label": "行きたい場所を削除しました"}
 
     if action == "want_create":
+        if not can_add_want_to_go(itinerary):
+            raise ValueError(build_want_to_go_limit_message(itinerary))
+
         name = _clean_concierge_text(raw_action.get("place_name") or raw_action.get("title"), 200, "場所名", required=True)
         place = WantToGo.objects.create(
             itinerary=itinerary,
@@ -2243,6 +2328,26 @@ class EditView(View):
             for key in request.POST.keys()
             if key.startswith("dates[") and "[date]" in key
         }, key=int)
+
+        if len(travel_date_indices) > MAX_ITINERARY_DAYS:
+            return render(request, self.template_name, {
+                "itinerary": itinerary,
+                "error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。",
+            }, status=400)
+
+        for i_str in travel_date_indices:
+            i = int(i_str)
+            schedule_indices = sorted({
+                key.split("[")[3].split("]")[0]
+                for key in request.POST.keys()
+                if key.startswith(f"dates[{i}][schedules][") and "[title]" in key
+            }, key=int)
+
+            if len(schedule_indices) > MAX_SCHEDULES_PER_DAY:
+                return render(request, self.template_name, {
+                    "itinerary": itinerary,
+                    "error": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
+                }, status=400)
 
         used_date_pks = []
 

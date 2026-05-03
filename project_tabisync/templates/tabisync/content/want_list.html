@@ -201,6 +201,7 @@ let editTargetId = null; // WantToGoのDB id
 let selectedPlace = null; // Google Places 選択結果
 let placesService = null;
 let autocompleteService = null;
+const wantToGoLimit = {{ want_to_go_limit|default:30 }};
 
 const placesData = [
     {% for place in places %}
@@ -560,6 +561,11 @@ function applyFilter() {
    追加/編集モーダル
 ================================= */
 function openAddModal(){
+  if (placesData.length >= wantToGoLimit) {
+    alert(`行きたいとこリストは1つのしおりにつき${wantToGoLimit}件まで保存できます。`);
+    return;
+  }
+
   editTargetId = null;
   selectedPlace = null;
 
@@ -783,12 +789,18 @@ try {
 
   if (!res.ok) {
     const text = await res.text();
+    let errorData = null;
+    try {
+      errorData = JSON.parse(text);
+    } catch (e) {
+      errorData = null;
+    }
     console.error("HTTP error:", res.status, text);
 
     if (res.status === 403) {
       alert("403 Forbiddenです。CSRFトークンまたはセッションが送れていません。localhost または 127.0.0.1 で開き直してください。");
     } else {
-      alert(`保存に失敗しました（HTTP ${res.status}）`);
+      alert(errorData?.message || `保存に失敗しました（HTTP ${res.status}）`);
     }
     return;
   }
@@ -806,7 +818,7 @@ try {
     location.reload();
   } else {
     console.error("save error:", data);
-    alert("保存に失敗しました");
+    alert(data.message || "保存に失敗しました");
   }
 } catch (e) {
   console.error(e);
