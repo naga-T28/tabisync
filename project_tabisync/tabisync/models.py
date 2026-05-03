@@ -21,6 +21,7 @@ class Itinerary(models.Model):
     total_days = models.PositiveIntegerField(blank=True, null=True)
     design_number = models.PositiveIntegerField(default=1)
     concierge_daily_limit = models.PositiveIntegerField(default=5)
+    want_to_go_limit = models.PositiveIntegerField(default=30)
 
     def set_passwords(self, view_pw: str, edit_pw: str):
         self.view_password = make_password(view_pw) if view_pw else ''
@@ -46,6 +47,9 @@ class Itinerary(models.Model):
 
     def get_concierge_daily_limit(self):
         return self.concierge_daily_limit or 5
+
+    def get_want_to_go_limit(self):
+        return self.want_to_go_limit or 30
 
 #version2のスケジュールデータ
 # models.py
