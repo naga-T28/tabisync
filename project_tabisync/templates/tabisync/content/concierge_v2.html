@@ -205,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
   let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
   let chatHistory = [];
+  const pendingChangeSets = new Map();
 
   function escapeHtml(text) {
     return String(text)
@@ -325,6 +326,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     article.appendChild(label);
     article.appendChild(bubble);
+
+    if (role === "assistant" && Array.isArray(options.editActions) && options.editActions.length) {
+      const changeSetId = options.changeSetId || `changes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      pendingChangeSets.set(changeSetId, options.editActions);
+
+      const applyBox = document.createElement("div");
+      applyBox.className = "concierge-apply-box";
+      applyBox.dataset.changeSetId = changeSetId;
+
+      const summary = document.createElement("p");
+      summary.className = "concierge-apply-summary";
+      summary.textContent = `${options.editActions.length}件の変更候補があります。`;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "concierge-apply-btn";
+      button.dataset.changeSetId = changeSetId;
+      button.innerHTML = '<i class="fa-solid fa-check"></i><span>変更を適用</span>';
+
+      const status = document.createElement("p");
+      status.className = "concierge-apply-status";
+      status.setAttribute("aria-live", "polite");
+
+      applyBox.appendChild(summary);
+      applyBox.appendChild(button);
+      applyBox.appendChild(status);
+      article.appendChild(applyBox);
+    }
+
     messagesEl.appendChild(article);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
@@ -340,7 +370,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const parsed = JSON.parse(rawHistory || "[]");
       if (!Array.isArray(parsed) || !parsed.length) return false;
       chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
-      chatHistory.forEach((item) => addMessage(item.role, item.content, { renderedHtml: item.rendered_html || "" }));
+      chatHistory.forEach((item) => addMessage(item.role, item.content, {
+        renderedHtml: item.rendered_html || "",
+        editActions: item.edit_actions || [],
+        changeSetId: item.change_set_id || "",
+      }));
       return chatHistory.length > 0;
     } catch (error) {
       return false;
@@ -411,11 +445,19 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const assistantReply = data.reply || "返答を生成できませんでした。";
-      addMessage("assistant", assistantReply, { markdown: true });
+      const editActions = Array.isArray(data.edit_actions) ? data.edit_actions : [];
+      const changeSetId = editActions.length ? `changes-${Date.now()}-${Math.random().toString(16).slice(2)}` : "";
+      addMessage("assistant", assistantReply, {
+        markdown: true,
+        editActions,
+        changeSetId,
+      });
       chatHistory.push({
         role: "assistant",
         content: assistantReply,
         rendered_html: renderMarkdown(assistantReply),
+        edit_actions: editActions,
+        change_set_id: changeSetId,
       });
       persistHistory();
     } catch (error) {
@@ -431,6 +473,63 @@ document.addEventListener("DOMContentLoaded", function () {
   formEl.addEventListener("submit", function (event) {
     event.preventDefault();
     submitPrompt(inputEl.value);
+  });
+
+  messagesEl.addEventListener("click", async function (event) {
+    const button = event.target instanceof Element ? event.target.closest(".concierge-apply-btn") : null;
+    if (!button) return;
+
+    const changeSetId = button.dataset.changeSetId || "";
+    const editActions = pendingChangeSets.get(changeSetId);
+    const applyBox = button.closest(".concierge-apply-box");
+    const statusEl = applyBox ? applyBox.querySelector(".concierge-apply-status") : null;
+    if (!Array.isArray(editActions) || !editActions.length) {
+      if (statusEl) statusEl.textContent = "適用できる変更が見つかりませんでした。";
+      return;
+    }
+
+    button.disabled = true;
+    button.classList.add("is-applying");
+    if (statusEl) statusEl.textContent = "変更を適用しています...";
+
+    try {
+      const response = await fetch("{% url 'tabisync:V2_concierge_apply' pk=itinerary.pk token=itinerary.token %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ edit_actions: editActions }),
+      });
+      const responseText = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error("サーバーからJSON以外の応答が返りました。");
+      }
+      if (!response.ok || data.status !== "ok") {
+        throw new Error(data.message || "変更を適用できませんでした。");
+      }
+
+      button.classList.remove("is-applying");
+      button.classList.add("is-applied");
+      button.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>適用済み</span>';
+      if (statusEl) statusEl.textContent = `${data.applied_count || editActions.length}件の変更を適用しました。`;
+      pendingChangeSets.delete(changeSetId);
+
+      chatHistory = chatHistory.map((item) => (
+        item.change_set_id === changeSetId
+          ? { ...item, edit_actions: [], applied: true }
+          : item
+      ));
+      persistHistory();
+    } catch (error) {
+      button.disabled = false;
+      button.classList.remove("is-applying");
+      if (statusEl) statusEl.textContent = error instanceof Error ? error.message : "変更を適用できませんでした。";
+    }
   });
 
   document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
