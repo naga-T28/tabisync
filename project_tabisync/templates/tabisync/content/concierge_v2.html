@@ -142,6 +142,7 @@
                   type="text"
                   placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
                   autocomplete="off"
+                  maxlength="60"
                 >
                 <button type="submit" class="concierge-send-btn" aria-label="送信">
                   <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
@@ -203,6 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const historyKey = `tabisync_concierge_history_${itineraryStorageId}`;
   const legacyStorageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
   const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
+  const conciergeMessageMaxLength = 60;
   let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
   let chatHistory = [];
   const pendingChangeSets = new Map();
@@ -405,6 +407,10 @@ document.addEventListener("DOMContentLoaded", function () {
   async function submitPrompt(prompt) {
     const userText = String(prompt || "").trim();
     if (!userText) return;
+    if (userText.length > conciergeMessageMaxLength) {
+      addMessage("assistant", `メッセージは${conciergeMessageMaxLength}字以内で入力してください。`);
+      return;
+    }
 
     addMessage("user", userText);
     chatHistory.push({ role: "user", content: userText });

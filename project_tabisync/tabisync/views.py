@@ -34,6 +34,8 @@ from .models import ChecklistV2, ConciergeChatLog, Itinerary, Item, Memo, MemoV2
 
 logger = logging.getLogger(__name__)
 
+CONCIERGE_USER_MESSAGE_MAX_LENGTH = 60
+
 
 # =========================
 # 基本ユーティリティ
@@ -1283,7 +1285,17 @@ class ChecklistV2View(View):
         })
 
     def post(self, request, pk, token):
-        return JsonResponse({"status": "error", "message": "編集ページから更新してください。"}, status=405)
+        checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
+
+        try:
+            data = json.loads(request.body)
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+
+        lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
+        checklist.content = json.dumps(lists, ensure_ascii=False)
+        checklist.save()
+        return JsonResponse({"status": "ok", "lists_count": len(lists), "lists": lists})
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
@@ -1325,6 +1337,11 @@ class ConciergeV2View(View):
         user_message = str(body.get("message") or "").strip()
         if not user_message:
             return JsonResponse({"status": "error", "message": "メッセージを入力してください。"}, status=400)
+        if len(user_message) > CONCIERGE_USER_MESSAGE_MAX_LENGTH:
+            return JsonResponse({
+                "status": "error",
+                "message": f"メッセージは{CONCIERGE_USER_MESSAGE_MAX_LENGTH}字以内で入力してください。",
+            }, status=400)
 
         if user_message == "__ping__":
             return JsonResponse({
@@ -1360,7 +1377,7 @@ class ConciergeV2View(View):
             }, status=429)
 
         try:
-            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message)
+            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message, history)
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge moderation failed for itinerary_id=%s: %s",
@@ -1519,7 +1536,7 @@ class ConciergeV2View(View):
             return []
 
         normalized_history = []
-        for item in raw_history[-12:]:
+        for item in raw_history[-8:]:
             if not isinstance(item, dict):
                 continue
             role = str(item.get("role") or "").strip()
@@ -1528,7 +1545,7 @@ class ConciergeV2View(View):
                 continue
             normalized_history.append({
                 "role": role,
-                "content": content[:4000],
+                "content": content[:1500],
             })
         return normalized_history
 

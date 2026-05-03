@@ -22,28 +22,25 @@
 
     <section id="checklistEditor" class="checklist-board"></section>
   </div>
-
-  <button type="button" id="addListBtn" class="fab-add checklist-fab" aria-label="リストを追加">
-    <i class="fa-solid fa-plus"></i>
-  </button>
 </div>
 
 <script id="checklists-data" type="application/json">{{ checklists_json|safe }}</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const editor = document.getElementById("checklistEditor");
-  const addListBtn = document.getElementById("addListBtn");
   const statusEl = document.getElementById("checklist-status");
   const dataEl = document.getElementById("checklists-data");
   const csrfToken = getCookie("csrftoken");
   let saveTimer = null;
   let lists = [];
+  let activeListId = "";
 
   try {
     lists = JSON.parse(dataEl.textContent || "[]");
   } catch (error) {
     lists = [];
   }
+  activeListId = lists[0]?.id || "";
 
   function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -93,37 +90,57 @@ document.addEventListener("DOMContentLoaded", function () {
       editor.innerHTML = `
         <div class="checklist-empty">
           <p>まだリストがありません。</p>
-          <p>右下のプラスボタンから追加できます。</p>
+          <button type="button" class="checklist-tab-add" data-action="add-list" aria-label="リストを追加">
+            <i class="fa-solid fa-plus"></i>
+          </button>
         </div>
       `;
       return;
     }
 
-    editor.innerHTML = lists.map((list, listIndex) => `
-      <article class="box5-6 checklist-box checklist-edit-box" data-list-id="${list.id}">
-        <h3 class="checklist-tape checklist-tape-${listIndex % 4}">${escapeHtml(list.title || "リスト")}</h3>
+    const activeList = getActiveList();
+    const activeIndex = Math.max(lists.findIndex((list) => list.id === activeList.id), 0);
+
+    editor.innerHTML = `
+      <nav class="checklist-tabs" aria-label="編集するチェックリストを切り替え">
+        ${lists.map((list) => `
+          <button
+            type="button"
+            class="checklist-tab ${list.id === activeList.id ? "is-active" : ""}"
+            data-action="select-list"
+            data-list-id="${list.id}"
+          >
+            ${escapeHtml(list.title || "リスト")}
+          </button>
+        `).join("")}
+        <button type="button" class="checklist-tab-add" data-action="add-list" aria-label="リストを追加">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </nav>
+      <article class="box5-6 checklist-box checklist-edit-box" data-list-id="${activeList.id}">
+        <h3 class="checklist-tape checklist-tape-${activeIndex % 4}">${escapeHtml(activeList.title || "リスト")}</h3>
         <div class="checklist-edit-head">
           <input
             type="text"
             class="checklist-title-input"
             data-action="title"
-            data-list-id="${list.id}"
-            value="${escapeHtml(list.title || "")}"
+            data-list-id="${activeList.id}"
+            value="${escapeHtml(activeList.title || "")}"
             placeholder="リスト名を入力"
           >
-          <button type="button" class="checklist-delete-list" data-action="delete-list" data-list-id="${list.id}" aria-label="リストを削除する">
+          <button type="button" class="checklist-delete-list" data-action="delete-list" data-list-id="${activeList.id}" aria-label="リストを削除する">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
         <div class="box-content">
           <ul class="checklist-edit-items">
-            ${(list.items || []).map((item) => `
+            ${(activeList.items || []).map((item) => `
               <li class="checklist-edit-item">
                 <label class="checklist-item-check">
                   <input
                     type="checkbox"
                     data-action="toggle-item"
-                    data-list-id="${list.id}"
+                    data-list-id="${activeList.id}"
                     data-item-id="${item.id}"
                     ${item.checked ? "checked" : ""}
                   >
@@ -132,24 +149,24 @@ document.addEventListener("DOMContentLoaded", function () {
                   type="text"
                   class="checklist-item-input"
                   data-action="item-text"
-                  data-list-id="${list.id}"
+                  data-list-id="${activeList.id}"
                   data-item-id="${item.id}"
                   value="${escapeHtml(item.text || "")}"
                   placeholder="項目を入力"
                 >
-                <button type="button" class="checklist-delete-item" data-action="delete-item" data-list-id="${list.id}" data-item-id="${item.id}" aria-label="項目を削除する">
+                <button type="button" class="checklist-delete-item" data-action="delete-item" data-list-id="${activeList.id}" data-item-id="${item.id}" aria-label="項目を削除する">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </li>
             `).join("")}
           </ul>
-          <button type="button" class="checklist-add-item" data-action="add-item" data-list-id="${list.id}">
+          <button type="button" class="checklist-add-item" data-action="add-item" data-list-id="${activeList.id}">
             <i class="fa-solid fa-plus"></i>
             項目を追加
           </button>
         </div>
       </article>
-    `).join("");
+    `;
   }
 
   function escapeHtml(text) {
@@ -177,6 +194,23 @@ document.addEventListener("DOMContentLoaded", function () {
           : [],
       }))
       .filter((list) => list.title || list.items.length);
+  }
+
+  function getActiveList() {
+    return lists.find((list) => list.id === activeListId) || lists[0] || null;
+  }
+
+  function addList() {
+    const newList = createEmptyList();
+    lists.push(newList);
+    activeListId = newList.id;
+    renderEditor();
+    setStatus("dirty", "未保存の変更があります");
+
+    const input = editor.querySelector(`.checklist-title-input[data-list-id="${newList.id}"]`);
+    if (input) {
+      input.focus();
+    }
   }
 
   async function saveLists() {
@@ -211,18 +245,6 @@ document.addEventListener("DOMContentLoaded", function () {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveLists, 500);
   }
-
-  addListBtn.addEventListener("click", function () {
-    const newList = createEmptyList();
-    lists.unshift(newList);
-    renderEditor();
-    setStatus("dirty", "未保存の変更があります");
-
-    const input = editor.querySelector(`[data-list-id="${newList.id}"].checklist-title-input, .checklist-title-input[data-list-id="${newList.id}"]`);
-    if (input) {
-      input.focus();
-    }
-  });
 
   editor.addEventListener("input", function (event) {
     const target = event.target;
@@ -268,6 +290,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const { action, listId, itemId } = actionButton.dataset;
     const list = lists.find((entry) => entry.id === listId);
 
+    if (action === "select-list") {
+      activeListId = listId || activeListId;
+      renderEditor();
+      return;
+    }
+
+    if (action === "add-list") {
+      addList();
+      return;
+    }
+
     if (action === "add-item") {
       if (!list) return;
       list.items = list.items || [];
@@ -293,6 +326,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (action === "delete-list") {
       lists = lists.filter((entry) => entry.id !== listId);
+      activeListId = lists[0]?.id || "";
       renderEditor();
       queueSave();
     }
