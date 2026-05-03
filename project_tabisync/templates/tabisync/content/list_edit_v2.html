@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const statusEl = document.getElementById("checklist-status");
   const dataEl = document.getElementById("checklists-data");
   const csrfToken = getCookie("csrftoken");
+  const MAX_CHECKLISTS_PER_ITINERARY = 10;
+  const MAX_CHECKLIST_ITEMS_PER_LIST = 30;
   let saveTimer = null;
   let lists = [];
   let activeListId = "";
@@ -196,11 +198,31 @@ document.addEventListener("DOMContentLoaded", function () {
       .filter((list) => list.title || list.items.length);
   }
 
+  function validateListLimits(targetLists) {
+    if (targetLists.length > MAX_CHECKLISTS_PER_ITINERARY) {
+      return `リストは最大${MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。`;
+    }
+
+    for (let index = 0; index < targetLists.length; index += 1) {
+      const list = targetLists[index];
+      if ((list.items || []).length > MAX_CHECKLIST_ITEMS_PER_LIST) {
+        return `${list.title || `リスト${index + 1}`}は${MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。`;
+      }
+    }
+
+    return "";
+  }
+
   function getActiveList() {
     return lists.find((list) => list.id === activeListId) || lists[0] || null;
   }
 
   function addList() {
+    if (lists.length >= MAX_CHECKLISTS_PER_ITINERARY) {
+      setStatus("error", `リストは最大${MAX_CHECKLISTS_PER_ITINERARY}リストまで保存できます。`);
+      return;
+    }
+
     const newList = createEmptyList();
     lists.push(newList);
     activeListId = newList.id;
@@ -215,6 +237,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function saveLists() {
     const payloadLists = buildSanitizedLists();
+    const limitError = validateListLimits(payloadLists);
+    if (limitError) {
+      setStatus("error", limitError);
+      return;
+    }
+
     setStatus("saving", "保存中...");
 
     try {
@@ -228,15 +256,16 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify({ lists: payloadLists }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(data.message || `HTTP ${response.status}`);
       }
 
-      await response.json();
       setStatus("saved", "保存済み");
     } catch (error) {
       console.error(error);
-      setStatus("error", "保存に失敗しました");
+      setStatus("error", error.message || "保存に失敗しました");
     }
   }
 
@@ -304,6 +333,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (action === "add-item") {
       if (!list) return;
       list.items = list.items || [];
+      if (list.items.length >= MAX_CHECKLIST_ITEMS_PER_LIST) {
+        setStatus("error", `${list.title || "リスト"}は${MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。`);
+        return;
+      }
+
       const newItem = createEmptyItem();
       list.items.push(newItem);
       renderEditor();
