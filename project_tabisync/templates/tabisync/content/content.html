@@ -22,8 +22,7 @@
 
     <div class="schedule-content-layout">
     <div class="schedule-main-column">
-    <div class="box5-6 schedule-table-box">
-      <h2 class="box-title">日程表</h2>
+    <div class="schedule-table-box">
       <div class="day-tabs" aria-label="日程を選択">
         <div class="day-tabs-scroll" role="tablist">
           {% for group in grouped_days %}
@@ -49,7 +48,7 @@
             aria-label="ほかの日程を選択"
             aria-expanded="false"
             onclick="toggleDayMenu()"
-          >...</button>
+          ><i class="fa-solid fa-chevron-down"></i></button>
           <div class="day-tab-menu-list" role="menu">
             {% for group in grouped_days %}
               <button
@@ -92,9 +91,14 @@
                         {% if s.end_time %}<span class="display-end-time">{{ s.end_time|time:'H:i' }}</span>{% endif %}
                       </div>
 
-                      <div class="row-main-text">
-                        <div class="display-title">{{ s.title }}</div>
+                      <div class="row-icon-column">
+                        <span class="schedule-icon {{ s.get_title_color_class }}" aria-hidden="true">
+                          <i class="fa-solid {{ s.get_icon_class }}"></i>
+                        </span>
+                      </div>
 
+                      <div class="row-main-text">
+                        <div class="display-title {{ s.get_title_color_class }}">{{ s.title }}</div>
                         {% if s.place %}
                           <div class="row-place-line display-place-line">
                             <button
@@ -121,9 +125,14 @@
                     </div>
                   </div>
                 {% endfor %}
+                <div class="edit-schedule-link-wrapper">
+                <a class="edit_button_content_under_schedule" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
               {% else %}
                 <div class="empty-day-message">この日の予定はまだありません。</div>
-                <a class="edit_button_content" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}">予定を追加する</a>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:Scheduleedit' pk=itinerary.pk token=itinerary.token %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
               {% endif %}
             </div>
           </section>
