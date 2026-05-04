@@ -115,7 +115,7 @@
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
-                    <a href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}" id="share-button"><i class="fa-solid fa-robot"></i></a>
+                    <a href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}" id="share-button"><img src="{% static 'img/ai-concierge-icon.webp' %}" alt="AIコンシェルジュ" class="footer-nav-icon-ai-concierge"></a>
                 </div>
             </div>
         </header>
@@ -125,6 +125,12 @@
         <footer>
             <nav class="footer-nav  --only-sp">
                 <ul class="footer-nav-ul">
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
+                            <i class="fa-solid fa-house"></i>
+                            <!--<div>旅程表</div>-->
+                        </a>
+                    </li>
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'V2_memo' or request.resolver_match.url_name == 'V2_memo_edit' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:V2_memo' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-clipboard"></i>
@@ -137,12 +143,6 @@
                             <!--<div>リスト</div>-->
                         </a>
                     </li>
-                    <li class="footer-nav-li --home {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
-                            <i class="fa-solid fa-house"></i>
-                            <!--<div>旅程表</div>-->
-                        </a>
-                    </li>
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'Wantto' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:Wantto' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-solid fa-map-location-dot"></i>
@@ -152,6 +152,12 @@
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_edit_v2' %}footer-nav-li-select{% endif %}">
                         <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
                             <i class="fa-regular fa-pen-to-square"></i>
+                            <!--<div>編集</div>-->
+                        </a>
+                    </li>
+                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_edit_v2' %}footer-nav-li-select{% endif %}">
+                        <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
+                            <img src="{% static 'img/ai-concierge-icon.webp' %}" alt="AIコンシェルジュ" class="footer-nav-icon-ai-concierge">
                             <!--<div>編集</div>-->
                         </a>
                     </li>
