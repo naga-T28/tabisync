@@ -5,104 +5,121 @@
 {% load static %}
 <main class="page-main home-page">
     <section class="home-hero">
-        <div class="home-hero-wrapper">
-            <div class="home-hero-inner">
-                <div class="home-hero-copy">
-                    <h1 class="home-hero-title">旅のしおりを、<br>AIと一緒に<br>スマートに。</h1>
-                    <p class="home-hero-lead">
-                        TabiSyncは、登録不要・無料で旅行計画を作成できる共有しおりです。
-                        旅程、行きたい場所、持ち物、メモをまとめて、AIコンシェルジュに相談しながら旅を整えられます。
-                    </p>
-                    <div class="home-hero-actions" aria-label="主要アクション">
-                        <a class="home-btn home-btn-primary" href="{% url 'tabisync:create' %}">
-                            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                            しおりを作成する
-                        </a>
-                        <a class="home-btn home-btn-secondary" href="{% url 'tabisync:demo_v2_concierge' %}">
-                            <i class="fa-solid fa-robot" aria-hidden="true"></i>
-                            AIデモを見る
-                        </a>
-                    </div>
-                    <!--
-                    <div class="home-hero-meta" aria-label="TabiSyncの特徴">
-                        <span>登録不要</span>
-                        <span>共有URLで参加</span>
-                        <span>スマホ最適化</span>
-                    </div>
-                    -->
+        <div class="home-hero-bg" aria-hidden="true"></div>
+        <div class="home-hero-inner">
+            <div class="home-hero-copy">
+                <p class="home-kicker">AI TRAVEL PLANNER</p>
+                <h1 class="home-hero-title">旅のしおりを、AIと一緒にスマートに。</h1>
+                <p class="home-hero-lead">
+                    TabiSyncは、登録不要・無料で旅行計画を作成できる共有しおりです。
+                    旅程、行きたい場所、持ち物、メモをまとめて、AIコンシェルジュに相談しながら旅を整えられます。
+                </p>
+                <div class="home-hero-actions" aria-label="主要アクション">
+                    <a class="home-btn home-btn-primary" href="{% url 'tabisync:create' %}">
+                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                        しおりを作成する
+                    </a>
+                    <a class="home-btn home-btn-secondary" href="{% url 'tabisync:demo_v2_concierge' %}">
+                        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                        AIデモを見る
+                    </a>
                 </div>
-                <div class="home-hero-product" aria-label="AIコンシェルジュの利用イメージ">
-                    <img src="{% static 'img/home-hero-product.webp' %}" alt="AIコンシェルジュの利用イメージ" class="home-hero-product-image">
+                <div class="home-hero-meta" aria-label="TabiSyncの特徴">
+                    <span>登録不要</span>
+                    <span>共有URLで参加</span>
+                    <span>スマホ最適化</span>
+                </div>
+            </div>
+
+            <div class="home-hero-product" aria-label="AIコンシェルジュの利用イメージ">
+                <div class="home-phone">
+                    <div class="home-phone-header">
+                        <img src="{% static 'img/logo-ai-concierge.webp' %}" alt="AIコンシェルジュ" class="home-ai-logo">
+                        <span>沖縄旅行</span>
+                    </div>
+                    <div class="home-chat">
+                        <div class="home-chat-bubble home-chat-ai">
+                            Day2は海と観光を両方楽しむなら、北部エリアに絞ると移動が楽です。
+                        </div>
+                        <div class="home-chat-bubble home-chat-user">
+                            持ち物も追加して
+                        </div>
+                        <div class="home-chat-bubble home-chat-ai">
+                            日焼け止め、着替え、モバイルバッテリーを持ち物リストに追加できます。
+                        </div>
+                    </div>
+                    <div class="home-input-preview">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        <span>旅程や持ち物を相談</span>
                     </div>
                 </div>
             </div>
         </div>
-
     </section>
 
     <section class="home-section home-concierge-section">
         <div class="home-section-heading">
-            <p class="home-kicker">PLAN WITHOUT FRICTION</p>
-            <h2>予定、場所、持ち物、メモをひとつの旅ボードに。</h2>
+            <p class="home-kicker">AI CONCIERGE</p>
+            <h2>しおりの中身を読んで、旅の判断をサポート</h2>
             <p>
-                旅行前の相談から当日の確認まで、必要な情報を同じURLで共有。
-                AIコンシェルジュに聞きながら、みんなで見やすいしおりに整えられます。
+                AIコンシェルジュは、あなたのしおりに登録した情報を必要に応じて参照します。
+                予定の確認、空き時間の相談、持ち物の提案、メモの整理まで、旅行中の小さな迷いを会話で解決できます。
             </p>
         </div>
         <div class="home-feature-grid">
             <article class="home-feature">
                 <i class="fa-solid fa-route" aria-hidden="true"></i>
-                <h3>旅程を整理</h3>
-                <p>日ごとの予定を時系列で管理。スマホでも次の行動をすぐ確認できます。</p>
+                <h3>旅程を把握</h3>
+                <p>「Day2の予定を教えて」のように聞くだけで、登録済みスケジュールを会話で確認できます。</p>
             </article>
             <article class="home-feature">
                 <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
-                <h3>行きたい場所を保存</h3>
-                <p>候補地をまとめて、予定日や優先度で旅の輪郭を作れます。</p>
+                <h3>行きたい場所を整理</h3>
+                <p>候補地や優先度を踏まえて、無理のない回り方や空き時間の使い方を考えられます。</p>
             </article>
             <article class="home-feature">
                 <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-                <h3>準備をチェック</h3>
-                <p>持ち物リストを共有して、忘れものを減らします。</p>
+                <h3>持ち物を提案</h3>
+                <p>旅程や相談内容に合わせて、必要になりそうな持ち物をチェックリストに追加できます。</p>
             </article>
             <article class="home-feature">
-                <i class="fa-solid fa-robot" aria-hidden="true"></i>
-                <h3>AIに相談</h3>
-                <p>旅程や候補地を見ながら、次の予定づくりをサポートします。</p>
+                <i class="fa-solid fa-note-sticky" aria-hidden="true"></i>
+                <h3>メモまで活用</h3>
+                <p>集合場所、予約メモ、気になることを残しておけば、あとからAIに確認できます。</p>
             </article>
         </div>
     </section>
 
     <section class="home-section home-flow-section">
         <div class="home-section-heading">
-            <p class="home-kicker">3 STEPS</p>
-            <h2>作って、共有して、旅先で開くだけ。</h2>
+            <p class="home-kicker">HOW IT WORKS</p>
+            <h2>作って、共有して、相談するだけ</h2>
         </div>
         <div class="home-flow">
-            <article class="home-flow-step">
+            <div class="home-flow-step">
                 <span>01</span>
-                <h3>日程を入力</h3>
-                <p>タイトルと旅行期間を入れるだけで、しおりを作成できます。</p>
-            </article>
-            <article class="home-flow-step">
+                <h3>しおりを作成</h3>
+                <p>旅行タイトルと日程を入れて、すぐに旅のしおりを作成できます。</p>
+            </div>
+            <div class="home-flow-step">
                 <span>02</span>
-                <h3>予定を追加</h3>
-                <p>行きたい場所や持ち物、メモを皆んなで整理できます。</p>
-            </article>
-            <article class="home-flow-step">
+                <h3>予定をまとめる</h3>
+                <p>旅程、行きたい場所、持ち物、メモをスマホから整理できます。</p>
+            </div>
+            <div class="home-flow-step">
                 <span>03</span>
-                <h3>URLで共有</h3>
-                <p>友達や家族に送れば、同じしおりをすぐ確認できます。</p>
-            </article>
+                <h3>AIに相談</h3>
+                <p>しおりの情報をもとに、旅行中の確認や提案を会話で受け取れます。</p>
+            </div>
         </div>
         <div class="home-section-actions">
-            <a class="home-btn home-btn-ghost" href="{% url 'tabisync:demo_v2_content' %}">
-                <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
-                サンプルを見る
-            </a>
             <a class="home-btn home-btn-primary" href="{% url 'tabisync:create' %}">
-                <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
-                無料で始める
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                無料で作成する
+            </a>
+            <a class="home-btn home-btn-ghost" href="{% url 'tabisync:demo_v2_content' %}">
+                <i class="fa-solid fa-book-open-reader" aria-hidden="true"></i>
+                しおりサンプル
             </a>
         </div>
     </section>
