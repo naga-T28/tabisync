@@ -287,7 +287,7 @@ footer small {
   background-image: linear-gradient(90deg, rgba(10, 24, 29, 0.92), rgba(10, 24, 29, 0.68) 45%, rgba(10, 24, 29, 0.34)), url("../img/home-lp.webp");
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  background-attachment: scroll;
   /*&::after {
     content: "";
     position: absolute;
@@ -820,6 +820,9 @@ footer small {
   }
 }
 @media screen and (min-width: 960px) {
+  .home-hero-wrapper {
+    background-attachment: fixed;
+  }
   .home-hero-inner {
     grid-template-columns: minmax(0, 1.02fr) minmax(420px, 0.98fr);
     padding-top: 92px;
