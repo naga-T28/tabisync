@@ -51,6 +51,7 @@ DEFAULT_ANSWER_PROMPT = """あなたは TabiSync のAIコンシェルジュで�
 - schedule_create/updateでは day, title, start_time, end_time, description, icon, place_name を必要に応じて使う。時刻はHH:MM形式、dayは1以上の数値
 - want_create/updateでは place_name, address, memo, day, priority を使う
 - memo_appendでは content に追加するメモ本文を入れる
+- memo_appendでは content の一行目に見出し、二行目以降に内容を入れる。
 - checklist_add_itemでは title にリスト名、items に追加項目を入れる
 """
 

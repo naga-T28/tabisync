@@ -89,8 +89,6 @@ section.update-section {
   height: auto;
   z-index: 1000;
   background: #ffffff;
-  border-bottom: 1px solid rgba(203, 217, 212, 0.72);
-  box-shadow: 0 14px 34px rgba(24, 42, 50, 0.08);
   backdrop-filter: blur(18px);
   transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, backdrop-filter 0.28s ease;
 }
@@ -102,7 +100,7 @@ section.update-section {
 }
 
 .header-wrapper {
-  width: min(1120px, 92%);
+  width: 90%;
   min-height: 64px;
   display: flex;
   justify-content: space-between;
@@ -244,7 +242,7 @@ footer {
   position: relative;
   margin-top: 32px;
   overflow: hidden;
-  background: radial-gradient(circle at 18% 10%, rgba(175, 41, 187, 0.24), transparent 30%), linear-gradient(135deg, #2f2134, #160d18);
+  background-color: #000;
   color: #ffffff;
   padding: 38px 20px 50px;
   text-align: center;

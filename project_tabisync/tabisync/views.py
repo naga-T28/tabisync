@@ -246,12 +246,14 @@ class DemoContentView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "content"
         return context
 class DemoMemoView(TemplateView):
     template_name = "demo/memo_demo.html"
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "memo"
         return context
     
 class DemoEditView(TemplateView):
@@ -259,12 +261,14 @@ class DemoEditView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "edit"
         return context
 class DemoListView(TemplateView):
     template_name = "demo/list_demo.html"
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["demo_nav"] = "list"
         return context
 
 
@@ -1299,6 +1303,7 @@ class MemoV2View(View):
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
         notes = normalize_memo_v2_notes(memo.content)
@@ -1306,15 +1311,36 @@ class MemoV2View(View):
             "memo": memo,
             "memo_notes": notes,
             "itinerary": self.itinerary,
+            "can_edit_memo": not self.itinerary.edit_password or request.session.get(f"edit_auth_{self.itinerary.pk}", False),
         })
 
     def post(self, request, pk, token):
-        return JsonResponse({"status": "error", "message": "編集ページから更新してください。"}, status=405)
+        if self.itinerary.edit_password and not request.session.get(f"edit_auth_{self.itinerary.pk}", False):
+            return JsonResponse({"status": "error", "message": "編集権限が必要です。"}, status=403)
+
+        memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+
+        if isinstance(data.get("notes"), list):
+            notes = normalize_memo_v2_notes(json.dumps(data.get("notes", []), ensure_ascii=False))
+        else:
+            notes = normalize_memo_v2_notes(data.get("content", ""))
+
+        limit_error = validate_memo_notes_limits(notes)
+        if limit_error:
+            return JsonResponse({"status": "error", "message": limit_error}, status=400)
+
+        memo.content = json.dumps(notes, ensure_ascii=False)
+        memo.save()
+        return JsonResponse({"status": "ok", "notes_count": len(notes), "notes": notes})
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class MemoV2EditView(View):
-    template_name = "tabisync/content/memo_edit_v2.html"
+    template_name = "tabisync/content/memo_v2.html"
     password_template = "tabisync/edit_password.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -1324,6 +1350,25 @@ class MemoV2EditView(View):
 
         session_key = f"edit_auth_{self.itinerary.pk}"
         if self.itinerary.edit_password and not request.session.get(session_key):
+            if request.method == "POST":
+                content_type = request.headers.get("Content-Type", "")
+                if "application/json" in content_type:
+                    return JsonResponse({"status": "error", "message": "編集権限が必要です。"}, status=403)
+
+                password = request.POST.get("password", "")
+                if self.itinerary.check_edit_password(password):
+                    request.session[session_key] = True
+                    return redirect(reverse("tabisync:V2_memo_edit", kwargs={"pk": self.pk, "token": self.token}))
+
+                response = render(request, self.password_template, {
+                    "error": "パスワードが間違っています。",
+                    "itinerary": self.itinerary,
+                    "pk": self.pk,
+                    "token": self.token,
+                })
+                response["X-Robots-Tag"] = "noindex, nofollow"
+                return response
+
             response = render(request, self.password_template, {
                 "itinerary": self.itinerary,
                 "pk": self.pk,
@@ -1344,6 +1389,7 @@ class MemoV2EditView(View):
             "memo": memo,
             "memo_notes": notes,
             "itinerary": self.itinerary,
+            "can_edit_memo": True,
         })
 
     def post(self, request, pk, token):
@@ -1396,9 +1442,13 @@ class ChecklistV2View(View):
             "itinerary": self.itinerary,
             "checklists": lists,
             "checklists_json": json.dumps(lists, ensure_ascii=False),
+            "can_edit_checklist": not self.itinerary.edit_password or request.session.get(f"edit_auth_{self.itinerary.pk}", False),
         })
 
     def post(self, request, pk, token):
+        if self.itinerary.edit_password and not request.session.get(f"edit_auth_{self.itinerary.pk}", False):
+            return JsonResponse({"status": "error", "message": "編集権限が必要です。"}, status=403)
+
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
 
         try:
@@ -2091,7 +2141,7 @@ def _apply_concierge_checklist_action(itinerary, raw_action):
 # v2リスト編集ページ
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class ChecklistV2EditView(View):
-    template_name = "tabisync/content/list_edit_v2.html"
+    template_name = "tabisync/content/list_v2.html"
     password_template = "tabisync/edit_password.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -2101,6 +2151,25 @@ class ChecklistV2EditView(View):
 
         session_key = f"edit_auth_{self.itinerary.pk}"
         if self.itinerary.edit_password and not request.session.get(session_key):
+            if request.method == "POST":
+                content_type = request.headers.get("Content-Type", "")
+                if "application/json" in content_type:
+                    return JsonResponse({"status": "error", "message": "編集権限が必要です。"}, status=403)
+
+                password = request.POST.get("password", "")
+                if self.itinerary.check_edit_password(password):
+                    request.session[session_key] = True
+                    return redirect(reverse("tabisync:V2_list_edit", kwargs={"pk": self.pk, "token": self.token}))
+
+                response = render(request, self.password_template, {
+                    "error": "パスワードが間違っています。",
+                    "itinerary": self.itinerary,
+                    "pk": self.pk,
+                    "token": self.token,
+                })
+                response["X-Robots-Tag"] = "noindex, nofollow"
+                return response
+
             response = render(request, self.password_template, {
                 "itinerary": self.itinerary,
                 "pk": self.pk,
@@ -2123,7 +2192,9 @@ class ChecklistV2EditView(View):
             checklist.save(update_fields=["content"])
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
+            "checklists": lists,
             "checklists_json": json.dumps(lists, ensure_ascii=False),
+            "can_edit_checklist": True,
         })
 
     def post(self, request, pk, token):
