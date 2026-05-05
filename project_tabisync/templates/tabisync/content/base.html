@@ -23,7 +23,7 @@
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
-        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
@@ -31,7 +31,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
-        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
+        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
