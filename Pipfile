@@ -12,6 +12,7 @@ gunicorn = "*"
 whitenoise = "*"
 django-ckeditor-5 = "*"
 django-sass-processor = "*"
+qrcode = "*"
 
 [dev-packages]
 
