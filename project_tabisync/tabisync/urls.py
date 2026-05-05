@@ -42,6 +42,7 @@ urlpatterns = [
     path('content/v2/<int:pk>/<uuid:token>/edit/memo/', views.MemoV2EditView.as_view(), name='V2_memo_edit'),
     path('content/v2/<int:pk>/<uuid:token>/list/', views.ChecklistV2View.as_view(), name='V2_list'),
     path('content/v2/<int:pk>/<uuid:token>/concierge/', views.ConciergeV2View.as_view(), name='V2_concierge'),
+    path('content/v2/<int:pk>/<uuid:token>/qr.png', views.itinerary_qr_code_view, name='content_v2_qr_code'),
     path('content/v2/<int:pk>/<uuid:token>/concierge/apply/', views.concierge_v2_apply_changes, name='V2_concierge_apply'),
     path('content/v2/<int:pk>/<uuid:token>/edit/list/', views.ChecklistV2EditView.as_view(), name='V2_list_edit'),
     path("content/v2/<int:pk>/<uuid:token>/schedule/row-save/",views.schedule_v2_row_save,name="schedule_v2_row_save"),
