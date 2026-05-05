@@ -18,7 +18,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -108,7 +108,7 @@ def build_itinerary_share_url(request, itinerary):
 
 
 def ensure_itinerary_qr_code(itinerary, share_url):
-    if itinerary.qr_code:
+    if itinerary.qr_code and itinerary.qr_code.storage.exists(itinerary.qr_code.name):
         return itinerary.qr_code.url
 
     filename = f"itinerary-{itinerary.pk}-{itinerary.token}.png"
@@ -145,6 +145,27 @@ def ensure_itinerary_qr_code(itinerary, share_url):
     itinerary.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
     itinerary.save(update_fields=["qr_code"])
     return itinerary.qr_code.url
+
+
+def build_itinerary_qr_code_url(itinerary):
+    return reverse("tabisync:content_v2_qr_code", kwargs={"pk": itinerary.pk, "token": itinerary.token})
+
+
+def itinerary_qr_code_view(request, pk, token):
+    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+
+    if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
+        return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
+
+    share_url = build_itinerary_share_url(request, itinerary)
+    ensure_itinerary_qr_code(itinerary, share_url)
+
+    if not itinerary.qr_code or not itinerary.qr_code.storage.exists(itinerary.qr_code.name):
+        raise Http404("QR code image was not found.")
+
+    response = FileResponse(itinerary.qr_code.open("rb"), content_type="image/png")
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    return response
 
 
 def get_client_ip(request):
@@ -488,7 +509,8 @@ class ItineraryDetailV2View(TemplateView):
             last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
         share_url = build_itinerary_share_url(request, itinerary)
-        qr_code_url = ensure_itinerary_qr_code(itinerary, share_url)
+        ensure_itinerary_qr_code(itinerary, share_url)
+        qr_code_url = build_itinerary_qr_code_url(itinerary)
 
         response = render(request, self.template_name, {
             "itinerary": itinerary,
