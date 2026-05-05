@@ -2,60 +2,210 @@
 {% block title %}沖縄旅行メモデモ{% endblock %}
 
 {% block contents %}
-<div class="content-main">
-  <div class="memo-v2-wrapper">
-    <div class="title-wrapper">
-      <div class="title-visual --miniMargin">
-        <p class="siori-sub-title">沖縄旅行</p>
-        <h1 class="siori-title --noMargin">みんなのメモ</h1>
-      </div>
-    </div>
-
-    <section class="checklist-header">
+<div class="content-main memo-ios-main">
+  <div class="memo-v2-wrapper memo-ios-shell" data-can-edit="false">
+    <header class="memo-ios-header">
       <div>
-        <h2>メモ一覧</h2>
-        <p>V2 では旅の気づきや集合メモも、このようなカードで見やすく共有できます。</p>
+        <p class="memo-ios-trip">沖縄旅行</p>
+        <h1>メモ</h1>
       </div>
-    </section>
-
-    <section class="memo-v2-board">
-      <article class="memo-note-card">
-        <div class="memo-note-footer">
-          <h3 class="memo-note-tape memo-note-tape-0">メモ 1</h3>
-        </div>
-        <div class="memo-note-preview markdown-body">
-          <h3>初日の持ち物</h3>
-          <ul>
-            <li>レンタカー予約確認メール</li>
-            <li>帽子と日焼け止め</li>
-            <li>空港で食べる軽食は不要</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="memo-note-card">
-        <div class="memo-note-footer">
-          <h3 class="memo-note-tape memo-note-tape-1">メモ 2</h3>
-        </div>
-        <div class="memo-note-preview markdown-body">
-          <p><strong>美ら海水族館</strong> は午前のほうが空いていそう。駐車場から少し歩くので、歩きやすい靴推奨。</p>
-        </div>
-      </article>
-
-      <article class="memo-note-card">
-        <div class="memo-note-footer">
-          <h3 class="memo-note-tape memo-note-tape-2">メモ 3</h3>
-        </div>
-        <div class="memo-note-preview markdown-body">
-          <p>お土産候補:</p>
-          <ul>
-            <li>ちんすこう</li>
-            <li>紅いもタルト</li>
-            <li>海ぶどう</li>
-          </ul>
-        </div>
-      </article>
-    </section>
+      <p id="save-status" class="memo-v2-save-status memo-ios-status" data-status="idle">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span class="memo-v2-save-status-text">閲覧中</span>
+      </p>
+    </header>
+    <section id="memoBoard" class="memo-v2-board memo-ios-list" aria-label="メモ一覧"></section>
   </div>
 </div>
+
+<script id="memo-notes-data" type="application/json">
+[
+  {"id": "note-okinawa-1", "content": "# 初日の持ち物\n- レンタカー予約確認メール\n- 帽子と日焼け止め\n- 空港で食べる軽食は不要"},
+  {"id": "note-okinawa-2", "content": "## 美ら海水族館\n午前のほうが空いていそう。駐車場から少し歩くので、歩きやすい靴推奨。"},
+  {"id": "note-okinawa-3", "content": "お土産候補:\n- ちんすこう\n- 紅いもタルト\n- 海ぶどう"}
+]
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const memoBoard = document.getElementById("memoBoard");
+  const notesScript = document.getElementById("memo-notes-data");
+  const desktopMedia = window.matchMedia("(min-width: 960px)");
+  const notes = JSON.parse(notesScript.textContent || "[]");
+  let selectedNoteId = desktopMedia.matches && notes[0] ? notes[0].id : "";
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(text) {
+    return text
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  function renderMarkdown(markdownText) {
+    const lines = escapeHtml(markdownText || "").split(/\r?\n/);
+    const html = [];
+    let listBuffer = [];
+
+    function flushList() {
+      if (!listBuffer.length) return;
+      html.push("<ul>" + listBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ul>");
+      listBuffer = [];
+    }
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        flushList();
+        return;
+      }
+      const listMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (listMatch) {
+        listBuffer.push(listMatch[1]);
+        return;
+      }
+      flushList();
+      const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      if (headingMatch) {
+        const level = Math.min(headingMatch[1].length, 3);
+        html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+        return;
+      }
+      html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+    });
+    flushList();
+    return html.join("") || "<p>メモがありません。</p>";
+  }
+
+  function plainText(markdownText) {
+    return String(markdownText || "")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/^[-*]\s+/gm, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .trim();
+  }
+
+  function getNoteTitle(note) {
+    const text = plainText(note.content);
+    const firstLine = text.split(/\r?\n/).find((line) => line.trim());
+    return firstLine ? firstLine.trim() : "メモ";
+  }
+
+  function getNotePreview(note) {
+    const lines = plainText(note.content).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    return lines.slice(1).join(" ") || "本文なし";
+  }
+
+  function getNoteDateLabel() {
+    return "今日";
+  }
+
+  function renderNoteList(selectedNote) {
+    return notes.map((note) => `
+      <article class="memo-note-card memo-ios-note ${selectedNote && note.id === selectedNote.id ? "is-selected" : ""}" data-note-id="${note.id}">
+        <button type="button" class="memo-ios-summary" data-action="open" data-note-id="${note.id}">
+          <span class="memo-ios-title">${escapeHtml(getNoteTitle(note))}</span>
+          <span class="memo-ios-meta">
+            <span>${escapeHtml(getNoteDateLabel(note))}</span>
+            <span>${escapeHtml(getNotePreview(note))}</span>
+          </span>
+        </button>
+      </article>
+    `).join("");
+  }
+
+  function renderList() {
+    memoBoard.classList.remove("is-detail", "is-split");
+    memoBoard.innerHTML = renderNoteList(null) || `
+      <div class="memo-empty-state">
+        <p>表示できるメモがありません。</p>
+      </div>
+    `;
+  }
+
+  function renderDetail(note) {
+    memoBoard.classList.add("is-detail");
+    memoBoard.innerHTML = `
+      <article class="memo-ios-detail" data-note-id="${note.id}">
+        <div class="memo-ios-detail-nav">
+          <button type="button" class="memo-ios-back" data-action="back" aria-label="メモ一覧に戻る">&lt;</button>
+          <span>${escapeHtml(getNoteDateLabel(note))}</span>
+        </div>
+        <h2>${escapeHtml(getNoteTitle(note))}</h2>
+        <div class="memo-ios-markdown markdown-body">${renderMarkdown(note.content)}</div>
+      </article>
+    `;
+  }
+
+  function renderSplitBoard() {
+    if (!notes.some((note) => note.id === selectedNoteId)) {
+      selectedNoteId = notes[0]?.id || "";
+    }
+    const selectedNote = notes.find((note) => note.id === selectedNoteId);
+    if (!selectedNote) {
+      renderList();
+      return;
+    }
+    memoBoard.classList.remove("is-detail");
+    memoBoard.classList.add("is-split");
+    memoBoard.innerHTML = `
+      <aside class="memo-ios-sidebar" aria-label="メモ一覧">
+        ${renderNoteList(selectedNote)}
+      </aside>
+      <article class="memo-ios-detail memo-ios-detail-pane" data-note-id="${selectedNote.id}">
+        <div class="memo-ios-detail-nav"><span>${escapeHtml(getNoteDateLabel(selectedNote))}</span></div>
+        <h2>${escapeHtml(getNoteTitle(selectedNote))}</h2>
+        <div class="memo-ios-markdown markdown-body">${renderMarkdown(selectedNote.content)}</div>
+      </article>
+    `;
+  }
+
+  function renderBoard() {
+    if (desktopMedia.matches) {
+      renderSplitBoard();
+      return;
+    }
+    const selectedNote = notes.find((note) => note.id === selectedNoteId);
+    if (selectedNote) {
+      renderDetail(selectedNote);
+      return;
+    }
+    renderList();
+  }
+
+  memoBoard.addEventListener("click", function (event) {
+    const actionEl = event.target.closest("[data-action]");
+    if (!actionEl) return;
+    const action = actionEl.dataset.action;
+    const noteId = actionEl.dataset.noteId;
+
+    if (action === "open") {
+      selectedNoteId = noteId;
+      renderBoard();
+      return;
+    }
+    if (action === "back") {
+      selectedNoteId = "";
+      renderBoard();
+    }
+  });
+
+  desktopMedia.addEventListener("change", function () {
+    if (desktopMedia.matches && !selectedNoteId && notes[0]) selectedNoteId = notes[0].id;
+    renderBoard();
+  });
+
+  renderBoard();
+});
+</script>
 {% endblock %}

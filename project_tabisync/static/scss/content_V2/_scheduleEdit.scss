@@ -293,7 +293,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 3000;
+  z-index: 12000;
   padding: 12px;
   box-sizing: border-box;
 }
@@ -305,6 +305,7 @@
 }
 
 .edit-modal-content {
+  position: relative;
   width: min(720px, calc(100vw - 24px));
   height: min(88dvh, 720px);
   background: #fff;
@@ -428,7 +429,12 @@
 }
 
 .suggestions-box {
+  position: relative;
+  z-index: 13000;
   margin-bottom: 12px;
+  border: 1px solid #d8dde6;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
 }
 
 .suggestion-item {
@@ -439,6 +445,21 @@
   cursor: pointer;
   background: #f8f7fb;
   color: #2f3747;
+}
+
+.pac-container {
+  z-index: 13000 !important;
+  border: 1px solid #d8dde6;
+  border-radius: 12px;
+  margin-top: 6px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+  font-family: "Noto Sans JP", sans-serif;
+}
+
+.pac-item {
+  padding: 10px 12px;
+  background: #fff;
 }
 
 .suggestion-item:hover {

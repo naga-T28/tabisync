@@ -192,7 +192,7 @@ footer {
   overflow: hidden;
   color: #fff;
   text-align: center;
-  background: radial-gradient(circle at 18% 10%, rgba(175, 41, 187, 0.24), transparent 30%), linear-gradient(135deg, #2f2134, #160d18);
+  background-color: #000;
 }
 footer ul {
   position: relative;
@@ -287,6 +287,7 @@ footer small {
   background-image: linear-gradient(90deg, rgba(10, 24, 29, 0.92), rgba(10, 24, 29, 0.68) 45%, rgba(10, 24, 29, 0.34)), url("../img/home-lp.webp");
   background-position: center;
   background-size: cover;
+  background-attachment: fixed;
   /*&::after {
     content: "";
     position: absolute;
@@ -307,10 +308,12 @@ footer small {
   display: grid;
   grid-template-columns: 1fr;
   align-items: center;
-  gap: 46px;
+  gap: 0;
 }
 
 .home-hero-copy {
+  position: relative;
+  z-index: 2;
   max-width: 690px;
 }
 
@@ -441,18 +444,23 @@ footer small {
 }
 
 .home-hero-product {
-  display: flex;
+  position: relative;
+  z-index: 1;
+  display: none;
   justify-content: center;
+  margin-top: -44px;
+  pointer-events: none;
 }
 
 .home-device {
-  width: min(365px, 100%);
+  width: min(520px, 118%);
   border: 1px solid rgba(255, 255, 255, 0.44);
   border-radius: 30px;
   padding: 14px;
   background: rgba(250, 252, 250, 0.92);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
-  transform: rotate(1.5deg);
+  transform: rotate(1.5deg) scale(2.16);
+  transform-origin: center top;
 }
 
 .home-device-header,
@@ -647,10 +655,14 @@ footer small {
   grid-template-columns: 1fr;
   gap: 30px;
   color: #fff;
-  background: radial-gradient(circle at 85% 14%, rgba(175, 41, 187, 0.26), transparent 30%), linear-gradient(135deg, #2f2134, #160d18);
+  margin-bottom: 40px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.85)), url("../img/tabisync-lp-2.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .home-trust-section .home-kicker {
-  color: #f2b8ff;
+  color: #ccc;
 }
 
 .home-trust-copy h2 {
@@ -809,8 +821,18 @@ footer small {
 }
 @media screen and (min-width: 960px) {
   .home-hero-inner {
-    grid-template-columns: minmax(0, 1.08fr) minmax(330px, 0.92fr);
+    grid-template-columns: minmax(0, 1.02fr) minmax(420px, 0.98fr);
     padding-top: 92px;
+  }
+  .home-hero-product {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0;
+    margin-left: -70px;
+  }
+  .home-device {
+    width: min(540px, 112%);
+    transform: rotate(1.5deg) scale(2.24);
   }
   .home-feature-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -818,6 +840,7 @@ footer small {
   .home-trust-section {
     grid-template-columns: minmax(0, 1fr) 380px;
     align-items: center;
+    margin-bottom: 40px;
   }
 }
 
