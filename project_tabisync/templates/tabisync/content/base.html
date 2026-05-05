@@ -154,14 +154,7 @@
                             <i class="fa-regular fa-pen-to-square"></i>
                             <!--<div>編集</div>-->
                         </a>
-                    </li>
-                    <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_edit_v2' %}footer-nav-li-select{% endif %}">
-                        <a class="footer-nav-a" href="{% url 'tabisync:content_edit_v2' pk=itinerary.pk token=itinerary.token %}">
-                            <img src="{% static 'img/ai-concierge-icon.webp' %}" alt="AIコンシェルジュ" class="footer-nav-icon-ai-concierge">
-                            <!--<div>編集</div>-->
-                        </a>
-                    </li>
-          
+                    </li>      
                 </ul>
             </nav>
             <ul>
