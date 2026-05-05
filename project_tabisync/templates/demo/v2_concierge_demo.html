@@ -7,21 +7,81 @@
         <meta name="robots" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/tabisync-ios-icon.ico'%}">
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
-        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260423">
+        <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260503">
     </head>
     <body id="concierge-body">
       <main class="content-main-concierge">
-        <header class="page-header">
+        <header class="page-header --only-pc content-side-nav">
+            <div class="content-side-nav-inner">
+                <div class="content-side-nav-logo">
+                    <a href="{% url 'tabisync:home' %}">
+                        <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-expanded">
+                        <img src="{% static 'img/icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-collapsed">
+                    </a>
+                </div>
+                <nav class="content-side-nav-menu" aria-label="デモしおりメニュー">
+                    <a class="content-side-nav-link" href="{% url 'tabisync:demo_v2_content' %}">
+                        <i class="fa-solid fa-house content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">旅程表</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:demo_v2_memo' %}">
+                        <i class="fa-solid fa-clipboard content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">メモ</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:demo_v2_list' %}">
+                        <i class="fa-solid fa-list-check content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">リスト</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:demo_v2_map' %}">
+                        <i class="fa-solid fa-map-location-dot content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">地図</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link is-active" href="{% url 'tabisync:demo_v2_concierge' %}">
+                        <i class="fa-solid fa-robot content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">AIコンシェルジュ</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                    <a class="content-side-nav-link" href="{% url 'tabisync:demo_v2_edit' %}">
+                        <i class="fa-regular fa-pen-to-square content-side-nav-icon"></i>
+                        <span class="content-side-nav-label">編集</span>
+                        <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                    </a>
+                </nav>
+                <div class="content-side-nav-bottom">
+                    <nav class="content-side-nav-legal" aria-label="サイト情報">
+                        <a href="{% url 'tabisync:profile' %}" target="_blank">
+                            <i class="fa-regular fa-user content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">運営者について</span>
+                        </a>
+                        <a href="{% url 'tabisync:privacy_policy' %}" target="_blank">
+                            <i class="fa-solid fa-shield-halved content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">プライバシーポリシー</span>
+                        </a>
+                        <a href="{% url 'tabisync:user_agreement' %}" target="_blank">
+                            <i class="fa-regular fa-file-lines content-side-nav-legal-icon"></i>
+                            <span class="content-side-nav-label">利用規約</span>
+                        </a>
+                    </nav>
+                    <button type="button" class="content-side-nav-toggle" aria-label="サイドバーを折りたたむ" aria-expanded="true">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <header class="page-header --only-sp">
             <div class="header-wrapper --concierge-header">
                 <div class="header-buttons">
                   <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_content' %}">
@@ -31,7 +91,7 @@
                 <div class="header-logo">
                     <h1>
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                            <img src="{% static 'img/logo-ai-concierge.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                         </a>
                     </h1>
                 </div>
@@ -51,26 +111,24 @@
             </section>
           </div>
         </div>
-        <footer class="page-footer-concierge">
-            <nav class="footer-nav --concierge-footer">
-                <form id="conciergeForm" class="concierge-form">
-                  <label class="concierge-input-wrap" for="conciergeInput">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <input
-                      id="conciergeInput"
-                      type="text"
-                      value="デモページのため送信はできません"
-                      autocomplete="off"
-                      disabled
-                    >
-                    <button type="submit" class="concierge-send-btn" aria-label="送信" disabled>
-                      <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
-                      <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
-                    </button>
-                  </label>
-                </form>
-            </nav>
-        </footer>
+        <div class="concierge-input-dock" role="region" aria-label="AIコンシェルジュへの質問入力">
+            <form id="conciergeForm" class="concierge-form">
+              <label class="concierge-input-wrap" for="conciergeInput">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <input
+                  id="conciergeInput"
+                  type="text"
+                  placeholder="例: Day2の予定をまとめて / おすすめの場所ある？"
+                  autocomplete="off"
+                  maxlength="60"
+                >
+                <button type="submit" class="concierge-send-btn" aria-label="送信">
+                  <i class="fa-regular fa-paper-plane concierge-send-icon"></i>
+                  <i class="fa-solid fa-spinner concierge-send-spinner" aria-hidden="true"></i>
+                </button>
+              </label>
+            </form>
+        </div>
         <div class="concierge-detail-modal" id="conciergeDetailModal" hidden>
           <div class="concierge-detail-backdrop" data-close-modal></div>
           <div class="concierge-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conciergeDetailTitle">
@@ -78,31 +136,32 @@
               <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="concierge-detail-content">
-              <p class="concierge-eyebrow">DEMO</p>
-              <h2 id="conciergeDetailTitle">AIコンシェルジュ デモについて</h2>
+              <p class="concierge-eyebrow">DETAILS</p>
+              <h2 id="conciergeDetailTitle">AIコンシェルジュβ版について</h2>
               <p class="concierge-detail-lead">
-                実際のAI送信は行わず、会話UIと説明モーダルの見た目だけを確認できるデモです。<br>
+                入力した内容に基づいて、旅程表と行きたい場所をもとに答えてくれるあなた専用のAIコンシェルジュです。<br>
                 <small>
-                  *会話内容はすべて架空で、送信や保存は行われません。<br>
+                  *このデモでは実際のAI送信や保存は行わず、沖縄旅行のサンプル回答を表示します。<br>
                 </small>
               </p>
 
               <div class="concierge-panel concierge-detail-panel">
-                <h2>このデモで見られるもの</h2>
+                <h2>できること</h2>
                 <ul class="concierge-capability-list">
-                  <li>チャットUIの見え方</li>
-                  <li>AI回答の吹き出しデザイン</li>
-                  <li>詳細モーダルの挙動</li>
-                  <li>プロンプトチップのデザイン</li>
+                  <li>「Day2の予定を教えて」で日程を要約</li>
+                  <li>「行きたい場所リスト」に登録した場所で予定を組んで</li>
+                  <li>「空いている日は？」で余白のある日を案内</li>
+                  <li>「持ち物を考えて」で準備のヒントを返答</li>
                 </ul>
               </div>
 
               <div class="concierge-panel concierge-detail-panel">
-                <h2>サンプル質問</h2>
+                <h2>すぐ試す</h2>
                 <div class="concierge-prompt-list">
-                  <button type="button" class="concierge-prompt-chip" disabled>Day2の予定を教えて</button>
-                  <button type="button" class="concierge-prompt-chip" disabled>おすすめの場所ある？</button>
-                  <button type="button" class="concierge-prompt-chip" disabled>持ち物を考えて</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="Day1の予定を教えて">Day1の予定を教えて</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="おすすめの場所ある？">おすすめの場所ある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="空いている日はある？">空いている日はある？</button>
+                  <button type="button" class="concierge-prompt-chip" data-prompt="持ち物を考えて">持ち物を考えて</button>
                 </div>
               </div>
             </div>
@@ -113,102 +172,235 @@
 document.addEventListener("DOMContentLoaded", function () {
   const messagesEl = document.getElementById("conciergeMessages");
   const formEl = document.getElementById("conciergeForm");
+  const inputEl = document.getElementById("conciergeInput");
+  const sendButtonEl = formEl.querySelector(".concierge-send-btn");
   const detailModalEl = document.getElementById("conciergeDetailModal");
   const detailOpenEl = document.getElementById("conciergeDetailOpen");
   const detailCloseEl = document.getElementById("conciergeDetailClose");
+  const conciergeMessageMaxLength = 60;
 
-  const demoMessages = [
-    {
-      role: "assistant",
-      html: `
-        <p>こんにちは、沖縄旅行デモの <strong>AIコンシェルジュ</strong> です。</p>
-        <p>このページでは、実際の送信はできませんが、会話画面のデザインを確認できます。</p>
-      `,
-    },
-    {
-      role: "user",
-      text: "Day2で海も観光も楽しめる回り方ある？",
-    },
-    {
-      role: "assistant",
-      html: `
-        <p>あります。たとえばこんな流れです。</p>
-        <ul>
-          <li>朝: 美ら海水族館へ移動して観光</li>
-          <li>昼: 古宇利島方面でランチ</li>
-          <li>夕方: ビーチ沿いのカフェで休憩</li>
-        </ul>
-        <p>無理のない移動にしたいなら、北部に絞るのがよさそうです。</p>
-      `,
-    },
-    {
-      role: "user",
-      text: "子ども連れ向けの持ち物も知りたい",
-    },
-    {
-      role: "assistant",
-      html: `
-        <p>子ども連れなら、このあたりを先に準備しておくと安心です。</p>
-        <ol>
-          <li>着替えを多めに用意</li>
-          <li>日差し対策グッズを忘れない</li>
-          <li>移動中のおやつと飲み物を確保</li>
-        </ol>
-      `,
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(text) {
+    let html = escapeHtml(text);
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    return html;
+  }
+
+  function renderMarkdown(text) {
+    const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+    const blocks = [];
+    let listType = null;
+    let listItems = [];
+    let paragraphLines = [];
+
+    function flushParagraph() {
+      if (!paragraphLines.length) return;
+      blocks.push(`<p>${paragraphLines.map((line) => renderInlineMarkdown(line)).join("<br>")}</p>`);
+      paragraphLines = [];
     }
-  ];
 
-  function addMessage(message) {
+    function flushList() {
+      if (!listType || !listItems.length) return;
+      blocks.push(`<${listType}>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</${listType}>`);
+      listType = null;
+      listItems = [];
+    }
+
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushParagraph();
+        flushList();
+        continue;
+      }
+
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+      if (headingMatch) {
+        flushParagraph();
+        flushList();
+        const level = headingMatch[1].length + 2;
+        blocks.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+        continue;
+      }
+
+      const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
+      if (unorderedMatch) {
+        flushParagraph();
+        if (listType && listType !== "ul") flushList();
+        listType = "ul";
+        listItems.push(unorderedMatch[1]);
+        continue;
+      }
+
+      const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+      if (orderedMatch) {
+        flushParagraph();
+        if (listType && listType !== "ol") flushList();
+        listType = "ol";
+        listItems.push(orderedMatch[1]);
+        continue;
+      }
+
+      if (listType) flushList();
+      paragraphLines.push(trimmed);
+    }
+
+    flushParagraph();
+    flushList();
+    return blocks.join("");
+  }
+
+  function addMessage(role, text, options = {}) {
     const article = document.createElement("article");
-    article.className = `concierge-message is-${message.role}`;
+    article.className = `concierge-message is-${role}`;
 
     const label = document.createElement("p");
     label.className = "concierge-message-label";
-    label.textContent = message.role === "assistant" ? "AIコンシェルジュ" : "あなた";
+    label.textContent = role === "assistant" ? "AIコンシェルジュ" : "あなた";
 
     const bubble = document.createElement("div");
     bubble.className = "concierge-message-bubble";
-    if (message.html) {
-      bubble.innerHTML = message.html;
+    if (options.renderedHtml) {
+      bubble.innerHTML = options.renderedHtml;
+    } else if (options.markdown) {
+      bubble.innerHTML = renderMarkdown(text);
     } else {
-      bubble.textContent = message.text || "";
+      bubble.textContent = text;
     }
 
     article.appendChild(label);
     article.appendChild(bubble);
     messagesEl.appendChild(article);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
-  function openDetailModal() {
-    detailModalEl.hidden = false;
-    document.body.classList.add("is-modal-open");
+  function setModalOpen(isOpen) {
+    if (!detailModalEl) return;
+    detailModalEl.hidden = !isOpen;
+    document.body.classList.toggle("is-concierge-modal-open", isOpen);
   }
 
-  function closeDetailModal() {
-    detailModalEl.hidden = true;
-    document.body.classList.remove("is-modal-open");
+  function setSending(isSending) {
+    sendButtonEl.disabled = isSending;
+    inputEl.disabled = isSending;
+    sendButtonEl.classList.toggle("is-sending", isSending);
   }
 
-  demoMessages.forEach(addMessage);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  function getDemoReply(userText) {
+    const normalized = String(userText || "").toLowerCase();
+    if (normalized.includes("day1") || normalized.includes("1日") || normalized.includes("初日")) {
+      return "Day1は那覇空港到着後、国際通りでランチと散策をして、夕方にホテルへ移動する流れです。\n\n- 昼: 国際通りで沖縄そば\n- 午後: 牧志公設市場周辺を散策\n- 夜: ホテル周辺でゆっくり夕食";
+    }
+    if (normalized.includes("day2") || normalized.includes("2日") || normalized.includes("美ら海")) {
+      return "Day2は北部エリアに絞ると移動が楽です。\n\n1. 朝に美ら海水族館へ向かう\n2. 古宇利島方面で海を見ながらランチ\n3. 夕方はビーチ沿いのカフェで休憩\n\nレンタカー移動が中心なので、出発は少し早めがおすすめです。";
+    }
+    if (normalized.includes("おすすめ") || normalized.includes("場所")) {
+      return "沖縄旅行のサンプルだと、古宇利島、美ら海水族館、国際通りが相性よさそうです。\n\nゆっくり過ごしたい日は瀬長島ウミカジテラスも候補に入れやすいです。";
+    }
+    if (normalized.includes("空いて") || normalized.includes("余白")) {
+      return "Day3の午後に少し余白があります。\n\nお土産を買うなら国際通り、景色を見たいなら瀬長島方面に寄ると無理が少なそうです。";
+    }
+    if (normalized.includes("持ち物") || normalized.includes("準備")) {
+      return "沖縄旅行では日差しと水辺対策を厚めにしておくと安心です。\n\n- 日焼け止め\n- 帽子\n- 水着\n- サンダル\n- モバイルバッテリー\n- 子ども用の着替え";
+    }
+    return "このデモでは沖縄旅行のサンプル回答を表示しています。\n\n旅程、行きたい場所、持ち物のどれかを聞くと、本番に近い吹き出しの見え方を確認できます。";
+  }
 
-  if (formEl) {
-    formEl.addEventListener("submit", function (event) {
-      event.preventDefault();
+  function submitPrompt(prompt) {
+    const userText = String(prompt || "").trim();
+    if (!userText) return;
+    if (userText.length > conciergeMessageMaxLength) {
+      addMessage("assistant", `メッセージは${conciergeMessageMaxLength}字以内で入力してください。`);
+      return;
+    }
+
+    addMessage("user", userText);
+    inputEl.value = "";
+    setSending(true);
+
+    window.setTimeout(function () {
+      addMessage("assistant", getDemoReply(userText), { markdown: true });
+      setSending(false);
+      inputEl.focus();
+    }, 350);
+  }
+
+  formEl.addEventListener("submit", function (event) {
+    event.preventDefault();
+    submitPrompt(inputEl.value);
+  });
+
+  document.querySelectorAll(".concierge-prompt-chip").forEach((button) => {
+    button.addEventListener("click", function () {
+      setModalOpen(false);
+      submitPrompt(button.dataset.prompt || "");
+    });
+  });
+
+  detailOpenEl?.addEventListener("click", function () {
+    setModalOpen(true);
+  });
+
+  detailCloseEl?.addEventListener("click", function () {
+    setModalOpen(false);
+  });
+
+  detailModalEl?.addEventListener("click", function (event) {
+    if (event.target instanceof HTMLElement && event.target.hasAttribute("data-close-modal")) {
+      setModalOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      setModalOpen(false);
+    }
+  });
+
+  addMessage("assistant", "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」");
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const toggle = document.querySelector(".content-side-nav-toggle");
+  const storageKey = "tabisync_demo_side_nav_collapsed";
+  const collapsedClass = "is-side-nav-collapsed";
+
+  function applySideNavState(isCollapsed) {
+    document.body.classList.toggle(collapsedClass, isCollapsed);
+    if (!toggle) return;
+
+    toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+    toggle.setAttribute("aria-label", isCollapsed ? "サイドバーを開く" : "サイドバーを折りたたむ");
+
+    const icon = toggle.querySelector("i");
+    if (icon) {
+      icon.className = isCollapsed ? "fa-solid fa-angle-right" : "fa-solid fa-angle-left";
+    }
+  }
+
+  applySideNavState(window.localStorage.getItem(storageKey) === "true");
+
+  if (toggle) {
+    toggle.addEventListener("click", function () {
+      const nextState = !document.body.classList.contains(collapsedClass);
+      window.localStorage.setItem(storageKey, String(nextState));
+      applySideNavState(nextState);
     });
   }
-
-  if (detailOpenEl) {
-    detailOpenEl.addEventListener("click", openDetailModal);
-  }
-
-  if (detailCloseEl) {
-    detailCloseEl.addEventListener("click", closeDetailModal);
-  }
-
-  detailModalEl.querySelectorAll("[data-close-modal]").forEach((node) => {
-    node.addEventListener("click", closeDetailModal);
-  });
 });
 </script>
     </body>

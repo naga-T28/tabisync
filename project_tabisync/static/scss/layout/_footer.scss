@@ -1,10 +1,12 @@
 @use "../base/variables" as variables;
 
 footer {
-  background-color: variables.$black;
+  position: relative;
+  margin-top: 32px;
+  overflow: hidden;
+  background-color: #000;
   color: variables.$white;
-  padding: 15px 10px;
-  padding-bottom: 50px;
+  padding: 38px 20px 50px;
   text-align: center;
   font-size: 14px;
   &.page-footer-concierge{
@@ -28,7 +30,7 @@ footer {
       font-weight: 500;
 
       &:hover {
-        color: variables.$accent-pink;
+        color: #f2b8ff;
       }
 
       i.fas.fa-external-link-alt {

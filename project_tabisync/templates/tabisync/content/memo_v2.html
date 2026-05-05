@@ -3,30 +3,62 @@
 {% block title %}メモ{% endblock %}
 
 {% block contents %}
-<div class="content-main">
-  <div class="memo-v2-wrapper">
-
-    <div class="title-wrapper">
-      <div class="title-visual --miniMargin">
-        <p class="siori-sub-title">{{ itinerary.title }}</p>
-        <h1 class="siori-title --noMargin">みんなのメモ</h1>
+<div class="content-main memo-ios-main">
+  <div class="memo-v2-wrapper memo-ios-shell" data-can-edit="{{ can_edit_memo|yesno:'true,false' }}">
+    <header class="memo-ios-header">
+      <div>
+        <p class="memo-ios-trip">{{ itinerary.title }}</p>
+        <h1>メモ</h1>
       </div>
-    </div>
-    <section id="memoBoard" class="memo-v2-board"></section>
+      <p id="save-status" class="memo-v2-save-status memo-ios-status" data-status="idle">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span class="memo-v2-save-status-text">
+          {% if can_edit_memo %}自動保存{% else %}閲覧中{% endif %}
+        </span>
+      </p>
+    </header>
+
+    {% if not can_edit_memo %}
+      <a class="memo-ios-unlock" href="{% url 'tabisync:V2_memo_edit' pk=itinerary.pk token=itinerary.token %}">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        編集する
+      </a>
+    {% endif %}
+
+    <section id="memoBoard" class="memo-v2-board memo-ios-list" aria-label="メモ一覧"></section>
   </div>
 </div>
 
 {{ memo_notes|json_script:"memo-notes-data" }}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  const shell = document.querySelector(".memo-ios-shell");
   const memoBoard = document.getElementById("memoBoard");
+  const saveStatus = document.getElementById("save-status");
+  const saveStatusText = saveStatus ? saveStatus.querySelector(".memo-v2-save-status-text") : null;
   const notesScript = document.getElementById("memo-notes-data");
+  const csrfToken = getCookie("csrftoken");
+  const canEdit = shell ? shell.dataset.canEdit === "true" : false;
+  const desktopMedia = window.matchMedia("(min-width: 960px)");
+  const MAX_MEMOS_PER_ITINERARY = 15;
+  const MAX_MEMO_WORDS = 1000;
+
   let notes = [];
+  let selectedNoteId = "";
+  let editingNoteId = "";
+  let saveTimer = null;
 
   try {
     notes = JSON.parse(notesScript.textContent || "[]");
   } catch (error) {
     notes = [];
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
   }
 
   function createNoteId() {
@@ -42,6 +74,25 @@ document.addEventListener("DOMContentLoaded", function () {
       .replace(/'/g, "&#39;");
   }
 
+  function countMemoWords(content) {
+    const matches = String(content || "").match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30ff\u3400-\u9fff]/g);
+    return matches ? matches.length : 0;
+  }
+
+  function validateNoteLimits(targetNotes) {
+    if (targetNotes.length > MAX_MEMOS_PER_ITINERARY) {
+      return `メモは最大${MAX_MEMOS_PER_ITINERARY}件まで保存できます。`;
+    }
+
+    for (let index = 0; index < targetNotes.length; index += 1) {
+      if (countMemoWords(targetNotes[index].content) > MAX_MEMO_WORDS) {
+        return `メモは最大${MAX_MEMO_WORDS}語まで保存できます。`;
+      }
+    }
+
+    return "";
+  }
+
   function renderInlineMarkdown(text) {
     return text
       .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -55,32 +106,47 @@ document.addEventListener("DOMContentLoaded", function () {
     const lines = escaped.split(/\r?\n/);
     const html = [];
     let listBuffer = [];
+    let orderedListBuffer = [];
 
-    function flushList() {
-      if (!listBuffer.length) return;
-      html.push("<ul>" + listBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ul>");
-      listBuffer = [];
+    function flushLists() {
+      if (listBuffer.length) {
+        html.push("<ul>" + listBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ul>");
+        listBuffer = [];
+      }
+
+      if (orderedListBuffer.length) {
+        html.push("<ol>" + orderedListBuffer.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("") + "</ol>");
+        orderedListBuffer = [];
+      }
     }
 
     lines.forEach((line) => {
       const trimmed = line.trim();
 
       if (!trimmed) {
-        flushList();
+        flushLists();
         return;
       }
 
       const listMatch = trimmed.match(/^[-*]\s+(.*)$/);
       if (listMatch) {
+        if (orderedListBuffer.length) flushLists();
         listBuffer.push(listMatch[1]);
         return;
       }
 
-      flushList();
+      const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+      if (orderedMatch) {
+        if (listBuffer.length) flushLists();
+        orderedListBuffer.push(orderedMatch[1]);
+        return;
+      }
+
+      flushLists();
 
       const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
       if (headingMatch) {
-        const level = headingMatch[1].length;
+        const level = Math.min(headingMatch[1].length, 3);
         html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
         return;
       }
@@ -94,8 +160,39 @@ document.addEventListener("DOMContentLoaded", function () {
       html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
     });
 
-    flushList();
-    return html.join("") || "<p>まだメモがありません。</p>";
+    flushLists();
+    return html.join("") || "<p>メモを入力</p>";
+  }
+
+  function plainText(markdownText) {
+    return String(markdownText || "")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/^[-*]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .trim();
+  }
+
+  function getNoteTitle(note) {
+    const text = plainText(note.content);
+    const firstLine = text.split(/\r?\n/).find((line) => line.trim());
+    return firstLine ? firstLine.trim() : "新規メモ";
+  }
+
+  function getNotePreview(note) {
+    const text = plainText(note.content);
+    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    return lines.slice(1).join(" ") || (note.content.trim() ? "本文なし" : "タップして表示");
+  }
+
+  function getNoteDateLabel(note) {
+    const idMatch = String(note.id || "").match(/note-(\d+)/);
+    if (!idMatch) return "今日";
+    const date = new Date(Number(idMatch[1]));
+    if (Number.isNaN(date.getTime())) return "今日";
+    return new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric" }).format(date);
   }
 
   function normalizeNotes() {
@@ -107,32 +204,328 @@ document.addEventListener("DOMContentLoaded", function () {
       .filter((note) => note.content.trim());
   }
 
-  function renderBoard() {
-    if (!memoBoard) return;
+  function setSaveStatus(status, text) {
+    if (!saveStatus || !saveStatusText) return;
+
+    const iconClassMap = {
+      idle: "fa-circle-info",
+      saving: "fa-rotate fa-spin",
+      saved: "fa-circle-check",
+      error: "fa-circle-exclamation",
+      dirty: "fa-pen",
+    };
+
+    saveStatus.dataset.status = status;
+    saveStatusText.textContent = text;
+
+    const icon = saveStatus.querySelector("i");
+    if (icon) {
+      icon.className = `fa-solid ${iconClassMap[status] || iconClassMap.idle}`;
+    }
+  }
+
+  function renderList() {
+    memoBoard.classList.remove("is-detail", "is-split");
 
     if (!notes.length) {
       memoBoard.innerHTML = `
-        <div class="memo-v2-empty">
-          <p>まだ付箋がありません。</p>
-          <p>編集ページからメモを追加できます。</p>
+        <div class="memo-v2-empty memo-ios-empty">
+          <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
+          <p>${canEdit ? "メモを追加して始められます。" : "まだメモがありません。"}</p>
+          ${canEdit ? `
+            <button type="button" class="memo-ios-add-note" data-action="add-note">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              新規メモ
+            </button>
+          ` : ""}
         </div>
       `;
       return;
     }
 
-    memoBoard.innerHTML = notes.map((note, index) => `
-      <article class="memo-note-card" data-note-id="${note.id}">
-        <div class="memo-note-footer">
-          <h3 class="memo-note-tape memo-note-tape-${index % 4}">メモ ${index + 1}</h3>
-        </div>
-        <div class="memo-note-preview markdown-body ${!note.content.trim() ? "is-placeholder" : ""}">
-          ${renderMarkdown(note.content)}
-        </div>
+    memoBoard.innerHTML = `
+      ${notes.map((note) => `
+      <article class="memo-note-card memo-ios-note" data-note-id="${note.id}">
+        <button type="button" class="memo-ios-summary" data-action="open" data-note-id="${note.id}">
+          <span class="memo-ios-title">${escapeHtml(getNoteTitle(note))}</span>
+          <span class="memo-ios-meta">
+            <span>${escapeHtml(getNoteDateLabel(note))}</span>
+            <span>${escapeHtml(getNotePreview(note))}</span>
+          </span>
+        </button>
       </article>
-    `).join("");
+      `).join("")}
+      ${canEdit ? `
+        <button type="button" class="memo-ios-add-note" data-action="add-note">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          新規メモ
+        </button>
+      ` : ""}
+    `;
   }
 
+  function renderDetail(note) {
+    const isEditing = editingNoteId === note.id;
+
+    memoBoard.classList.add("is-detail");
+    memoBoard.innerHTML = `
+      <article class="memo-ios-detail" data-note-id="${note.id}">
+        <div class="memo-ios-detail-nav">
+          <button type="button" class="memo-ios-back" data-action="back" aria-label="メモ一覧に戻る">&lt;</button>
+          <span>${escapeHtml(getNoteDateLabel(note))}</span>
+        </div>
+        <h2>${escapeHtml(getNoteTitle(note))}</h2>
+        ${isEditing ? `
+          <textarea
+            class="memo-note-textarea"
+            data-action="edit"
+            data-note-id="${note.id}"
+            placeholder="メモを入力"
+          >${escapeHtml(note.content)}</textarea>
+        ` : `
+          <div class="memo-ios-markdown markdown-body">
+            ${renderMarkdown(note.content)}
+          </div>
+        `}
+        ${canEdit ? `
+          <div class="memo-note-actions">
+            <button type="button" class="memo-note-action memo-note-delete" data-action="delete" data-note-id="${note.id}" aria-label="削除する">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="memo-note-action memo-note-action-edit ${isEditing ? "is-active" : ""}" data-action="${isEditing ? "done" : "edit-mode"}" data-note-id="${note.id}" aria-label="${isEditing ? "表示に戻る" : "編集する"}">
+              <i class="fa-solid ${isEditing ? "fa-check" : "fa-pen"}" aria-hidden="true"></i>
+            </button>
+          </div>
+        ` : ""}
+      </article>
+    `;
+  }
+
+  function renderSplitBoard() {
+    if (!notes.length) {
+      memoBoard.classList.remove("is-detail", "is-split");
+      renderList();
+      return;
+    }
+
+    if (!notes.some((note) => note.id === selectedNoteId)) {
+      selectedNoteId = notes[0].id;
+    }
+
+    const selectedNote = notes.find((note) => note.id === selectedNoteId) || notes[0];
+    const isEditing = editingNoteId === selectedNote.id;
+
+    memoBoard.classList.remove("is-detail");
+    memoBoard.classList.add("is-split");
+    memoBoard.innerHTML = `
+      <aside class="memo-ios-sidebar" aria-label="メモ一覧">
+        ${notes.map((note) => `
+          <article class="memo-note-card memo-ios-note ${note.id === selectedNote.id ? "is-selected" : ""}" data-note-id="${note.id}">
+            <button type="button" class="memo-ios-summary" data-action="open" data-note-id="${note.id}">
+              <span class="memo-ios-title">${escapeHtml(getNoteTitle(note))}</span>
+              <span class="memo-ios-meta">
+                <span>${escapeHtml(getNoteDateLabel(note))}</span>
+                <span>${escapeHtml(getNotePreview(note))}</span>
+              </span>
+            </button>
+          </article>
+        `).join("")}
+        ${canEdit ? `
+          <button type="button" class="memo-ios-add-note" data-action="add-note">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            新規メモ
+          </button>
+        ` : ""}
+      </aside>
+      <article class="memo-ios-detail memo-ios-detail-pane" data-note-id="${selectedNote.id}">
+        <div class="memo-ios-detail-nav">
+          <span>${escapeHtml(getNoteDateLabel(selectedNote))}</span>
+        </div>
+        <h2>${escapeHtml(getNoteTitle(selectedNote))}</h2>
+        ${isEditing ? `
+          <textarea
+            class="memo-note-textarea"
+            data-action="edit"
+            data-note-id="${selectedNote.id}"
+            placeholder="メモを入力"
+          >${escapeHtml(selectedNote.content)}</textarea>
+        ` : `
+          <div class="memo-ios-markdown markdown-body">
+            ${renderMarkdown(selectedNote.content)}
+          </div>
+        `}
+        ${canEdit ? `
+          <div class="memo-note-actions">
+            <button type="button" class="memo-note-action memo-note-delete" data-action="delete" data-note-id="${selectedNote.id}" aria-label="削除する">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="memo-note-action memo-note-action-edit ${isEditing ? "is-active" : ""}" data-action="${isEditing ? "done" : "edit-mode"}" data-note-id="${selectedNote.id}" aria-label="${isEditing ? "表示に戻る" : "編集する"}">
+              <i class="fa-solid ${isEditing ? "fa-check" : "fa-pen"}" aria-hidden="true"></i>
+            </button>
+          </div>
+        ` : ""}
+      </article>
+    `;
+  }
+
+  function renderBoard() {
+    if (!memoBoard) return;
+
+    if (desktopMedia.matches) {
+      renderSplitBoard();
+      return;
+    }
+
+    const selectedNote = notes.find((note) => note.id === selectedNoteId);
+    if (selectedNote) {
+      renderDetail(selectedNote);
+      return;
+    }
+
+    renderList();
+  }
+
+  function queueSave() {
+    if (!canEdit) return;
+    setSaveStatus("saving", "保存中...");
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNotes, 600);
+  }
+
+  async function saveNotes() {
+    const payload = notes
+      .map((note) => ({
+        content: note.content.trim(),
+      }))
+      .filter((note) => note.content);
+
+    const limitError = validateNoteLimits(payload);
+    if (limitError) {
+      setSaveStatus("error", limitError);
+      return;
+    }
+
+    try {
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ notes: payload }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}`);
+      }
+
+      setSaveStatus("saved", "保存済み");
+    } catch (error) {
+      console.error(error);
+      setSaveStatus("error", error.message || "保存に失敗しました");
+    }
+  }
+
+  function addNote() {
+    if (!canEdit) return;
+
+    if (notes.length >= MAX_MEMOS_PER_ITINERARY) {
+      setSaveStatus("error", `メモは最大${MAX_MEMOS_PER_ITINERARY}件まで保存できます。`);
+      return;
+    }
+
+    const newNote = { id: createNoteId(), content: "" };
+    notes.unshift(newNote);
+    selectedNoteId = newNote.id;
+    editingNoteId = newNote.id;
+    renderBoard();
+
+    const textarea = memoBoard.querySelector(".memo-note-textarea");
+    if (textarea) textarea.focus();
+
+    setSaveStatus("dirty", "未保存の変更があります");
+  }
+
+  memoBoard.addEventListener("input", function (event) {
+    const target = event.target;
+    if (!target.matches(".memo-note-textarea")) return;
+
+    const noteId = target.dataset.noteId;
+    const note = notes.find((item) => item.id === noteId);
+    if (!note) return;
+
+    note.content = target.value;
+    queueSave();
+  });
+
+  memoBoard.addEventListener("click", function (event) {
+    const openButton = event.target.closest('[data-action="open"]');
+    if (openButton) {
+      selectedNoteId = openButton.dataset.noteId;
+      editingNoteId = "";
+      renderBoard();
+      return;
+    }
+
+    const addNoteButton = event.target.closest('[data-action="add-note"]');
+    if (addNoteButton) {
+      addNote();
+      return;
+    }
+
+    const backButton = event.target.closest('[data-action="back"]');
+    if (backButton) {
+      selectedNoteId = "";
+      editingNoteId = "";
+      renderBoard();
+      return;
+    }
+
+    const editModeButton = event.target.closest('[data-action="edit-mode"]');
+    if (editModeButton && canEdit) {
+      editingNoteId = editModeButton.dataset.noteId;
+      renderBoard();
+      const textarea = memoBoard.querySelector(".memo-note-textarea");
+      if (textarea) textarea.focus();
+      return;
+    }
+
+    const doneButton = event.target.closest('[data-action="done"]');
+    if (doneButton && canEdit) {
+      editingNoteId = "";
+      renderBoard();
+      return;
+    }
+
+    const deleteButton = event.target.closest('[data-action="delete"]');
+    if (!deleteButton || !canEdit) return;
+
+    const noteId = deleteButton.dataset.noteId;
+    notes = notes.filter((note) => note.id !== noteId);
+    selectedNoteId = "";
+    editingNoteId = "";
+    renderBoard();
+    queueSave();
+  });
+
+  notes = notes.map((note) => ({
+    id: note.id || createNoteId(),
+    content: note.content || "",
+  }));
   normalizeNotes();
+  if (desktopMedia.matches && notes[0]) {
+    selectedNoteId = notes[0].id;
+  }
+  desktopMedia.addEventListener("change", function () {
+    if (desktopMedia.matches && !selectedNoteId && notes[0]) {
+      selectedNoteId = notes[0].id;
+    }
+    renderBoard();
+  });
   renderBoard();
 });
 </script>

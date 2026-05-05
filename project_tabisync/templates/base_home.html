@@ -3,23 +3,23 @@
 <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <title>TabiSync | 無料・登録不要で旅のしおりを作成・共有できる旅行計画ツール</title>
-        <meta name="description" content="TabiSyncは、無料・登録不要で旅のしおりを簡単に作成・共有できるサービスです。日程・予定・持ち物リストまで、グループ旅行の計画をスムーズに。">
+        <title>TabiSync | AIコンシェルジュと作る無料・登録不要の旅行計画ツール</title>
+        <meta name="description" content="TabiSyncは、無料・登録不要で旅のしおりを作成・共有できる旅行計画ツールです。旅程・行きたい場所・持ち物・メモをまとめて、AIコンシェルジュに相談できます。">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
-        <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+        <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+        <link rel="apple-touch-icon" href="{% static 'img/tabisync-ios-icon.ico'%}">
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta property="og:title" content="TabiSync">
-        <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
+        <meta property="og:description" content="AIコンシェルジュと旅のしおりを作成・共有。旅行計画をスマートに。">
         <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="TabiSync">
-        <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
+        <meta name="twitter:description" content="AIコンシェルジュと旅のしおりを作成・共有。旅行計画をスマートに。">
         <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
                     <div class="header-logo">
                         <h1>
                             <a href="{% url 'tabisync:home' %}">
-                                <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSync" class="logo-image">
+                                <img src="{% static 'img/tabisync-logo-white.webp' %}" alt="TabiSync" class="logo-image">
                             </a>
                         </h1>
                     </div>
@@ -79,8 +79,18 @@
         </div>
         <script>
         (function () {
+            const header = document.querySelector(".page-header");
             const btn = document.getElementById("btn08");
             const nav = document.getElementById("nav-menu");
+
+            function syncHeaderBackground() {
+                if (!header) return;
+                header.classList.toggle("is-scrolled", window.scrollY >= 80);
+            }
+
+            syncHeaderBackground();
+            window.addEventListener("scroll", syncHeaderBackground, { passive: true });
+
             if (!btn || !nav) return;
 
             function toggleMenu() {
