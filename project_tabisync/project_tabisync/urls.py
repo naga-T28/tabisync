@@ -19,13 +19,24 @@ from django.urls import path, include
 from django.contrib.sitemaps.views import sitemap
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
 from tabisync.sitemaps import StaticViewSitemap
 
 sitemaps = {
     'static': StaticViewSitemap,
 }
+
+
+def ads_txt(request):
+    return FileResponse(
+        open(settings.BASE_DIR / "static" / "ads.txt", "rb"),
+        content_type="text/plain",
+    )
+
+
 urlpatterns = [
     path('admin/nagat28/', admin.site.urls),
+    path("ads.txt", ads_txt, name="ads-txt"),
     path("", include("tabisync.urls")),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django-sitemap'),
     path("ckeditor5/", include("django_ckeditor_5.urls")),
