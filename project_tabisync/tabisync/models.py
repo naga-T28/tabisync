@@ -22,6 +22,7 @@ class Itinerary(models.Model):
     design_number = models.PositiveIntegerField(default=1)
     concierge_daily_limit = models.PositiveIntegerField(default=5)
     want_to_go_limit = models.PositiveIntegerField(default=30)
+    qr_code = models.ImageField(upload_to="qr_codes/", blank=True)
 
     def set_passwords(self, view_pw: str, edit_pw: str):
         self.view_password = make_password(view_pw) if view_pw else ''

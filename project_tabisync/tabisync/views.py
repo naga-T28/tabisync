@@ -6,6 +6,7 @@ import re
 import urllib.parse
 import urllib.request
 
+from io import BytesIO
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -13,6 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.core import signing
+from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
@@ -96,6 +98,53 @@ def build_public_absolute_uri(request, path=None):
     target_path = path or request.get_full_path()
     scheme = "https" if getattr(settings, "USE_HTTPS", False) else request.scheme
     return f"{scheme}://{request.get_host()}{target_path}"
+
+
+def build_itinerary_share_url(request, itinerary):
+    return build_public_absolute_uri(
+        request,
+        reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token})
+    )
+
+
+def ensure_itinerary_qr_code(itinerary, share_url):
+    if itinerary.qr_code:
+        return itinerary.qr_code.url
+
+    filename = f"itinerary-{itinerary.pk}-{itinerary.token}.png"
+
+    try:
+        import qrcode
+    except ImportError:
+        qr_code_url = (
+            "https://api.qrserver.com/v1/create-qr-code/"
+            f"?size=220x220&data={urllib.parse.quote(share_url, safe='')}"
+        )
+        try:
+            with urllib.request.urlopen(qr_code_url, timeout=10) as response:
+                itinerary.qr_code.save(filename, ContentFile(response.read()), save=False)
+            itinerary.save(update_fields=["qr_code"])
+            return itinerary.qr_code.url
+        except Exception:
+            logger.exception("Failed to fetch and save QR code image.")
+            return qr_code_url
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(share_url)
+    qr.make(fit=True)
+
+    image = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+
+    itinerary.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+    itinerary.save(update_fields=["qr_code"])
+    return itinerary.qr_code.url
 
 
 def get_client_ip(request):
@@ -393,6 +442,8 @@ class CreateView(View):
         )
 
         itinerary.save()
+        share_url = build_itinerary_share_url(request, itinerary)
+        ensure_itinerary_qr_code(itinerary, share_url)
 
         return redirect(reverse('tabisync:content_v2', kwargs={
             'pk': itinerary.pk,
@@ -436,14 +487,8 @@ class ItineraryDetailV2View(TemplateView):
             first_date_str = itinerary.start_date.strftime("%Y.%m.%d")
             last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
-        share_url = build_public_absolute_uri(
-            request,
-            reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token})
-        )
-        qr_code_url = (
-            "https://api.qrserver.com/v1/create-qr-code/"
-            f"?size=220x220&data={urllib.parse.quote(share_url, safe='')}"
-        )
+        share_url = build_itinerary_share_url(request, itinerary)
+        qr_code_url = ensure_itinerary_qr_code(itinerary, share_url)
 
         response = render(request, self.template_name, {
             "itinerary": itinerary,
