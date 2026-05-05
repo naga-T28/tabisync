@@ -4,38 +4,22 @@
 {% block contents %}
 <main class="content-main">
     <div class="edit-menu">
-        <h2 class="edit-menu-title">沖縄旅行のしおり編集</h2>
-        <p class="edit-menu-description">このデモでは編集はできませんが、V2 ではこのように編集メニューから各機能へ移動できます。</p>
+        <h2 class="edit-menu-title">しおり内容の編集</h2>
+        <p class="edit-menu-description">デモページのため保存はできませんが、現在の編集メニューと同じ見た目で確認できます。</p>
         <div class="edit-menu-buttons">
             <a class="edit-menu-button" href="{% url 'tabisync:create' %}">
                 <i class="fa-solid fa-pen-to-square"></i>
                 <div class="edit-menu-text">
-                    <p class="edit-menu-text-title">しおりを作成する</p>
-                    <p class="edit-menu-text-description">実際に自分の旅程で V2 のしおりを作成できます</p>
+                    <p class="edit-menu-text-title">内容編集</p>
+                    <p class="edit-menu-text-description">タイトル、サブタイトル、旅行日数の変更、概要が編集できます</p>
                 </div>
                 <p>〉</p>
             </a>
             <a class="edit-menu-button" href="{% url 'tabisync:demo_v2_content' %}">
                 <i class="fa-solid fa-calendar-days"></i>
                 <div class="edit-menu-text">
-                    <p class="edit-menu-text-title">旅程表を見る</p>
-                    <p class="edit-menu-text-description">沖縄旅行のサンプル旅程に戻ります</p>
-                </div>
-                <p>〉</p>
-            </a>
-            <a class="edit-menu-button" href="{% url 'tabisync:demo_v2_map' %}">
-                <i class="fa-solid fa-map-location-dot"></i>
-                <div class="edit-menu-text">
-                    <p class="edit-menu-text-title">地図デモを見る</p>
-                    <p class="edit-menu-text-description">画像ベースの軽量な地図デモを表示します</p>
-                </div>
-                <p>〉</p>
-            </a>
-            <a class="edit-menu-button" href="{% url 'tabisync:demo_v2_concierge' %}">
-                <i class="fa-solid fa-robot"></i>
-                <div class="edit-menu-text">
-                    <p class="edit-menu-text-title">AIコンシェルジュを見る</p>
-                    <p class="edit-menu-text-description">送信はできませんが、V2 の会話UIを確認できます</p>
+                    <p class="edit-menu-text-title">旅程表編集</p>
+                    <p class="edit-menu-text-description">予定を追加・削除・編集することができます</p>
                 </div>
                 <p>〉</p>
             </a>

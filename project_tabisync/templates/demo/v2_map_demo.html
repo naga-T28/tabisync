@@ -2,52 +2,400 @@
 {% block title %}沖縄旅行地図デモ{% endblock %}
 
 {% block contents %}
-{% load static %}
-<div class="content-main">
-  <div class="place-wrapper">
-    <div class="box5-6" style="margin: 74px auto 0; width: min(780px, calc(100% - 24px));">
-      <h2 class="box-title">行きたい場所マップ</h2>
-      <div class="box-content">
-        <p style="margin-bottom: 14px;">デモでは重たい地図APIの代わりに、沖縄本島のイメージマップを表示しています。</p>
-        <img
-          src="{% static 'img/demo-okinawa-map.svg' %}"
-          alt="沖縄旅行デモ用の地図イメージ"
-          style="width: 100%; border-radius: 18px; border: 1px solid #d7dce3; background: #fff;"
-        >
-      </div>
+<div class="content-main-map">
+<div class="place-wrapper">
+    <div id="map">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3673159.690079393!2d127.1328998!3d25.9657442!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x34f57062eeab5be7%3A0x35bb617286fdd1ef!2z5rKW57iE55yM!5e0!3m2!1sja!2sjp!4v1777968679803!5m2!1sja!2sjp"
+        width="600"
+        height="450"
+        style="border:0; width:100%; height:100%; display:block;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
     </div>
-
     <div class="place-list-column">
+      <div class="day-filter-bar">
+          <div>
+          <button type="button" id="dayFilterButton" class="day-filter-button" onclick="openDayFilterModal()">
+              <i class="fa-solid fa-sliders"></i>
+              <span>絞り込み</span>
+              <span id="dayFilterCount" class="day-filter-count" hidden>0</span>
+          </button>
+          </div>
+          <div>
+          <button type="button" id="sortFilterButton" class="day-filter-button" onclick="openSortFilterModal()">
+              <i class="fa-solid fa-arrow-down-wide-short"></i>
+              <span>並び替え</span>
+              <span id="sortFilterLabel" class="sort-filter-label">日数順</span>
+          </button>
+          </div>
+      </div>
+
       <div class="place-list-wrapper">
-        <div class="card-wrapper">
-          <div class="card">
-            <div class="card-content">
-              <h3>国際通り</h3>
-              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 1</p></div>
-              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">ランチとお土産探し</p></div>
-            </div>
+          <div class="card-wrapper" data-id="1" data-day="1" data-priority="4">
+              <div class="card" onclick="openModalFromCard(1)">
+                  <div class="card-content">
+                      <h3>国際通り</h3>
+                      <div class="modal-date-only"><p><i class="fa-solid fa-ranking-star"></i></p><p class="card-day">
+                          <span class="card-priority-stars">
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-empty"><i class="fa-regular fa-star"></i></span>
+                          </span>
+                      </p></div>
+                      <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 1</p></div>
+                      <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">ランチとお土産探し</p></div>
+                  </div>
+              </div>
           </div>
-        </div>
-        <div class="card-wrapper">
-          <div class="card">
-            <div class="card-content">
-              <h3>美ら海水族館</h3>
-              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 2</p></div>
-              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">午前中に入る予定</p></div>
-            </div>
+          <div class="card-wrapper" data-id="2" data-day="2" data-priority="5">
+              <div class="card" onclick="openModalFromCard(2)">
+                  <div class="card-content">
+                      <h3>美ら海水族館</h3>
+                      <div class="modal-date-only"><p><i class="fa-solid fa-ranking-star"></i></p><p class="card-day">
+                          <span class="card-priority-stars">
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                          </span>
+                      </p></div>
+                      <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 2</p></div>
+                      <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">午前中に入る予定</p></div>
+                  </div>
+              </div>
           </div>
-        </div>
-        <div class="card-wrapper">
-          <div class="card">
-            <div class="card-content">
-              <h3>アメリカンビレッジ</h3>
-              <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 3</p></div>
-              <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">夜景も見たい</p></div>
-            </div>
+          <div class="card-wrapper" data-id="3" data-day="3" data-priority="3">
+              <div class="card" onclick="openModalFromCard(3)">
+                  <div class="card-content">
+                      <h3>アメリカンビレッジ</h3>
+                      <div class="modal-date-only"><p><i class="fa-solid fa-ranking-star"></i></p><p class="card-day">
+                          <span class="card-priority-stars">
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-empty"><i class="fa-regular fa-star"></i></span>
+                              <span class="is-empty"><i class="fa-regular fa-star"></i></span>
+                          </span>
+                      </p></div>
+                      <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 3</p></div>
+                      <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">夜景も見たい</p></div>
+                  </div>
+              </div>
           </div>
-        </div>
+          <div class="card-wrapper" data-id="4" data-day="4" data-priority="4">
+              <div class="card" onclick="openModalFromCard(4)">
+                  <div class="card-content">
+                      <h3>首里城公園</h3>
+                      <div class="modal-date-only"><p><i class="fa-solid fa-ranking-star"></i></p><p class="card-day">
+                          <span class="card-priority-stars">
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-filled"><i class="fa-solid fa-star"></i></span>
+                              <span class="is-empty"><i class="fa-regular fa-star"></i></span>
+                          </span>
+                      </p></div>
+                      <div class="modal-date-only"><p><i class="fa-regular fa-calendar-days"></i></p><p class="card-day">Day 4</p></div>
+                      <div class="modal-memo-only"><p><i class="fa-regular fa-clipboard"></i></p><p class="memo">帰る前に散策</p></div>
+                  </div>
+              </div>
+          </div>
+        <button type="button" class="fab-add" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
     </div>
-  </div>
+    <div id="dayFilterModal" class="filter-modal">
+        <div class="filter-modal-content" onclick="event.stopPropagation();">
+            <div class="filter-modal-header">
+                <h3>日数の絞り込み</h3>
+                <button type="button" class="edit-modal-close" onclick="closeDayFilterModal()">&times;</button>
+            </div>
+            <div class="filter-checkbox-list">
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="0">
+                    <span>未定</span>
+                </label>
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="1">
+                    <span>Day 1</span>
+                </label>
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="2">
+                    <span>Day 2</span>
+                </label>
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="3">
+                    <span>Day 3</span>
+                </label>
+                <label class="filter-checkbox-item">
+                    <input type="checkbox" class="day-filter-check" value="4">
+                    <span>Day 4</span>
+                </label>
+            </div>
+            <div class="filter-modal-footer">
+                <button type="button" class="btn-secondary" onclick="clearDayFilterSelection()">クリア</button>
+                <button type="button" class="btn-primary" onclick="applyDayFilterSelection()">適用</button>
+            </div>
+        </div>
+    </div>
+    <div id="sortFilterModal" class="filter-modal">
+        <div class="filter-modal-content" onclick="event.stopPropagation();">
+            <div class="filter-modal-header">
+                <h3>並び替え</h3>
+                <button type="button" class="edit-modal-close" onclick="closeSortFilterModal()">&times;</button>
+            </div>
+            <div class="filter-option-list">
+                <button type="button" class="filter-option-button" data-sort-value="day" onclick="applySortFilter('day')">日数順</button>
+                <button type="button" class="filter-option-button" data-sort-value="priority" onclick="applySortFilter('priority')">行きたい度順</button>
+            </div>
+        </div>
+    </div>
+    <div id="placeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle"></h3>
+            <input type="hidden" id="modalPlaceDbId" value="">
+            <div class="modal-memo"><p><i class="fa-regular fa-clipboard"></i></p><p id="modalMemo"></p></div>
+            <div class="modal-adress"><p><i class="fa-solid fa-location-dot"></i></p><p id="modalAdress"></p></div>
+            <div class="modal-date">
+                <p><i class="fa-regular fa-calendar-days"></i></p>
+                <p id="modalDay"></p>
+            </div>
+            <div class="modal-priority">
+                <p><i class="fa-solid fa-star"></i></p>
+                <p id="modalPriority"></p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-edit-btn" onclick="openEditModalFromView()"><i class="fa-solid fa-pen-to-square"></i>編集</button>
+                <a id="modalMapsButton" href="#" target="_blank" rel="noopener noreferrer" class="maps-button">
+                    Google Mapsで開く
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="editModal" class="edit-modal">
+        <div class="edit-modal-content" onclick="event.stopPropagation();">
+            <div class="edit-modal-header">
+                <h3 id="editModalTitle">行きたい場所を追加</h3>
+                <button type="button" class="edit-modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="search-wrapper">
+                <input id="searchInput" type="text" placeholder="場所を検索">
+                <button id="searchBtn" type="button">検索</button>
+            </div>
+            <div id="suggestions" class="suggestions-box"></div>
+            <input id="placeName" placeholder="場所名">
+            <input id="placeAddress" placeholder="住所">
+            <textarea id="memoInput" placeholder="メモ"></textarea>
+            <select id="plannedDayInput">
+                <option value="0">未定</option>
+                <option value="1">Day 1</option>
+                <option value="2">Day 2</option>
+                <option value="3">Day 3</option>
+                <option value="4">Day 4</option>
+            </select>
+            <div class="place-priority">
+                <p class="place-priority-label">行きたい度</p>
+                <div class="place-priority-stars" id="placePriorityStars" role="radiogroup" aria-label="行きたい度">
+                    <button type="button" class="priority-star is-active" data-value="1" aria-label="星1">★</button>
+                    <button type="button" class="priority-star is-active" data-value="2" aria-label="星2">★</button>
+                    <button type="button" class="priority-star is-active" data-value="3" aria-label="星3">★</button>
+                    <button type="button" class="priority-star" data-value="4" aria-label="星4">★</button>
+                    <button type="button" class="priority-star" data-value="5" aria-label="星5">★</button>
+                </div>
+                <input id="placePriorityInput" type="hidden" value="3">
+            </div>
+            <details class="place-detail-settings" id="placeDetailSettings">
+                <summary><span id="placeDetailToggleIcon">＋</span>詳細設定</summary>
+                <p class="place-detail-note">デモページでは保存や検索はできません。</p>
+                <div class="place-detail-grid">
+                    <label class="place-detail-field">
+                        <span>緯度</span>
+                        <input id="placeLatInput" type="number" step="any" inputmode="decimal" placeholder="例: 26.2124">
+                    </label>
+                    <label class="place-detail-field">
+                        <span>経度</span>
+                        <input id="placeLngInput" type="number" step="any" inputmode="decimal" placeholder="例: 127.6809">
+                    </label>
+                    <label class="place-detail-field place-detail-field-wide">
+                        <span>Google Place ID</span>
+                        <input id="placeIdInput" type="text" placeholder="Google Places の place_id">
+                    </label>
+                </div>
+            </details>
+            <div class="edit-modal-footer">
+                <button type="button" class="btn-primary" onclick="closeEditModal()">保存</button>
+                <button type="button" class="btn-danger" id="deleteBtn" style="display:none;">削除</button>
+            </div>
+        </div>
+    </div>
 </div>
+</div>
+<script>
+let currentDayFilterValues = [];
+let currentSortFilter = "day";
+
+const placesData = [
+  { id: 1, name: "国際通り", address: "沖縄県那覇市牧志周辺", memo: "ランチとお土産探し", planned_day: 1, priority: 4, maps_url: "https://www.google.com/maps/search/?api=1&query=%E5%9B%BD%E9%9A%9B%E9%80%9A%E3%82%8A%20%E6%B2%96%E7%B8%84" },
+  { id: 2, name: "美ら海水族館", address: "沖縄県国頭郡本部町石川424", memo: "午前中に入る予定", planned_day: 2, priority: 5, maps_url: "https://www.google.com/maps/search/?api=1&query=%E7%BE%8E%E3%82%89%E6%B5%B7%E6%B0%B4%E6%97%8F%E9%A4%A8" },
+  { id: 3, name: "アメリカンビレッジ", address: "沖縄県中頭郡北谷町美浜", memo: "夜景も見たい", planned_day: 3, priority: 3, maps_url: "https://www.google.com/maps/search/?api=1&query=%E3%82%A2%E3%83%A1%E3%83%AA%E3%82%AB%E3%83%B3%E3%83%93%E3%83%AC%E3%83%83%E3%82%B8%20%E6%B2%96%E7%B8%84" },
+  { id: 4, name: "首里城公園", address: "沖縄県那覇市首里金城町1-2", memo: "帰る前に散策", planned_day: 4, priority: 4, maps_url: "https://www.google.com/maps/search/?api=1&query=%E9%A6%96%E9%87%8C%E5%9F%8E%E5%85%AC%E5%9C%92" },
+];
+
+function getSelectedDaySet() {
+    return new Set(currentDayFilterValues.map(String));
+}
+
+function syncDayFilterCount() {
+    const countEl = document.getElementById("dayFilterCount");
+    const count = currentDayFilterValues.length;
+    if (!countEl) return;
+    if (count === 0) {
+        countEl.hidden = true;
+        countEl.textContent = "";
+        return;
+    }
+    countEl.hidden = false;
+    countEl.textContent = String(count);
+}
+
+function syncDayFilterChecksFromState() {
+    const selected = getSelectedDaySet();
+    document.querySelectorAll(".day-filter-check").forEach((checkbox) => {
+        checkbox.checked = selected.has(checkbox.value);
+    });
+}
+
+function syncSortFilterLabel() {
+    const labelEl = document.getElementById("sortFilterLabel");
+    if (!labelEl) return;
+    labelEl.textContent = currentSortFilter === "priority" ? "行きたい度順" : "日数順";
+    document.querySelectorAll(".filter-option-button").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.sortValue === currentSortFilter);
+    });
+}
+
+function openDayFilterModal() {
+    syncDayFilterChecksFromState();
+    document.getElementById("dayFilterModal").classList.add("active");
+}
+
+function closeDayFilterModal() {
+    document.getElementById("dayFilterModal").classList.remove("active");
+}
+
+function openSortFilterModal() {
+    syncSortFilterLabel();
+    document.getElementById("sortFilterModal").classList.add("active");
+}
+
+function closeSortFilterModal() {
+    document.getElementById("sortFilterModal").classList.remove("active");
+}
+
+function clearDayFilterSelection() {
+    document.querySelectorAll(".day-filter-check").forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+}
+
+function applyDayFilterSelection() {
+    currentDayFilterValues = [...document.querySelectorAll(".day-filter-check:checked")]
+        .map((checkbox) => checkbox.value);
+    syncDayFilterCount();
+    closeDayFilterModal();
+    applyFilter();
+}
+
+function applySortFilter(value) {
+    currentSortFilter = value === "priority" ? "priority" : "day";
+    syncSortFilterLabel();
+    closeSortFilterModal();
+    sortCards();
+    applyFilter();
+}
+
+function applyFilter() {
+    const selected = getSelectedDaySet();
+    document.querySelectorAll(".card-wrapper").forEach((card) => {
+        const shouldShow = selected.size === 0 || selected.has(String(card.dataset.day || "0"));
+        card.style.display = shouldShow ? "" : "none";
+    });
+}
+
+function sortCards() {
+    const list = document.querySelector(".place-list-wrapper");
+    if (!list) return;
+    const addButton = list.querySelector(".fab-add");
+    const cards = [...list.querySelectorAll(".card-wrapper")];
+    cards.sort((a, b) => {
+        if (currentSortFilter === "priority") {
+            return (parseInt(b.dataset.priority || "0", 10) - parseInt(a.dataset.priority || "0", 10))
+                || (parseInt(a.dataset.day || "0", 10) - parseInt(b.dataset.day || "0", 10));
+        }
+        return (parseInt(a.dataset.day || "0", 10) - parseInt(b.dataset.day || "0", 10))
+            || (parseInt(b.dataset.priority || "0", 10) - parseInt(a.dataset.priority || "0", 10));
+    });
+    cards.forEach((card) => list.insertBefore(card, addButton));
+}
+
+function renderPriority(value) {
+    const priority = Math.min(5, Math.max(1, parseInt(value || "3", 10) || 3));
+    return "★".repeat(priority) + "☆".repeat(5 - priority);
+}
+
+function openModalFromCard(placeId) {
+    const place = placesData.find((item) => item.id === placeId);
+    if (!place) return;
+    document.getElementById("modalPlaceDbId").value = place.id;
+    document.getElementById("modalTitle").textContent = place.name || "";
+    document.getElementById("modalAdress").textContent = place.address || "住所情報なし";
+    document.getElementById("modalMemo").textContent = place.memo || "メモなし";
+    document.getElementById("modalDay").textContent = place.planned_day ? `Day ${place.planned_day}` : "未定";
+    document.getElementById("modalPriority").textContent = renderPriority(place.priority);
+    const mapsButton = document.getElementById("modalMapsButton");
+    mapsButton.href = place.maps_url || "#";
+    mapsButton.style.display = place.maps_url ? "inline-block" : "none";
+    document.getElementById("placeModal").classList.add("active");
+}
+
+function closeModal() {
+    document.getElementById("placeModal").classList.remove("active");
+}
+
+function openAddModal() {
+    document.getElementById("editModalTitle").textContent = "行きたい場所を追加";
+    document.getElementById("editModal").classList.add("active");
+}
+
+function openEditModalFromView() {
+    closeModal();
+    document.getElementById("editModalTitle").textContent = "行きたい場所を編集";
+    document.getElementById("editModal").classList.add("active");
+}
+
+function closeEditModal() {
+    document.getElementById("editModal").classList.remove("active");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    syncSortFilterLabel();
+    sortCards();
+    document.getElementById("placeModal").addEventListener("click", function (event) {
+        if (event.target === this) closeModal();
+    });
+    document.getElementById("editModal").addEventListener("click", function (event) {
+        if (event.target === this) closeEditModal();
+    });
+    document.getElementById("dayFilterModal").addEventListener("click", closeDayFilterModal);
+    document.getElementById("sortFilterModal").addEventListener("click", closeSortFilterModal);
+});
+</script>
 {% endblock %}

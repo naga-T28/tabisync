@@ -4,22 +4,83 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}沖縄旅行デモ{% endblock %} | TabiSync</title>
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
-    <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
+    <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
+    <link rel="apple-touch-icon" href="{% static 'img/tabisync-ios-icon.ico'%}">
     <meta name="apple-mobile-web-app-title" content="TabiSync">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/reset.css'%}">
     <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}">
 </head>
 <body id="content-body">
-    <header class="page-header">
+    <header class="page-header --only-pc content-side-nav">
+        <div class="content-side-nav-inner">
+            <div class="content-side-nav-logo">
+                <a href="{% url 'tabisync:home' %}">
+                    <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-expanded">
+                    <img src="{% static 'img/icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image content-side-nav-logo-collapsed">
+                </a>
+            </div>
+            <nav class="content-side-nav-menu" aria-label="デモしおりメニュー">
+                <a class="content-side-nav-link {% if demo_nav == 'content' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_content' %}">
+                    <i class="fa-solid fa-house content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">旅程表</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+                <a class="content-side-nav-link {% if demo_nav == 'memo' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_memo' %}">
+                    <i class="fa-solid fa-clipboard content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">メモ</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+                <a class="content-side-nav-link {% if demo_nav == 'list' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_list' %}">
+                    <i class="fa-solid fa-list-check content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">リスト</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+                <a class="content-side-nav-link {% if demo_nav == 'map' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_map' %}">
+                    <i class="fa-solid fa-map-location-dot content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">地図</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+                <a class="content-side-nav-link {% if demo_nav == 'concierge' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_concierge' %}">
+                    <i class="fa-solid fa-robot content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">AIコンシェルジュ</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+                <a class="content-side-nav-link {% if demo_nav == 'edit' %}is-active{% endif %}" href="{% url 'tabisync:demo_v2_edit' %}">
+                    <i class="fa-regular fa-pen-to-square content-side-nav-icon"></i>
+                    <span class="content-side-nav-label">編集</span>
+                    <i class="fa-solid fa-chevron-right content-side-nav-chevron"></i>
+                </a>
+            </nav>
+            <div class="content-side-nav-bottom">
+                <nav class="content-side-nav-legal" aria-label="サイト情報">
+                    <a href="{% url 'tabisync:profile' %}" target="_blank">
+                        <i class="fa-regular fa-user content-side-nav-legal-icon"></i>
+                        <span class="content-side-nav-label">運営者について</span>
+                    </a>
+                    <a href="{% url 'tabisync:privacy_policy' %}" target="_blank">
+                        <i class="fa-solid fa-shield-halved content-side-nav-legal-icon"></i>
+                        <span class="content-side-nav-label">プライバシーポリシー</span>
+                    </a>
+                    <a href="{% url 'tabisync:user_agreement' %}" target="_blank">
+                        <i class="fa-regular fa-file-lines content-side-nav-legal-icon"></i>
+                        <span class="content-side-nav-label">利用規約</span>
+                    </a>
+                </nav>
+                <button type="button" class="content-side-nav-toggle" aria-label="サイドバーを折りたたむ" aria-expanded="true">
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    <header class="page-header --only-sp">
         <div class="header-wrapper">
             <div class="header-buttons">
                 <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button>
@@ -27,12 +88,14 @@
             <div class="header-logo">
                 <h1>
                     <a href="{% url 'tabisync:home' %}">
-                        <img src="{% static 'img/logo-tabisync.webp' %}" alt="TabiSyncロゴ" class="logo-image">
+                        <img src="{% static 'img/tabisync-icon-pc.webp' %}" alt="TabiSyncロゴ" class="logo-image">
                     </a>
                 </h1>
             </div>
             <div class="header-buttons">
-                <a href="{% url 'tabisync:demo_v2_concierge' %}" id="share-button"><i class="fa-solid fa-robot"></i></a>
+                <a href="{% url 'tabisync:demo_v2_concierge' %}" id="share-button">
+                    <img src="{% static 'img/ai-concierge-icon.webp' %}" alt="AIコンシェルジュ" class="footer-nav-icon-ai-concierge">
+                </a>
             </div>
         </div>
     </header>
@@ -40,8 +103,13 @@
     {% block contents %}{% endblock %}
 
     <footer>
-        <nav class="footer-nav">
+        <nav class="footer-nav --only-sp">
             <ul class="footer-nav-ul">
+                <li class="footer-nav-li {% if demo_nav == 'content' %}footer-nav-li-select{% endif %}">
+                    <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_content' %}">
+                        <i class="fa-solid fa-house"></i>
+                    </a>
+                </li>
                 <li class="footer-nav-li {% if demo_nav == 'memo' %}footer-nav-li-select{% endif %}">
                     <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_memo' %}">
                         <i class="fa-solid fa-clipboard"></i>
@@ -50,11 +118,6 @@
                 <li class="footer-nav-li {% if demo_nav == 'list' %}footer-nav-li-select{% endif %}">
                     <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_list' %}">
                         <i class="fa-solid fa-list-check"></i>
-                    </a>
-                </li>
-                <li class="footer-nav-li --home {% if demo_nav == 'content' %}footer-nav-li-select{% endif %}">
-                    <a class="footer-nav-a" href="{% url 'tabisync:demo_v2_content' %}">
-                        <i class="fa-solid fa-house"></i>
                     </a>
                 </li>
                 <li class="footer-nav-li {% if demo_nav == 'map' %}footer-nav-li-select{% endif %}">
@@ -76,5 +139,35 @@
         </ul>
         <small>Copyright &copy; 2026 TabiSync All Rights Reserved.</small>
     </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggle = document.querySelector(".content-side-nav-toggle");
+            const storageKey = "tabisync_demo_side_nav_collapsed";
+            const collapsedClass = "is-side-nav-collapsed";
+
+            function applySideNavState(isCollapsed) {
+                document.body.classList.toggle(collapsedClass, isCollapsed);
+                if (!toggle) return;
+
+                toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+                toggle.setAttribute("aria-label", isCollapsed ? "サイドバーを開く" : "サイドバーを折りたたむ");
+
+                const icon = toggle.querySelector("i");
+                if (icon) {
+                    icon.className = isCollapsed ? "fa-solid fa-angle-right" : "fa-solid fa-angle-left";
+                }
+            }
+
+            applySideNavState(window.localStorage.getItem(storageKey) === "true");
+
+            if (toggle) {
+                toggle.addEventListener("click", function () {
+                    const nextState = !document.body.classList.contains(collapsedClass);
+                    window.localStorage.setItem(storageKey, String(nextState));
+                    applySideNavState(nextState);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

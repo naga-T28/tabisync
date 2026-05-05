@@ -10,7 +10,7 @@
                 <div class="home-hero-copy">
                     <h1 class="home-hero-title">旅のしおりを、<br>AIと一緒に<br>スマートに。</h1>
                     <p class="home-hero-lead">
-                        TabiSyncは、登録不要・無料で旅行計画を作成できる共有しおりです。
+                        TabiSyncは、登録不要・完全無料で旅行計画を作成できる共有しおりです。<br>
                         旅程、行きたい場所、持ち物、メモをまとめて、AIコンシェルジュに相談しながら旅を整えられます。
                     </p>
                     <div class="home-hero-actions" aria-label="主要アクション">
@@ -18,21 +18,14 @@
                             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                             しおりを作成する
                         </a>
-                        <a class="home-btn home-btn-secondary" href="{% url 'tabisync:demo_v2_concierge' %}">
-                            <i class="fa-solid fa-robot" aria-hidden="true"></i>
-                            AIデモを見る
+                        <a class="home-btn home-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+                            <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+                            サンプルを見る
                         </a>
                     </div>
-                    <!--
-                    <div class="home-hero-meta" aria-label="TabiSyncの特徴">
-                        <span>登録不要</span>
-                        <span>共有URLで参加</span>
-                        <span>スマホ最適化</span>
-                    </div>
-                    -->
                 </div>
-                <div class="home-hero-product" aria-label="AIコンシェルジュの利用イメージ">
-                    <img src="{% static 'img/home-hero-product.webp' %}" alt="AIコンシェルジュの利用イメージ" class="home-hero-product-image">
+                <div class="home-hero-product" aria-label="TabiSyncの利用イメージ">
+                    <img src="{% static 'img/home-hero-product.webp' %}" alt="TabiSyncの利用イメージ" class="home-hero-product-image">
                     </div>
                 </div>
             </div>
@@ -95,22 +88,12 @@
                 <p>友達や家族に送れば、同じしおりをすぐ確認できます。</p>
             </article>
         </div>
-        <div class="home-section-actions">
-            <a class="home-btn home-btn-ghost" href="{% url 'tabisync:demo_v2_content' %}">
-                <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
-                サンプルを見る
-            </a>
-            <a class="home-btn home-btn-primary" href="{% url 'tabisync:create' %}">
-                <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
-                無料で始める
-            </a>
-        </div>
     </section>
 
     <section class="home-section home-trust-section">
         <div class="home-trust-copy">
             <p class="home-kicker">FREE & SIMPLE</p>
-            <h2>グループ旅行に必要な共有を、ひとつに。</h2>
+            <h2>グループ旅行に必要な共有を、<br>ひとつに。</h2>
             <p>
                 アプリのインストールやアカウント登録は不要。共有URLを開くだけで、友達や家族と同じしおりを確認できます。
                 旅行前の準備から当日の確認まで、スマートフォンで扱いやすい画面に整えています。

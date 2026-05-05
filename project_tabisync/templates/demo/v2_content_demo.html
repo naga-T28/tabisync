@@ -2,179 +2,350 @@
 {% block title %}沖縄旅行のしおりデモ{% endblock %}
 
 {% block contents %}
-{% load static %}
 <div class="content-main">
-<div class="schedule-view-page">
-  <div class="title-wrapper">
-    <div class="title-visual">
-      <h1 class="siori-title">沖縄旅行</h1>
-      <p class="siori-sub-title">~3泊4日・家族で巡る本島満喫プラン~</p>
-      <p class="siori-title-date">2026.07.18 ～ 2026.07.21</p>
+  <div class="schedule-view-page">
+    <div class="title-wrapper">
+      <div class="title-visual">
+        <h1 class="siori-title">沖縄旅行</h1>
+        <p class="siori-sub-title">~3泊4日・家族で巡る本島満喫プラン~</p>
+        <p class="siori-title-date">2026.07.18 ～ 2026.07.21</p>
+      </div>
     </div>
 
-    <div class="box5-6">
-      <h2 class="box-title">概要</h2>
-      <div class="box-content">
-        <p>那覇を拠点に、美ら海水族館、古宇利島、国際通り、アメリカンビレッジを巡る沖縄旅行のデモしおりです。V2の見た目と導線をそのまま試せるように、旅程・メモ・リスト・地図ページを用意しています。</p>
+    <div class="schedule-content-layout">
+      <div class="schedule-main-column">
+        <div class="schedule-table-box">
+          <div class="day-tabs" aria-label="日程を選択">
+            <div class="day-tabs-scroll" role="tablist">
+              <button type="button" class="day-tab is-active" role="tab" aria-selected="true" aria-controls="day-0" data-day-tab-index="0" data-calendar-date="2026-07-18" onclick="setActivePanelByIndex(0)">
+                <span class="day-tab-label">1日目</span>
+                <span class="day-tab-date">2026-07-18</span>
+              </button>
+              <button type="button" class="day-tab" role="tab" aria-selected="false" aria-controls="day-1" data-day-tab-index="1" data-calendar-date="2026-07-19" onclick="setActivePanelByIndex(1)">
+                <span class="day-tab-label">2日目</span>
+                <span class="day-tab-date">2026-07-19</span>
+              </button>
+              <button type="button" class="day-tab" role="tab" aria-selected="false" aria-controls="day-2" data-day-tab-index="2" data-calendar-date="2026-07-20" onclick="setActivePanelByIndex(2)">
+                <span class="day-tab-label">3日目</span>
+                <span class="day-tab-date">2026-07-20</span>
+              </button>
+              <button type="button" class="day-tab" role="tab" aria-selected="false" aria-controls="day-3" data-day-tab-index="3" data-calendar-date="2026-07-21" onclick="setActivePanelByIndex(3)">
+                <span class="day-tab-label">4日目</span>
+                <span class="day-tab-date">2026-07-21</span>
+              </button>
+            </div>
+            <div class="day-tab-menu">
+              <button type="button" class="day-tab-more" aria-label="ほかの日程を選択" aria-expanded="false" onclick="toggleDayMenu()">
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+              <div class="day-tab-menu-list" role="menu">
+                <button type="button" class="day-tab-menu-item is-active" role="menuitem" data-day-menu-index="0" data-calendar-date="2026-07-18" onclick="setActivePanelByIndex(0)">
+                  <span>1日目</span><span class="day-tab-menu-date">2026-07-18</span>
+                </button>
+                <button type="button" class="day-tab-menu-item" role="menuitem" data-day-menu-index="1" data-calendar-date="2026-07-19" onclick="setActivePanelByIndex(1)">
+                  <span>2日目</span><span class="day-tab-menu-date">2026-07-19</span>
+                </button>
+                <button type="button" class="day-tab-menu-item" role="menuitem" data-day-menu-index="2" data-calendar-date="2026-07-20" onclick="setActivePanelByIndex(2)">
+                  <span>3日目</span><span class="day-tab-menu-date">2026-07-20</span>
+                </button>
+                <button type="button" class="day-tab-menu-item" role="menuitem" data-day-menu-index="3" data-calendar-date="2026-07-21" onclick="setActivePanelByIndex(3)">
+                  <span>4日目</span><span class="day-tab-menu-date">2026-07-21</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="scheduleView" class="box-content">
+            <section class="day-panel is-active" id="day-0" data-day-key="1" data-calendar-date="2026-07-18" data-day-num="1">
+              <div class="day-heading-nav">
+                <h2 class="day-heading">1日目<br><span class="day-heading-date">2026-07-18</span></h2>
+              </div>
+              <div class="schedule-list">
+                <div class="schedule-row" data-start-datetime="2026-07-18T10:30:00">
+                  <div class="row-display">
+                    <div class="row-time-text has-end-time">
+                      <span class="display-start-time">10:30</span>
+                      <span class="display-end-time">12:00</span>
+                    </div>
+                    <div class="row-icon-column">
+                      <span class="schedule-icon title-color-blue" aria-hidden="true"><i class="fa-solid fa-plane-arrival"></i></span>
+                    </div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-blue">那覇空港に到着</div>
+                      <div class="row-place-line display-place-line">
+                        <button type="button" class="place-open-btn" onclick="openPlaceModal({name:'那覇空港', address:'沖縄県那覇市鏡水150', memo:'レンタカーを受け取って市内へ移動', planned_day:1, place_id:'ChIJZ0u_JQ5u5TQRbhZ-UuPUiWQ'})">
+                          <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">那覇空港</span>
+                        </button>
+                      </div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>レンタカーを受け取って市内へ移動</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="schedule-row" data-start-datetime="2026-07-18T13:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">13:00</span></div>
+                    <div class="row-icon-column">
+                      <span class="schedule-icon title-color-orange" aria-hidden="true"><i class="fa-solid fa-utensils"></i></span>
+                    </div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-orange">国際通りで昼食と散策</div>
+                      <div class="row-place-line display-place-line">
+                        <button type="button" class="place-open-btn" onclick="openPlaceModal({name:'国際通り', address:'沖縄県那覇市牧志周辺', memo:'沖縄そばとブルーシールを楽しむ', planned_day:1, place_id:''})">
+                          <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">国際通り</span>
+                        </button>
+                      </div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>沖縄そばとブルーシールを楽しむ</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="schedule-row" data-start-datetime="2026-07-18T17:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">17:00</span></div>
+                    <div class="row-icon-column">
+                      <span class="schedule-icon title-color-pink" aria-hidden="true"><i class="fa-solid fa-sun"></i></span>
+                    </div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-pink">瀬長島ウミカジテラス</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>夕日を見ながら初日のんびり</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:demo_v2_edit' %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              </div>
+            </section>
+
+            <section class="day-panel" id="day-1" data-day-key="2" data-calendar-date="2026-07-19" data-day-num="2">
+              <div class="day-heading-nav">
+                <h2 class="day-heading">2日目<br><span class="day-heading-date">2026-07-19</span></h2>
+              </div>
+              <div class="schedule-list">
+                <div class="schedule-row" data-start-datetime="2026-07-19T09:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text has-end-time"><span class="display-start-time">09:00</span><span class="display-end-time">12:00</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-blue" aria-hidden="true"><i class="fa-solid fa-fish"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-blue">美ら海水族館</div>
+                      <div class="row-place-line display-place-line">
+                        <button type="button" class="place-open-btn" onclick="openPlaceModal({name:'沖縄美ら海水族館', address:'沖縄県国頭郡本部町石川424', memo:'ジンベエザメの大水槽を見学', planned_day:2, place_id:''})">
+                          <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">沖縄美ら海水族館</span>
+                        </button>
+                      </div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>ジンベエザメの大水槽を見学</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="schedule-row" data-start-datetime="2026-07-19T14:30:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">14:30</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-green" aria-hidden="true"><i class="fa-solid fa-car"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-green">古宇利島ドライブ</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>ハートロックと海辺のカフェへ</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:demo_v2_edit' %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              </div>
+            </section>
+
+            <section class="day-panel" id="day-2" data-day-key="3" data-calendar-date="2026-07-20" data-day-num="3">
+              <div class="day-heading-nav">
+                <h2 class="day-heading">3日目<br><span class="day-heading-date">2026-07-20</span></h2>
+              </div>
+              <div class="schedule-list">
+                <div class="schedule-row" data-start-datetime="2026-07-20T11:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">11:00</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-purple" aria-hidden="true"><i class="fa-solid fa-store"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-purple">アメリカンビレッジ</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>ショッピングとランチ</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="schedule-row" data-start-datetime="2026-07-20T19:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">19:00</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-orange" aria-hidden="true"><i class="fa-solid fa-hotel"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-orange">ホテルでプールと夕食</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>夜はゆっくり休憩</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:demo_v2_edit' %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              </div>
+            </section>
+
+            <section class="day-panel" id="day-3" data-day-key="4" data-calendar-date="2026-07-21" data-day-num="4">
+              <div class="day-heading-nav">
+                <h2 class="day-heading">4日目<br><span class="day-heading-date">2026-07-21</span></h2>
+              </div>
+              <div class="schedule-list">
+                <div class="schedule-row" data-start-datetime="2026-07-21T09:30:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">09:30</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-red" aria-hidden="true"><i class="fa-solid fa-landmark"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-red">首里城公園</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>帰る前に沖縄の歴史を感じる</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="schedule-row" data-start-datetime="2026-07-21T15:00:00">
+                  <div class="row-display">
+                    <div class="row-time-text"><span class="display-start-time">15:00</span></div>
+                    <div class="row-icon-column"><span class="schedule-icon title-color-blue" aria-hidden="true"><i class="fa-solid fa-plane-departure"></i></span></div>
+                    <div class="row-main-text">
+                      <div class="display-title title-color-blue">那覇空港へ</div>
+                      <div class="display-description"><i class="fa-regular fa-clipboard"></i>お土産を買って帰路へ</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="edit-schedule-link-wrapper">
+                  <a class="edit_button_content_under_schedule" href="{% url 'tabisync:demo_v2_edit' %}"><i class="fa-solid fa-pen-to-square"></i>予定を編集する</a>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <aside class="schedule-side-column">
+        <div class="box5-6 schedule-overview-box">
+          <h2 class="box-title">概要</h2>
+          <div class="box-content">
+            <p>那覇を拠点に、美ら海水族館、古宇利島、国際通り、アメリカンビレッジを巡る沖縄旅行のデモしおりです。現在のV2旅程表と同じUIで確認できます。</p>
+          </div>
+        </div>
+        <div class="box5-6 schedule-share-box">
+          <h2 class="box-title">しおりを共有</h2>
+          <div class="box-content">
+            <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※デモ用リンクです）</p>
+            <p id="copy-url-box" class="copy-url-box">
+              <i class="fa-solid fa-link"></i> <span id="copy-url-text">https://tabisync.example/demo/v2/okinawa</span>
+            </p>
+            <div class="share-qr-wrapper">
+              <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
+              <div class="share-qr-image" aria-label="デモ用QRコード" style="display:grid;place-items:center;background:#fff;border:1px solid #ddd;">
+                <i class="fa-solid fa-qrcode" style="font-size:6rem;color:#1c1c1e;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="placeModal" class="modal">
+    <div class="modal-content" onclick="event.stopPropagation();">
+      <span class="close" onclick="closePlaceModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div class="modal-memo">
+        <p><i class="fa-regular fa-clipboard"></i></p>
+        <p id="modalMemo"></p>
+      </div>
+      <div class="modal-adress">
+        <p><i class="fa-solid fa-location-dot"></i></p>
+        <p id="modalAdress"></p>
+      </div>
+      <div class="modal-date">
+        <p><i class="fa-regular fa-calendar-days"></i></p>
+        <p id="modalDay"></p>
+      </div>
+      <div class="modal-actions">
+        <a id="modalMapsButton" href="#" target="_blank" rel="noopener noreferrer" class="maps-button">Google Mapsで開く</a>
       </div>
     </div>
   </div>
-
-  <div class="box5-6">
-    <h2 class="box-title">日程表</h2>
-    <div id="scheduleView" class="box-content">
-      <section class="day-panel is-active" data-calendar-date="2026-07-18">
-        <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
-          <h2 class="day-heading">Day 1<br><span class="day-heading-date">2026-07-18</span></h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
-        </div>
-        <div class="schedule-list">
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">10:30</span></div>
-              <div class="row-main-text">
-                <div class="display-title">那覇空港に到着</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>レンタカーを受け取って市内へ移動</div>
-              </div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">13:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">国際通りで昼食と散策</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>沖縄そばとブルーシールを楽しむ</div>
-              </div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">17:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">瀬長島ウミカジテラス</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>夕日を見ながら初日のんびり</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="day-panel" data-calendar-date="2026-07-19">
-        <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
-          <h2 class="day-heading">Day 2<br><span class="day-heading-date">2026-07-19</span></h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
-        </div>
-        <div class="schedule-list">
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">09:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">美ら海水族館</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>ジンベエザメの大水槽を見学</div>
-              </div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">14:30</span></div>
-              <div class="row-main-text">
-                <div class="display-title">古宇利島ドライブ</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>ハートロックと海辺のカフェへ</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="day-panel" data-calendar-date="2026-07-20">
-        <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
-          <h2 class="day-heading">Day 3<br><span class="day-heading-date">2026-07-20</span></h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
-        </div>
-        <div class="schedule-list">
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">11:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">アメリカンビレッジ</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>ショッピングとランチ</div>
-              </div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">19:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">ホテルでプールと夕食</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>夜はゆっくり休憩</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="day-panel" data-calendar-date="2026-07-21">
-        <div class="day-heading-nav">
-          <button type="button" class="day-move-btn" onclick="moveDay(-1)">◀︎</button>
-          <h2 class="day-heading">Day 4<br><span class="day-heading-date">2026-07-21</span></h2>
-          <button type="button" class="day-move-btn" onclick="moveDay(1)">▶︎</button>
-          </div>
-        <div class="schedule-list">
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">09:30</span></div>
-              <div class="row-main-text">
-                <div class="display-title">首里城公園</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>帰る前に沖縄の歴史を感じる</div>
-              </div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="row-display">
-              <div class="row-time-text"><span class="display-start-time">15:00</span></div>
-              <div class="row-main-text">
-                <div class="display-title">那覇空港へ</div>
-                <div class="display-description"><i class="fa-regular fa-clipboard"></i>お土産を買って帰路へ</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <div class="box5-6">
-    <h2 class="box-title">デモについて</h2>
-    <div class="box-content">
-      <p>このデモは実際の V2 UI をベースにしたサンプルです。フッターからメモ、リスト、地図ページも確認できます。</p>
-    </div>
-  </div>
 </div>
-</div>
+
 <script>
 function getPanels() {
   return [...document.querySelectorAll('.day-panel')];
 }
 
-function setActivePanelByIndex(index) {
-  const panels = getPanels();
-  if (!panels.length) return;
-  panels.forEach((panel) => panel.classList.remove('is-active'));
-  panels[index].classList.add('is-active');
+function formatScheduleDates() {
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const dateEls = document.querySelectorAll('.day-tab-date, .day-tab-menu-date, .day-heading-date');
+  dateEls.forEach(el => {
+    const raw = el.closest('[data-calendar-date]')?.dataset.calendarDate;
+    if (!raw) return;
+    const date = new Date(`${raw}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return;
+    el.textContent = `${date.getMonth() + 1}/${date.getDate()}(${weekdays[date.getDay()]})`;
+  });
 }
 
-function moveDay(direction) {
-  const panels = getPanels();
-  if (!panels.length) return;
-  const activeIndex = panels.findIndex((panel) => panel.classList.contains('is-active'));
-  const currentIndex = activeIndex >= 0 ? activeIndex : 0;
-  let nextIndex = currentIndex + direction;
-  if (nextIndex < 0) nextIndex = panels.length - 1;
-  if (nextIndex >= panels.length) nextIndex = 0;
-  setActivePanelByIndex(nextIndex);
+function closeDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const moreButton = document.querySelector('.day-tab-more');
+  if (menu) menu.classList.remove('is-open');
+  if (moreButton) moreButton.setAttribute('aria-expanded', 'false');
 }
+
+function toggleDayMenu() {
+  const menu = document.querySelector('.day-tab-menu');
+  const moreButton = document.querySelector('.day-tab-more');
+  if (!menu || !moreButton) return;
+  const isOpen = menu.classList.toggle('is-open');
+  moreButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function setActivePanelByIndex(index) {
+  const panels = getPanels();
+  if (!panels.length || index < 0 || index >= panels.length) return;
+  panels.forEach(p => p.classList.remove('is-active'));
+  panels[index].classList.add('is-active');
+  document.querySelectorAll('.day-tab').forEach((tab, tabIndex) => {
+    const isActive = tabIndex === index;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    if (isActive) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  });
+  document.querySelectorAll('.day-tab-menu-item').forEach((item, itemIndex) => {
+    item.classList.toggle('is-active', itemIndex === index);
+  });
+  closeDayMenu();
+}
+
+function openPlaceModal(place) {
+  document.getElementById("modalTitle").textContent = place.name || "";
+  document.getElementById("modalAdress").textContent = place.address || "住所情報なし";
+  document.getElementById("modalMemo").textContent = place.memo || "メモなし";
+  const dayVal = parseInt(place.planned_day) || 0;
+  document.getElementById("modalDay").textContent = dayVal === 0 ? "未定" : `${dayVal}日目`;
+  const mapsButton = document.getElementById("modalMapsButton");
+  const query = place.place_id ? `query_place_id=${encodeURIComponent(place.place_id)}` : `query=${encodeURIComponent(place.name || "")}`;
+  mapsButton.href = `https://www.google.com/maps/search/?api=1&${query}`;
+  document.getElementById("placeModal").style.display = "flex";
+}
+
+function closePlaceModal() {
+  document.getElementById("placeModal").style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  formatScheduleDates();
+  setActivePanelByIndex(0);
+  const urlBox = document.getElementById("copy-url-box");
+  const urlText = document.getElementById("copy-url-text");
+  if (urlBox && urlText) {
+    urlBox.addEventListener("click", function () {
+      const textToCopy = urlText.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => alert("URLをコピーしました！"));
+      } else {
+        prompt("コピーしてください：", textToCopy);
+      }
+    });
+  }
+});
 </script>
 {% endblock %}
