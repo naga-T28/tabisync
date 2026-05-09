@@ -1,5 +1,6 @@
 import json
 import logging
+import mimetypes
 import os
 import ipaddress
 import re
@@ -62,10 +63,7 @@ def get_itinerary_cover_url(itinerary):
     if not itinerary.cover_image:
         return ""
 
-    try:
-        return itinerary.cover_image.url
-    except ValueError:
-        return ""
+    return reverse("tabisync:content_v2_cover_image", kwargs={"pk": itinerary.pk, "token": itinerary.token})
 
 # クローラ対策
 def robots_txt_view(request):
@@ -179,6 +177,28 @@ def itinerary_qr_code_view(request, pk, token):
 
     response = FileResponse(itinerary.qr_code.open("rb"), content_type="image/png")
     response["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+def itinerary_cover_image_view(request, pk, token):
+    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+
+    view_session_key = f"view_auth_{pk}_{token}"
+    edit_session_key = f"edit_auth_{pk}"
+    if (
+        itinerary.view_password
+        and not request.session.get(view_session_key, False)
+        and not request.session.get(edit_session_key, False)
+    ):
+        raise Http404("Cover image was not found.")
+
+    if not itinerary.cover_image or not itinerary.cover_image.storage.exists(itinerary.cover_image.name):
+        raise Http404("Cover image was not found.")
+
+    content_type = mimetypes.guess_type(itinerary.cover_image.name)[0] or "application/octet-stream"
+    response = FileResponse(itinerary.cover_image.open("rb"), content_type=content_type)
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    response["Cache-Control"] = "private, max-age=3600"
     return response
 
 
