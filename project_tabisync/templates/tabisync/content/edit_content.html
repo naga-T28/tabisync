@@ -5,7 +5,7 @@
 {% load static %}
 <main class="content-main">
   <div class="edit-content-page">
-  <form class="create-form edit-content-form" method="post" action="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}">
+  <form class="create-form edit-content-form" method="post" enctype="multipart/form-data" action="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}">
     {% csrf_token %}
     <div class="input-first-wrapper">
       <div class="schedules-container">
@@ -46,6 +46,29 @@
       </div>
 
       <div class="schedules-container">
+        <h3 class="input-item-title"><i class="fa-regular fa-image"></i> 表紙画像</h3>
+        <p class="input-item-description">表紙画像は1日1回まで変更できます。新しい画像を保存すると、前の画像は削除されます。</p>
+        {% if cover_image_url %}
+          <img class="cover-image-preview" src="{{ cover_image_url }}" alt="現在の表紙画像">
+        {% endif %}
+        <div class="cover-image-upload">
+          <input
+            id="coverImageInput"
+            class="cover-image-input"
+            type="file"
+            name="cover_image"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            {% if not can_update_cover_image %}disabled{% endif %}
+          >
+          <label class="cover-image-label {% if not can_update_cover_image %}is-disabled{% endif %}" for="coverImageInput">
+            <i class="fa-solid fa-upload"></i>
+            <span>{% if can_update_cover_image %}画像を選択{% else %}今日は変更済みです{% endif %}</span>
+          </label>
+        </div>
+        <p id="coverImageFileName" class="cover-image-file-name">JPEG、PNG、WebP、GIF / 5MBまで</p>
+      </div>
+
+      <div class="schedules-container">
         <h3 class="input-item-title"><i class="fa-solid fa-key"></i> パスワード設定</h3>
         <p class="input-item-description">閲覧用・編集用パスワードと再設定用メールアドレスはこの画面では変更できません。</p>
       </div>
@@ -61,6 +84,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const MAX_ITINERARY_DAYS = 30;
   const startDate = document.getElementById("startDate");
   const endDate = document.getElementById("endDate");
+  const coverImageInput = document.getElementById("coverImageInput");
+  const coverImageFileName = document.getElementById("coverImageFileName");
+
+  if (coverImageInput && coverImageFileName) {
+    coverImageInput.addEventListener("change", function () {
+      coverImageFileName.textContent = this.files && this.files[0]
+        ? this.files[0].name
+        : "JPEG、PNG、WebP、GIF / 5MBまで";
+    });
+  }
 
   if (!startDate || !endDate) return;
 

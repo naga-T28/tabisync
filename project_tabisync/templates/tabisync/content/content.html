@@ -9,13 +9,30 @@
   <div class="schedule-view-page">
     <div class="title-wrapper">
       <div class="title-visual">
-        <h1 class="siori-title">{{ itinerary.title }}</h1>
-        {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
-        {% if first_date_str and last_date_str %}
-          <p class="siori-title-date">
-            {{ first_date_str }} ～ {{ last_date_str }}
-          </p>
+        {% if cover_image_url %}
+          <img class="siori-cover-image" src="{{ cover_image_url }}" alt="{{ itinerary.title }}の表紙画像" loading="eager">
         {% endif %}
+        <div class="siori-title-area">
+          <div class="siori-title-subtitle-wrapper">
+            <h1 class="siori-title">{{ itinerary.title }}</h1>
+            {% if itinerary.subtitle %}<p class="siori-sub-title">~{{ itinerary.subtitle }}~</p>{% endif %}
+          </div>
+          {% if first_date_str and last_date_str %}
+            <p class="siori-title-date">
+              {{ first_date_str }} ～ {{ last_date_str }}
+            </p>
+          {% endif %}
+        </div>
+        <div class="siori-title-actions" aria-label="しおり操作">
+          <a class="siori-title-action" href="{% url 'tabisync:content_edit_form_v2' pk=itinerary.pk token=itinerary.token %}" aria-label="内容を編集">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>編集</span>
+          </a>
+          <button class="siori-title-action --share" type="button" onclick="shareItinerary()" aria-label="しおりを共有">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>共有</span>
+          </button>
+        </div>
         
       </div>
     </div>
@@ -201,18 +218,44 @@
 
           if (urlBox && urlText) {
             urlBox.addEventListener("click", function () {
-              const textToCopy = urlText.textContent;
-
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(textToCopy)
-                  .then(() => alert("URLをコピーしました！"))
-                  .catch(() => prompt("コピーできませんでした。手動でコピーしてください：", textToCopy));
-              } else {
-                prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
-              }
+              copyShareUrl(urlText.textContent);
             });
           }
         });
+async function copyShareUrl(textToCopy) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      alert("URLをコピーしました！");
+      return;
+    } catch (error) {
+      prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+      return;
+    }
+  }
+
+  prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+}
+
+async function shareItinerary() {
+  const shareData = {
+    title: "{{ itinerary.title|escapejs }} | TabiSync",
+    text: "旅のしおりを共有します。",
+    url: "{{ share_url|escapejs }}"
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (error) {
+      if (error && error.name === "AbortError") return;
+    }
+  }
+
+  copyShareUrl(shareData.url);
+}
+
 function getPanels() {
   return [...document.querySelectorAll('.day-panel')];
 }

@@ -10,6 +10,8 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
+from PIL import Image, UnidentifiedImageError
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
@@ -44,6 +46,8 @@ MAX_MEMOS_PER_ITINERARY = 15
 MAX_MEMO_WORDS = 1000
 MAX_CHECKLISTS_PER_ITINERARY = 10
 MAX_CHECKLIST_ITEMS_PER_LIST = 30
+MAX_COVER_IMAGE_SIZE = 5 * 1024 * 1024
+ALLOWED_COVER_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MEMO_WORD_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30ff\u3400-\u9fff]")
 
 
@@ -52,6 +56,16 @@ MEMO_WORD_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[\u3040-\u30f
 # =========================
 def offline_view(request):
     return render(request, "offline.html")
+
+
+def get_itinerary_cover_url(itinerary):
+    if not itinerary.cover_image:
+        return ""
+
+    try:
+        return itinerary.cover_image.url
+    except ValueError:
+        return ""
 
 # クローラ対策
 def robots_txt_view(request):
@@ -511,6 +525,7 @@ class ItineraryDetailV2View(TemplateView):
         share_url = build_itinerary_share_url(request, itinerary)
         ensure_itinerary_qr_code(itinerary, share_url)
         qr_code_url = build_itinerary_qr_code_url(itinerary)
+        cover_image_url = get_itinerary_cover_url(itinerary)
 
         response = render(request, self.template_name, {
             "itinerary": itinerary,
@@ -520,6 +535,7 @@ class ItineraryDetailV2View(TemplateView):
             "last_date_str": last_date_str,
             "share_url": share_url,
             "qr_code_url": qr_code_url,
+            "cover_image_url": cover_image_url,
         })
         response["X-Robots-Tag"] = "noindex, nofollow"
         return response
@@ -909,6 +925,8 @@ class EditContentFormV2View(View):
     def _render_form(self, request, itinerary, extra_context=None, status=200):
         context = {
             "itinerary": itinerary,
+            "cover_image_url": get_itinerary_cover_url(itinerary),
+            "can_update_cover_image": itinerary.cover_image_updated_on != timezone.localdate(),
         }
         if extra_context:
             context.update(extra_context)
@@ -948,6 +966,7 @@ class EditContentFormV2View(View):
         description = (request.POST.get("description") or "").strip()
         start_date_str = (request.POST.get("start_date") or "").strip()
         end_date_str = (request.POST.get("end_date") or "").strip()
+        cover_image = request.FILES.get("cover_image")
 
         if not title:
             itinerary.title = title
@@ -959,6 +978,55 @@ class EditContentFormV2View(View):
                 {"error": "タイトルを入力してください。"},
                 status=400,
             )
+
+        today = timezone.localdate()
+        if cover_image:
+            if itinerary.cover_image_updated_on == today:
+                itinerary.title = title
+                itinerary.subtitle = subtitle
+                itinerary.description = description
+                return self._render_form(
+                    request,
+                    itinerary,
+                    {"error": "表紙画像の変更は1日1回までです。明日以降に再度お試しください。"},
+                    status=400,
+                )
+
+            if cover_image.size > MAX_COVER_IMAGE_SIZE:
+                itinerary.title = title
+                itinerary.subtitle = subtitle
+                itinerary.description = description
+                return self._render_form(
+                    request,
+                    itinerary,
+                    {"error": "表紙画像は5MB以下の画像を選択してください。"},
+                    status=400,
+                )
+
+            if cover_image.content_type not in ALLOWED_COVER_IMAGE_CONTENT_TYPES:
+                itinerary.title = title
+                itinerary.subtitle = subtitle
+                itinerary.description = description
+                return self._render_form(
+                    request,
+                    itinerary,
+                    {"error": "表紙画像はJPEG、PNG、WebP、GIFのいずれかを選択してください。"},
+                    status=400,
+                )
+
+            try:
+                Image.open(cover_image).verify()
+                cover_image.seek(0)
+            except (UnidentifiedImageError, OSError):
+                itinerary.title = title
+                itinerary.subtitle = subtitle
+                itinerary.description = description
+                return self._render_form(
+                    request,
+                    itinerary,
+                    {"error": "表紙画像として読み込めないファイルです。別の画像を選択してください。"},
+                    status=400,
+                )
 
         new_start_date = None
         new_end_date = None
@@ -1059,7 +1127,16 @@ class EditContentFormV2View(View):
         itinerary.description = description
         itinerary.start_date = new_start_date
         itinerary.end_date = new_end_date
+        old_cover_image = itinerary.cover_image.name if itinerary.cover_image else ""
+        if cover_image:
+            itinerary.cover_image = cover_image
+            itinerary.cover_image_updated_on = today
         itinerary.save()
+
+        if cover_image and old_cover_image and old_cover_image != itinerary.cover_image.name:
+            storage = itinerary.cover_image.storage
+            if storage.exists(old_cover_image):
+                storage.delete(old_cover_image)
 
         fallback_base_date = itinerary.created_at.date()
         for schedule in schedules:
