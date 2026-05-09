@@ -66,6 +66,7 @@
           </label>
         </div>
         <p id="coverImageFileName" class="cover-image-file-name">JPEG、PNG、WebP、GIF / 5MBまで</p>
+        <p id="coverImageError" class="cover-image-error" aria-live="polite"></p>
       </div>
 
       <div class="schedules-container">
@@ -86,12 +87,42 @@ document.addEventListener("DOMContentLoaded", function () {
   const endDate = document.getElementById("endDate");
   const coverImageInput = document.getElementById("coverImageInput");
   const coverImageFileName = document.getElementById("coverImageFileName");
+  const coverImageError = document.getElementById("coverImageError");
+  const submitButton = document.querySelector(".edit-content-form .enter-input-btn");
+  const allowedCoverImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const maxCoverImageSize = 5 * 1024 * 1024;
+
+  function setCoverImageError(message) {
+    if (coverImageError) {
+      coverImageError.textContent = message;
+    }
+
+    if (submitButton) {
+      submitButton.disabled = Boolean(message);
+    }
+  }
 
   if (coverImageInput && coverImageFileName) {
     coverImageInput.addEventListener("change", function () {
-      coverImageFileName.textContent = this.files && this.files[0]
-        ? this.files[0].name
-        : "JPEG、PNG、WebP、GIF / 5MBまで";
+      const file = this.files && this.files[0];
+      coverImageFileName.textContent = file ? file.name : "JPEG、PNG、WebP、GIF / 5MBまで";
+
+      if (!file) {
+        setCoverImageError("");
+        return;
+      }
+
+      if (!allowedCoverImageTypes.includes(file.type)) {
+        setCoverImageError("表紙画像はJPEG、PNG、WebP、GIFのいずれかを選択してください。");
+        return;
+      }
+
+      if (file.size > maxCoverImageSize) {
+        setCoverImageError("表紙画像は5MB以下の画像を選択してください。");
+        return;
+      }
+
+      setCoverImageError("");
     });
   }
 
