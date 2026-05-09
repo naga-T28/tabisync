@@ -1,14 +1,29 @@
 {% extends "demo/v2_base.html" %}
 {% block title %}沖縄旅行のしおりデモ{% endblock %}
-
+{% load static %}
 {% block contents %}
 <div class="content-main">
   <div class="schedule-view-page">
     <div class="title-wrapper">
       <div class="title-visual">
-        <h1 class="siori-title">沖縄旅行</h1>
-        <p class="siori-sub-title">~3泊4日・家族で巡る本島満喫プラン~</p>
-        <p class="siori-title-date">2026.07.18 ～ 2026.07.21</p>
+        <img class="siori-cover-image" src="{% static 'img/demo-v2-cover.webp' %}" alt="沖縄旅行の表紙画像" loading="eager">
+        <div class="siori-title-area">
+          <div class="siori-title-subtitle-wrapper">
+            <h1 class="siori-title">沖縄旅行</h1>
+            <p class="siori-sub-title">~3泊4日・家族で巡る本島満喫プラン~</p>
+          </div>
+          <p class="siori-title-date">2026.07.18 ～ 2026.07.21</p>
+        </div>
+        <div class="siori-title-actions" aria-label="しおり操作">
+          <a class="siori-title-action" href="{% url 'tabisync:demo_v2_edit' %}" aria-label="内容を編集">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>編集</span>
+          </a>
+          <button class="siori-title-action --share" type="button" onclick="shareItinerary()" aria-label="しおりを共有">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>共有</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -229,12 +244,12 @@
           <div class="box-content">
             <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※デモ用リンクです）</p>
             <p id="copy-url-box" class="copy-url-box">
-              <i class="fa-solid fa-link"></i> <span id="copy-url-text">https://tabisync.example/demo/v2/okinawa</span>
+              <i class="fa-solid fa-link"></i> <span id="copy-url-text">https://tabisync.com/demo/v2/</span>
             </p>
             <div class="share-qr-wrapper">
               <p class="share-qr-note">QRコードからもこのしおりを開けます。</p>
               <div class="share-qr-image" aria-label="デモ用QRコード" style="display:grid;place-items:center;background:#fff;border:1px solid #ddd;">
-                <i class="fa-solid fa-qrcode" style="font-size:6rem;color:#1c1c1e;"></i>
+                <img src="{% static 'img/qr_code.png' %}" alt="デモ用QRコード" style="width:100%;height:auto;max-width:200px;">
               </div>
             </div>
           </div>
@@ -331,6 +346,40 @@ function closePlaceModal() {
   document.getElementById("placeModal").style.display = "none";
 }
 
+async function copyShareUrl(textToCopy) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      alert("URLをコピーしました！");
+      return;
+    } catch (error) {
+      prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+      return;
+    }
+  }
+
+  prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
+}
+
+async function shareItinerary() {
+  const shareData = {
+    title: "沖縄旅行 | TabiSync",
+    text: "旅のしおりを共有します。",
+    url: "https://tabisync.com/demo/v2/"
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (error) {
+      if (error && error.name === "AbortError") return;
+    }
+  }
+
+  copyShareUrl(shareData.url);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   formatScheduleDates();
   setActivePanelByIndex(0);
@@ -338,12 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlText = document.getElementById("copy-url-text");
   if (urlBox && urlText) {
     urlBox.addEventListener("click", function () {
-      const textToCopy = urlText.textContent;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy).then(() => alert("URLをコピーしました！"));
-      } else {
-        prompt("コピーしてください：", textToCopy);
-      }
+      copyShareUrl(urlText.textContent);
     });
   }
 });

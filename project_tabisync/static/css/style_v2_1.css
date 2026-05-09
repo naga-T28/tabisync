@@ -616,8 +616,11 @@ article.privacy-policy,
   margin: 0 auto 2em; /* 外側の余白（上下と中央配置） */
   position: relative; /* 相対位置指定 */
   background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 100px;
 }
 .title-visual.--miniMargin {
   margin-bottom: 5px;
@@ -625,33 +628,84 @@ article.privacy-policy,
   padding-bottom: 10px;
 }
 
+.siori-cover-image {
+  display: block;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  background: #eef1f5;
+  border-radius: 10px;
+}
+
 .siori-title {
   font-family: "Noto Sans JP", sans-serif;
-  text-align: center;
-  font-size: 40px;
+  text-align: left;
+  font-size: 30px;
   margin: 0;
   padding: 0;
-  padding-left: 16px;
   padding-right: 16px;
-  margin-top: 30px;
 }
 .siori-title.--noMargin {
   margin-top: 0;
 }
 
+.siori-title-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+  align-self: stretch;
+}
+
+.siori-title-actions {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 6px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.siori-title-action {
+  width: 100px;
+  height: 35px;
+  border: 1px solid #e2e5ec;
+  border-radius: 5px;
+  background: #fff;
+  color: #2f3747;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  gap: 10px;
+  cursor: pointer;
+}
+.siori-title-action i {
+  font-size: 17px;
+}
+.siori-title-action.--share {
+  background-color: #AF29BB;
+  border-color: #AF29BB;
+  color: #fff;
+}
+
 .siori-sub-title {
   font-family: "Noto Sans JP", sans-serif;
-  text-align: center;
-  font-size: 20px;
-  margin-top: -10px;
+  text-align: left;
+  font-size: 16px;
+  margin-top: 0;
 }
 
 .siori-title-date {
   font-family: "Noto Sans JP", sans-serif;
-  text-align: center;
+  text-align: left;
   font-size: 14px;
-  margin-top: 30px;
   padding-bottom: 10px;
+  padding-left: 5px;
 }
 
 #scheduleView {
@@ -1268,6 +1322,34 @@ article.privacy-policy,
   }
   .title-visual {
     margin-bottom: 28px;
+    box-shadow: none;
+    gap: 30px;
+  }
+  .title-visual .siori-title {
+    text-align: left;
+    font-size: 35px;
+  }
+  .siori-cover-image {
+    margin: 10px;
+    width: 150px;
+    height: 150px;
+    margin-left: 0;
+  }
+  .siori-title-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .siori-title-subtitle-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .siori-title-actions {
+    display: flex;
+    flex-direction: row;
+    padding-right: 10px;
   }
   .schedule-content-layout {
     display: grid;
@@ -2533,6 +2615,59 @@ body#content-body:has(.content-main-map) > footer > small {
   padding: 14px;
   resize: vertical;
 }
+.edit-content-page .cover-image-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #eef1f5;
+  margin-bottom: 14px;
+}
+.edit-content-page .cover-image-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.edit-content-page .cover-image-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.edit-content-page .cover-image-label {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #2f3747;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.edit-content-page .cover-image-label.is-disabled {
+  background: #c9ced6;
+  cursor: not-allowed;
+}
+.edit-content-page .cover-image-file-name {
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+.edit-content-page .cover-image-error {
+  min-height: 1.5em;
+  margin-top: 6px;
+  color: #c0392b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
 .edit-content-page .input-date-flex {
   color: #666;
   font-weight: 700;
@@ -2553,6 +2688,12 @@ body#content-body:has(.content-main-map) > footer > small {
   font-size: 1rem;
   font-weight: 700;
   box-shadow: 0 12px 24px rgba(47, 55, 71, 0.18);
+}
+.edit-content-page .enter-input-btn:disabled {
+  background: #c9ced6;
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .edit-menu {
