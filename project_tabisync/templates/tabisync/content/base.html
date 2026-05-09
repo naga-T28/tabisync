@@ -21,10 +21,13 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        {% if itinerary.cover_image %}
+            {% url 'tabisync:content_v2_cover_image' pk=itinerary.pk token=itinerary.token as cover_image_meta_url %}
+        {% endif %}
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
-        <meta property="og:image" content="{% if itinerary.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ itinerary.cover_image.url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
+        <meta property="og:image" content="{% if cover_image_meta_url %}{{ request.scheme }}://{{ request.get_host }}{{ cover_image_meta_url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
@@ -32,7 +35,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
-        <meta name="twitter:image" content="{% if itinerary.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ itinerary.cover_image.url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
+        <meta name="twitter:image" content="{% if cover_image_meta_url %}{{ request.scheme }}://{{ request.get_host }}{{ cover_image_meta_url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
