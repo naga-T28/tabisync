@@ -53,4 +53,8 @@ jobs:
             # Djangoコンテナが起動するまで待機（例: 30秒）
             echo "Waiting for Django container to be ready..."
             sleep 20
+
+            # web_appディレクトリに移動してdocker-compose実行
+            cd ~/web_app
+            docker compose up -d
           EOF
