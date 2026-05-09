@@ -24,7 +24,7 @@
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
         <meta property="og:description" content="旅のしおりをみんなで簡単共有！">
-        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
+        <meta property="og:image" content="{% if itinerary.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ itinerary.cover_image.url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
         <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
@@ -32,7 +32,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ itinerary.title }} | TabiSync">
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
-        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
+        <meta name="twitter:image" content="{% if itinerary.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ itinerary.cover_image.url }}{% else %}{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}{% endif %}">
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
@@ -41,6 +41,7 @@
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2974880632446425"
      crossorigin="anonymous"></script>
+     <script async custom-element="amp-ad" src="https://cdn.ampproject.org/v0/amp-ad-0.1.js"></script>
     </head>
     <body id="content-body">
         <header class="page-header --only-pc content-side-nav">
@@ -126,6 +127,14 @@
 
         {% endblock %}
         <footer>
+            <amp-ad width="100vw" height="320"
+                type="adsense"
+                data-ad-client="ca-pub-2974880632446425"
+                data-ad-slot="3502690953"
+                data-auto-format="rspv"
+                data-full-width="">
+            <div overflow=""></div>
+            </amp-ad>
             <nav class="footer-nav  --only-sp">
                 <ul class="footer-nav-ul">
                     <li class="footer-nav-li {% if request.resolver_match.url_name == 'content_v2' %}footer-nav-li-select{% endif %}">
