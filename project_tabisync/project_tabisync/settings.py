@@ -241,6 +241,13 @@ USE_I18N = True
 
 USE_TZ = True
 
+# 5MBの表紙画像にmultipart/form-dataの境界やCSRFなどの余白が乗るため、
+# リクエスト全体の受信上限は画像上限より大きくしておく。
+MAX_COVER_IMAGE_UPLOAD_BYTES = int(os.environ.get("MAX_COVER_IMAGE_UPLOAD_BYTES", str(5 * 1024 * 1024)))
+MAX_REQUEST_BODY_BYTES = int(os.environ.get("MAX_REQUEST_BODY_BYTES", str(8 * 1024 * 1024)))
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_REQUEST_BODY_BYTES
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_REQUEST_BODY_BYTES
+
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
