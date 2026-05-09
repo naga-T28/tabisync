@@ -5,6 +5,11 @@ from django.contrib.auth.hashers import make_password, check_password
 from django_ckeditor_5.fields import CKEditor5Field
 
 
+def itinerary_cover_upload_to(instance, filename):
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    return f"itinerary_covers/{instance.pk or 'new'}-{uuid.uuid4().hex}.{ext}"
+
+
 class Itinerary(models.Model):
     """しおり全体"""
     title = models.CharField(max_length=100)
@@ -23,6 +28,8 @@ class Itinerary(models.Model):
     concierge_daily_limit = models.PositiveIntegerField(default=5)
     want_to_go_limit = models.PositiveIntegerField(default=30)
     qr_code = models.ImageField(upload_to="qr_codes/", blank=True)
+    cover_image = models.ImageField(upload_to=itinerary_cover_upload_to, blank=True)
+    cover_image_updated_on = models.DateField(blank=True, null=True)
 
     def set_passwords(self, view_pw: str, edit_pw: str):
         self.view_password = make_password(view_pw) if view_pw else ''
