@@ -2829,7 +2829,8 @@ class SendResetLinkView(View):
             data = {"pk": pk, "token": str(token), "type": type}
             signed_token = signing.dumps(data, salt="tabisync-password-reset")
 
-            reset_url = request.build_absolute_uri(
+            reset_url = build_public_absolute_uri(
+                request,
                 reverse("tabisync:reset_password", kwargs={"signed_token": signed_token})
             )
 
@@ -2839,8 +2840,23 @@ class SendResetLinkView(View):
                 f"1時間以内に以下のURLにアクセスしてください。\n\n{reset_url}"
             )
 
-            send_mail(subject, message, None, [itinerary.reset_email])
-            messages.success(request, "再設定用リンクをメールで送信しました。")
+            try:
+                sent_count = send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [itinerary.reset_email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception("Failed to send password reset email for itinerary %s.", itinerary.pk)
+                messages.error(request, "メールの送信に失敗しました。時間をおいて再度お試しください。")
+            else:
+                if sent_count:
+                    messages.success(request, "再設定用リンクをメールで送信しました。")
+                else:
+                    logger.warning("Password reset email was not sent for itinerary %s.", itinerary.pk)
+                    messages.error(request, "メールの送信に失敗しました。時間をおいて再度お試しください。")
         else:
             messages.error(request, "送信できませんでした。")
 
