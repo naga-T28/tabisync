@@ -212,16 +212,127 @@
   </div>
 </div>
 <script>
-            document.addEventListener("DOMContentLoaded", function () {
-          const urlBox = document.getElementById("copy-url-box");
-          const urlText = document.getElementById("copy-url-text");
+document.addEventListener("DOMContentLoaded", function () {
+  function startContentTour(forceStart) {
+    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
 
-          if (urlBox && urlText) {
-            urlBox.addEventListener("click", function () {
-              copyShareUrl(urlText.textContent);
-            });
+    const tourStorageKey = "tabisync_content_tour_seen";
+
+    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
+
+    const isPc = window.matchMedia("(min-width: 960px)").matches;
+    const tourSteps = isPc
+      ? [
+          {
+            popover: {
+              title: '旅程表へようこそ',
+              description: 'このページでは、旅行の日程確認、予定の編集、しおりの共有ができます。'
+            }
+          },
+          {
+            element: '.content-side-nav',
+            popover: {
+              title: 'メニュー',
+              description: 'PCでは左側のメニューから、メモ・リスト・地図などへ移動できます。'
+            }
+          },
+          {
+            element: '.schedule-table-box',
+            popover: {
+              title: '旅程表',
+              description: 'ここには旅行の計画が日毎に表示されます。'
+            }
+          },
+          {
+            element: '.schedule-share-box',
+            popover: {
+              title: 'しおりを共有',
+              description: 'リンクやQRコードから、このしおりを共有できます。'
+            }
           }
-        });
+        ]
+      : [
+          {
+            popover: {
+              title: '旅程表へようこそ',
+              description: 'このページでは、旅行の日程確認、予定の編集、しおりの共有ができます。'
+            }
+          },
+          {
+            element: '.day-tabs',
+            popover: {
+              title: '日程の切り替え',
+              description: 'ここから日ごとの予定を切り替えられます。'
+            }
+          },
+          {
+            element: '.footer-nav-icon-ai-concierge',
+            popover: {
+              title: 'AIコンシェルジュ',
+              description: '日程の提案や質問への回答など、AIコンシェルジュがあなたの旅をサポートします。'
+            }
+          },
+          {
+            element: '.edit_button_content_under_schedule',
+            popover: {
+              title: '予定の編集',
+              description: '予定の編集ページへ移動できます。予定を追加したり、時間や場所を変更したりできます。'
+            }
+          },
+          {
+            element: '.footer-nav',
+            popover: {
+              title: 'メニュー',
+              description: '画面下のメニューから、メモ・リスト・地図などへ移動できます。'
+            }
+          },
+          {
+            element: '#content-tour-button',
+            popover: {
+              title: 'ヘルプ',
+              description: 'この説明はヘルプアイコンから再度見ることができます。'
+            }
+          }
+        ];
+
+    const driverObj = window.driver.js.driver({
+      animate: true,
+      overlayOpacity: 0.75,
+      showProgress: true,
+      nextBtnText: '次へ',
+      prevBtnText: '戻る',
+      doneBtnText: '完了',
+      onDestroyed: function () {
+        window.localStorage.setItem(tourStorageKey, "true");
+      },
+      steps: tourSteps
+    });
+
+    driverObj.drive();
+  }
+
+  window.startContentTour = function () {
+    startContentTour(true);
+  };
+
+  startContentTour(false);
+
+  const tourButton = document.getElementById("content-tour-button");
+  if (tourButton) {
+    tourButton.addEventListener("click", function () {
+      startContentTour(true);
+    });
+  }
+
+  const urlBox = document.getElementById("copy-url-box");
+  const urlText = document.getElementById("copy-url-text");
+
+  if (urlBox && urlText) {
+    urlBox.addEventListener("click", function () {
+      copyShareUrl(urlText.textContent);
+    });
+  }
+});
 async function copyShareUrl(textToCopy) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
