@@ -882,6 +882,100 @@ function closeModal() {
     document.getElementById("placeModal").classList.remove("active");
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function startMapTour(forceStart) {
+    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
+
+    const tourStorageKey = "tabisync_map_tour_seen";
+    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
+
+    const isPc = window.matchMedia("(min-width: 960px)").matches;
+    const tourSteps = [
+      {
+        popover: {
+          title: '地図へようこそ',
+          description: '行きたい場所を地図と一覧で確認・管理できます。'
+        }
+      },
+      ...(isPc ? [
+        {
+          element: '.content-side-nav',
+          popover: {
+            title: 'メニュー',
+            description: '左側のメニューから、旅程表・メモ・リストなどへ移動できます。'
+          }
+        }
+      ] : []),
+      {
+        element: '#map',
+        popover: {
+          title: '地図',
+          description: '登録した場所の位置を地図上で確認できます。'
+        }
+      },
+      {
+        element: '.day-filter-bar',
+        popover: {
+          title: '絞り込みと並び替え',
+          description: '日程や行きたい度に合わせて、場所の一覧を整理できます。'
+        }
+      },
+      {
+        element: '.place-list-wrapper',
+        popover: {
+          title: '行きたい場所',
+          description: 'カードを開くと詳細を確認できます。右下のボタンから場所を追加できます。'
+        }
+      },
+      ...(!isPc ? [
+        {
+          element: '.footer-nav',
+          popover: {
+            title: 'メニュー',
+            description: '画面下のメニューから、旅程表・メモ・リストなどへ移動できます。'
+          }
+        },
+        {
+          element: '#content-tour-button',
+          popover: {
+            title: 'ヘルプ',
+            description: 'この説明はヘルプアイコンから再度見ることができます。'
+          }
+        }
+      ] : [])
+    ];
+
+    const driverObj = window.driver.js.driver({
+      animate: true,
+      overlayOpacity: 0.75,
+      showProgress: true,
+      nextBtnText: '次へ',
+      prevBtnText: '戻る',
+      doneBtnText: '完了',
+      onDestroyed: function () {
+        window.localStorage.setItem(tourStorageKey, "true");
+      },
+      steps: tourSteps
+    });
+
+    driverObj.drive();
+  }
+
+  window.startContentTour = function () {
+    startMapTour(true);
+  };
+
+  startMapTour(false);
+
+  const tourButton = document.getElementById("content-tour-button");
+  if (tourButton) {
+    tourButton.addEventListener("click", function () {
+      startMapTour(true);
+    });
+  }
+});
+</script>
 
 
 {% endblock %}

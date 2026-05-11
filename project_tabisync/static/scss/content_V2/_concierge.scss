@@ -19,13 +19,6 @@
   }
 }
 
-#conciergeDetailOpen{
-  background-color: #fff;
-  border: none;
-  color: #5f6061;
-  font-size: 30px;
-  padding: 0;
-}
 body#concierge-body {
   min-height: 100svh;
   background: #fff;
@@ -181,69 +174,9 @@ body#concierge-body {
   display: none;
 }
 
-.concierge-panel,
 .concierge-chat-shell {
   border-radius: 22px;
   background: #fff;
-}
-
-.concierge-panel {
-  padding: 20px;
-}
-
-.concierge-panel + .concierge-panel {
-  margin-top: 16px;
-}
-
-.concierge-panel h2 {
-  margin-bottom: 12px;
-  font-size: 1rem;
-  color: #2f3747;
-}
-
-.concierge-capability-list {
-  display: grid;
-  gap: 12px;
-  color: #616161;
-  line-height: 1.6;
-}
-
-.concierge-capability-list li {
-  list-style: none;
-  position: relative;
-  padding-left: 18px;
-}
-
-.concierge-capability-list li::before {
-  content: "";
-  position: absolute;
-  top: 0.65em;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #f0b85c;
-}
-
-.concierge-prompt-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.concierge-prompt-chip {
-  border: none;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #f4f5f7;
-  color: #38405f;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.concierge-prompt-chip:hover {
-  transform: translateY(-1px);
-  background: #eceef3;
 }
 
 .concierge-chat-shell {
@@ -492,68 +425,6 @@ body#concierge-body {
   }
 }
 
-.concierge-detail-modal[hidden] {
-  display: none;
-}
-
-.concierge-detail-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-}
-
-.concierge-detail-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(16, 23, 37, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.concierge-detail-dialog {
-  position: relative;
-  width: calc(100% - 20px);
-  max-height: calc(100dvh - 40px);
-  margin: 20px auto 0;
-  padding: 22px 16px 16px;
-  overflow-y: auto;
-  border-radius: 24px;
-  background: #fffdf9;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
-}
-
-.concierge-detail-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 50%;
-  background: #f2f3f6;
-  color: #2f3747;
-  cursor: pointer;
-}
-
-.concierge-detail-content h2 {
-  margin: 0 0 12px;
-  font-size: 1.35rem;
-  color: #2f3747;
-}
-
-.concierge-detail-lead {
-  margin-bottom: 18px;
-  color: #616161;
-  line-height: 1.8;
-}
-
-.concierge-detail-panel + .concierge-detail-panel {
-  margin-top: 14px;
-}
-
-body.is-concierge-modal-open {
-  overflow: hidden;
-}
-
 @media screen and (min-width: variables.$breakpoint-md) {
   :root {
     --concierge-header-offset: 68px;
@@ -571,7 +442,6 @@ body.is-concierge-modal-open {
     border-radius: 0;
   }
 
-  .concierge-panel,
   .concierge-chat-shell {
     border-radius: 28px;
   }
@@ -620,10 +490,4 @@ body.is-concierge-modal-open {
     height: 58px;
   }
 
-  .concierge-detail-dialog {
-    width: min(100% - 24px, 560px);
-    max-height: min(80dvh, 720px);
-    margin-top: 10dvh;
-    padding: 24px 18px 18px;
-  }
 }

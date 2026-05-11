@@ -69,7 +69,9 @@ article.privacy-policy,
     margin-bottom: 5px;
 }
 
-#share-button{
+
+#share-button,
+.content-tour-button{
     all: unset;  
     display: flex;
     flex-direction: column;
@@ -81,10 +83,15 @@ article.privacy-policy,
     margin-right: 5%;
     width: 30px;
 }
-#share-button i{
+#share-button i,
+.content-tour-button i{
     font-size: 25px;
 }
-
+.content-tour-button{
+  &.--ai i{
+    font-size: 30px;
+  }
+}
 .header-nav-pc-wrapper{
   display: none;
 
