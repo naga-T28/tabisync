@@ -529,4 +529,91 @@ document.addEventListener("DOMContentLoaded", function () {
   renderBoard();
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function startMemoTour(forceStart) {
+    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
+
+    const tourStorageKey = "tabisync_memo_tour_seen";
+    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
+
+    const isPc = window.matchMedia("(min-width: 960px)").matches;
+    const tourSteps = [
+      {
+        popover: {
+          title: 'メモへようこそ',
+          description: '旅のメモや気づいたことを、このページにまとめて残せます。'
+        }
+      },
+      ...(isPc ? [
+        {
+          element: '.content-side-nav',
+          popover: {
+            title: 'メニュー',
+            description: '左側のメニューから、旅程表・リスト・地図などへ移動できます。'
+          }
+        }
+      ] : []),
+      {
+        element: '.memo-ios-header',
+        popover: {
+          title: '保存状態',
+          description: '編集できる場合は、メモの変更が自動保存されます。'
+        }
+      },
+      {
+        element: '#memoBoard',
+        popover: {
+          title: 'メモ一覧',
+          description: 'メモを開いて内容を確認できます。編集権限があれば追加や更新もできます。'
+        }
+      },
+      ...(!isPc ? [
+        {
+          element: '.footer-nav',
+          popover: {
+            title: 'メニュー',
+            description: '画面下のメニューから、旅程表・リスト・地図などへ移動できます。'
+          }
+        },
+        {
+          element: '#content-tour-button',
+          popover: {
+            title: 'ヘルプ',
+            description: 'この説明はヘルプアイコンから再度見ることができます。'
+          }
+        }
+      ] : [])
+    ];
+
+    const driverObj = window.driver.js.driver({
+      animate: true,
+      overlayOpacity: 0.75,
+      showProgress: true,
+      nextBtnText: '次へ',
+      prevBtnText: '戻る',
+      doneBtnText: '完了',
+      onDestroyed: function () {
+        window.localStorage.setItem(tourStorageKey, "true");
+      },
+      steps: tourSteps
+    });
+
+    driverObj.drive();
+  }
+
+  window.startContentTour = function () {
+    startMemoTour(true);
+  };
+
+  startMemoTour(false);
+
+  const tourButton = document.getElementById("content-tour-button");
+  if (tourButton) {
+    tourButton.addEventListener("click", function () {
+      startMemoTour(true);
+    });
+  }
+});
+</script>
 {% endblock %}
