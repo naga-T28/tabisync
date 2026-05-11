@@ -41,7 +41,9 @@
         <!--オリジナルCSS-->
         <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2974880632446425"
      crossorigin="anonymous"></script>
      <script async custom-element="amp-ad" src="https://cdn.ampproject.org/v0/amp-ad-0.1.js"></script>
@@ -111,7 +113,10 @@
         <header class="page-header --only-sp">
             <div class="header-wrapper">
                 <div class="header-buttons">
-                    <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button>
+                    <!-- <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i></button> -->
+                    <button id="content-tour-button" class="content-tour-button" type="button" aria-label="使い方を見る">
+                        <i class="fa-regular fa-circle-question"></i>
+                    </button>
                 </div>
                 <div class="header-logo">
                     <h1>
@@ -120,7 +125,6 @@
                         </a>
                     </h1>
                 </div>
-                <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
                     <a href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}" id="share-button"><img src="{% static 'img/ai-concierge-icon.webp' %}" alt="AIコンシェルジュ" class="footer-nav-icon-ai-concierge"></a>
                 </div>
