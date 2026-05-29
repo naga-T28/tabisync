@@ -32,6 +32,13 @@
 
     </section>
 
+    <section class="home-section home-recent-section" id="homeRecentSection" hidden>
+        <div class="home-section-heading">
+            <h2>このブラウザで最近閲覧したしおり</h2>
+        </div>
+        <div class="home-recent-list" id="homeRecentList" aria-label="最近閲覧したしおり"></div>
+    </section>
+
     <section class="home-section home-concierge-section">
         <div class="home-section-heading">
             <h2>AIコンシェルジュが、<br>旅行をサポートします</h2>
@@ -99,11 +106,7 @@
             </div>
             <div>
                 <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
-                <span>スマホで確認しやすい</span>
-            </div>
-            <div>
-                <i class="fa-solid fa-desktop" aria-hidden="true"></i>
-                <span>PCでも編集しやすい</span>
+                <span>PC・スマホ対応</span>
             </div>
         </div>
     </section>
@@ -138,6 +141,13 @@
                 <ul class="update-list">
                     <li class="update-item">
                         <div class="update-version-date">
+                            <span class="update-version"> v2.1.1 </span>
+                            <span class="update-date">2026年05月30日</span>
+                        </div>
+                        <span class="update-content">最近閲覧したしおりを表示する機能とその他新機能を追加しました。</span>
+                    </li>
+                    <li class="update-item">
+                        <div class="update-version-date">
                             <span class="update-version"> v2.1.0 </span>
                             <span class="update-date">2026年05月11日</span>
                         </div>
@@ -149,13 +159,6 @@
                             <span class="update-date">2026年05月05日</span>
                         </div>
                         <span class="update-content">TabiSyncのデザインと基本機能をリニューアルしました。</span>
-                    </li>
-                    <li class="update-item">
-                        <div class="update-version-date">
-                            <span class="update-version"> v1.4.1 </span>
-                            <span class="update-date">2026年01月20日</span>
-                        </div>
-                        <span class="update-content">共有URLをより見やすく表示できるようになりました。</span>
                     </li>
                 </ul>
             </div>
@@ -172,4 +175,64 @@
         </section>
     </div>
 </main>
+<script>
+(function () {
+    const recentKey = "tabisync_recent_itineraries";
+    const section = document.getElementById("homeRecentSection");
+    const list = document.getElementById("homeRecentList");
+
+    if (!section || !list) return;
+
+    function formatViewedAt(timestamp) {
+        if (!timestamp) return "";
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toLocaleDateString("ja-JP", {
+            month: "numeric",
+            day: "numeric"
+        });
+    }
+
+    function createRecentItem(item) {
+        const link = document.createElement("a");
+        link.className = "home-recent-item";
+        link.href = item.url;
+
+        const icon = document.createElement("span");
+        icon.className = "home-recent-icon";
+        icon.innerHTML = '<i class="fa-solid fa-book-open" aria-hidden="true"></i>';
+
+        const copy = document.createElement("span");
+        copy.className = "home-recent-copy";
+
+        const title = document.createElement("span");
+        title.className = "home-recent-title";
+        title.textContent = item.title || "無題のしおり";
+
+        const meta = document.createElement("span");
+        meta.className = "home-recent-meta";
+        const viewedAt = formatViewedAt(item.viewedAt);
+        meta.textContent = viewedAt ? viewedAt + " に閲覧" : "最近閲覧";
+
+        copy.append(title, meta);
+        link.append(icon, copy);
+        return link;
+    }
+
+    try {
+        const recent = JSON.parse(window.localStorage.getItem(recentKey) || "[]")
+            .filter(function (item) {
+                return item && item.url && item.title;
+            })
+            .slice(0, 4);
+
+        if (!recent.length) return;
+
+        list.replaceChildren(...recent.map(createRecentItem));
+        section.hidden = false;
+    } catch (error) {
+        section.hidden = true;
+    }
+})();
+</script>
 {% endblock %}

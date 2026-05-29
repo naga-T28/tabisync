@@ -211,6 +211,27 @@
                         applySideNavState(nextState);
                     });
                 }
+
+                try {
+                    const recentKey = "tabisync_recent_itineraries";
+                    const recent = JSON.parse(window.localStorage.getItem(recentKey) || "[]");
+                    const current = {
+                        id: "{{ itinerary.pk|escapejs }}",
+                        title: "{{ itinerary.title|escapejs }}",
+                        url: "{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}",
+                        viewedAt: Date.now()
+                    };
+                    const nextRecent = [
+                        current,
+                        ...recent.filter(function (item) {
+                            return item && item.id !== current.id && item.url !== current.url;
+                        })
+                    ].slice(0, 6);
+
+                    window.localStorage.setItem(recentKey, JSON.stringify(nextRecent));
+                } catch (error) {
+                    // localStorageが使えない環境では履歴表示を省略します。
+                }
             });
         </script>
     </body>

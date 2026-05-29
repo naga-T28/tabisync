@@ -968,7 +968,7 @@ article.privacy-policy,
 .schedule-row {
   border-bottom: 1px solid #c4c4c4;
   padding: 14px 0;
-  min-height: 85px;
+  min-height: 100px;
 }
 
 .schedule-row:last-child {
@@ -983,11 +983,16 @@ article.privacy-policy,
   margin-top: 6px;
 }
 
+.schedule-row.is-next-schedule + .schedule-route-link-wrapper + .schedule-row {
+  margin-top: 6px;
+}
+
 .row-display {
   display: grid;
   grid-template-columns: 55px 40px minmax(0, 1fr);
   column-gap: 8px;
   align-items: stretch;
+  min-height: 80px;
 }
 
 /* =========================
@@ -1205,6 +1210,43 @@ article.privacy-policy,
 
 .place-open-btn:hover .place-name-text {
   text-decoration: underline;
+}
+
+.schedule-route-link-wrapper {
+  display: flex;
+  padding: 0;
+  margin-top: -2px;
+}
+
+.schedule-route-link {
+  min-height: 36px;
+  width: 100%;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #d9dde6;
+  border-top: 1px solid #d9dde6;
+  padding: 6px 20px;
+  color: #3f4b55;
+  background: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 1px;
+  text-decoration: none;
+}
+.schedule-route-link div {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+}
+.schedule-route-link div i {
+  color: #7b4bb2;
+  font-size: 0.9rem;
+}
+.schedule-route-link:hover {
+  border-color: #cfc0dc;
+  background: #fbf8fd;
 }
 
 .empty-day-message {
@@ -2927,6 +2969,7 @@ body#content-body:has(.content-main-map) > footer > small {
 }
 .schedule-edit-page .row-display {
   display: grid;
+  height: 100%;
   grid-template-columns: 55px 40px minmax(0, 1fr);
   column-gap: 8px;
   align-items: stretch;
