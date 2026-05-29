@@ -486,6 +486,7 @@ footer small {
 .input-description {
   width: 100%;
   min-height: 24px;
+  max-height: 200px;
   padding: 4px 6px;
   border-radius: 6px;
   border: 1px solid #ccc;

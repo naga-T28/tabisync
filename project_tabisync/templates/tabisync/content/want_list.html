@@ -136,10 +136,12 @@
             </div>
 
             <div class="search-wrapper">
+                <div>
                 <input id="searchInput" type="text" placeholder="場所を検索">
                 <button id="searchBtn" type="button">検索</button>
+                  </div>
+                  <div id="suggestions" class="suggestions-box"></div>
             </div>
-            <div id="suggestions" class="suggestions-box"></div>
 
             <input id="placeName" placeholder="場所名">
             <input id="placeAddress" placeholder="住所">
@@ -580,6 +582,7 @@ function openAddModal(){
   setPriorityStars(3);
   setPlaceDetailFields();
   document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("suggestions").classList.remove("is-active");
   document.getElementById("placeDetailSettings").open = false;
   syncPlaceDetailToggle();
 
@@ -608,6 +611,7 @@ function openEditModalFromView(){
     lng: place.lng ?? ""
   });
   document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("suggestions").classList.remove("is-active");
   document.getElementById("placeDetailSettings").open = false;
   syncPlaceDetailToggle();
 
@@ -630,10 +634,7 @@ function openEditModalFromView(){
 
 function closeEditModal(){
   document.getElementById("editModal").classList.remove("active");
-}
-
-function closeEditModal(){
-  document.getElementById("editModal").classList.remove("active");
+  document.getElementById("suggestions").classList.remove("is-active");
 }
 
 // 背景クリックで閉じる
@@ -642,18 +643,27 @@ document.getElementById("editModal").addEventListener("click", () => closeEditMo
 /* ===============================
    Place検索（候補表示）
 ================================= */
-function renderSuggestions(items){
+function renderSuggestions(items) {
   const box = document.getElementById("suggestions");
   box.innerHTML = "";
-  if (!items || items.length === 0) return;
+
+  if (!items || items.length === 0) {
+    box.classList.remove("is-active");
+    return;
+  }
 
   items.forEach(it => {
     const div = document.createElement("div");
     div.className = "suggestion-item";
     div.textContent = it.description || it.name || "";
-    div.addEventListener("click", () => selectSuggestion(it));
+    div.addEventListener("click", () => {
+      selectSuggestion(it);
+      box.classList.remove("is-active");
+    });
     box.appendChild(div);
   });
+
+  box.classList.add("is-active");
 }
 
 function selectSuggestion(pred){
@@ -677,12 +687,16 @@ function selectSuggestion(pred){
       lng: place.geometry?.location?.lng?.() ?? ""
     });
     document.getElementById("suggestions").innerHTML = "";
+    document.getElementById("suggestions").classList.remove("is-active");
   });
 }
 
 function doSearch(){
   const q = document.getElementById("searchInput").value.trim();
-  if (!q) return;
+  if (!q) {
+    renderSuggestions([]);
+    return;
+  }
 
   if (autocompleteService){
     autocompleteService.getPlacePredictions({ input: q }, (preds, status) => {

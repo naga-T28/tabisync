@@ -2076,27 +2076,46 @@ body#content-body:has(.content-main-map) > footer > small {
    5) Suggestions (Place Search)
    ========================= */
 /* NOTE: suggestions-box / suggestion-item は重複していたため統合 */
-.suggestions-box {
-  position: relative;
+.search-wrapper > .suggestions-box {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
   z-index: 13000;
+  display: none;
   background: #fff;
-  border: 1px solid #d8dde6;
-  border-radius: 10px;
-  margin-top: 5px;
+  border: 1px solid #e2d9e6;
+  border-radius: 12px;
   max-height: 220px;
   overflow-y: auto;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 12px 28px rgba(42, 34, 48, 0.12);
 }
 
-.suggestion-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+.search-wrapper > .suggestions-box.is-active {
+  display: block;
+}
+
+.search-wrapper .suggestion-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0e9f2;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  margin-bottom: 0;
   cursor: pointer;
   background: #fff;
+  color: #30383b;
+  line-height: 1.5;
+  font-size: 0.95rem;
 }
 
-.suggestion-item:hover {
-  background: #f5f5f5;
+.search-wrapper .suggestion-item:last-child {
+  border-bottom: 0;
+}
+
+.search-wrapper .suggestion-item:hover {
+  background: #fbf7fc;
 }
 
 /* =========================
@@ -2252,7 +2271,7 @@ body#content-body:has(.content-main-map) > footer > small {
   position: fixed;
   inset: 0;
   height: 100dvh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(24, 27, 29, 0.46);
   z-index: 12000;
   justify-content: center;
   align-items: center;
@@ -2265,16 +2284,17 @@ body#content-body:has(.content-main-map) > footer > small {
 
 .edit-modal-content {
   position: relative;
-  background: #fff;
+  background: #fffefd;
   width: min(560px, 94vw);
   max-height: calc(100dvh - 32px);
   overflow: auto;
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid #eee4f1;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 18px 44px rgba(36, 31, 39, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .edit-modal-header {
@@ -2288,37 +2308,54 @@ body#content-body:has(.content-main-map) > footer > small {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: #fff;
+  background: #faf7fb;
   font-size: 22px;
-  border: none;
-  color: #333;
+  border: 1px solid #eadfeb;
+  color: #4a454c;
   cursor: pointer;
 }
 
 .search-wrapper {
+  position: relative;
   width: 100%;
   display: flex;
-  align-items: center;
-  overflow: hidden;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  overflow: visible;
   background: #fff;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
+.search-wrapper > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
 .search-wrapper input {
   flex: 1;
-  width: 80%;
-  padding: 5px;
-  border: 1px solid #969696;
-  border-radius: 10px 0 0 10px;
-  padding-left: 10px;
+  min-width: 0;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #d9cddd;
+  border-radius: 12px;
+  background: #fff;
+  color: #2f383b;
+  font-size: 16px;
 }
 .search-wrapper button {
-  width: 20%;
-  padding: 5px;
-  border: 1px solid #3e3e3e;
-  background: #3e3e3e;
-  color: #fff;
-  border-radius: 0 10px 10px 0;
+  flex: 0 0 auto;
+  min-width: 76px;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid #b79bbe;
+  background: #fff;
+  color: #7c1f86;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 #placeName,
@@ -2327,16 +2364,39 @@ body#content-body:has(.content-main-map) > footer > small {
 .edit-modal-content textarea,
 .edit-modal-content select {
   width: 100%;
-  padding: 5px;
-  padding-left: 10px;
+  min-height: 46px;
+  padding: 11px 13px;
   border-radius: 12px;
-  border: 1px solid #969696;
+  border: 1px solid #d9cddd;
+  background: #fff;
+  color: #2f383b;
   font-size: 16px;
+  line-height: 1.5;
+  box-shadow: 0 1px 0 rgba(48, 56, 59, 0.03);
+}
+
+#searchInput:focus,
+#placeName:focus,
+#placeAddress:focus,
+.place-detail-field input:focus,
+.edit-modal-content textarea:focus,
+.edit-modal-content select:focus {
+  outline: none;
+  border-color: #b79bbe;
+  box-shadow: 0 0 0 3px rgba(175, 41, 187, 0.08);
+}
+
+.edit-modal-content textarea {
+  min-height: 104px;
+  resize: vertical;
 }
 
 .place-detail-settings {
   margin-top: 10px;
   border-radius: 12px;
+  border: 1px solid #eee4f1;
+  background: #fcfafc;
+  padding: 12px;
 }
 .place-detail-settings summary {
   cursor: pointer;
@@ -2378,17 +2438,14 @@ body#content-body:has(.content-main-map) > footer > small {
   border: 0;
   background: transparent;
   color: #d0d0d0;
-  font-size: 2rem;
+  font-size: 1.85rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0;
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-.priority-star:hover {
-  transform: scale(1.06);
+  padding: 2px;
+  transition: color 0.16s ease;
 }
 .priority-star.is-active {
-  color: #f4b400;
+  color: #d9a443;
 }
 
 .place-detail-grid {
@@ -2416,7 +2473,7 @@ body#content-body:has(.content-main-map) > footer > small {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .btn-primary {
@@ -2430,6 +2487,18 @@ body#content-body:has(.content-main-map) > footer > small {
   cursor: pointer;
 }
 
+.edit-modal-footer .btn-primary {
+  min-height: 46px;
+  border: 1px solid #9d71a6;
+  border-radius: 12px;
+  background: #8f4798;
+  color: #fff;
+  font-weight: 750;
+  padding: 11px 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(143, 71, 152, 0.16);
+}
+
 .btn-secondary {
   border: 1px solid #cfcfcf;
   border-radius: 12px;
@@ -2440,6 +2509,14 @@ body#content-body:has(.content-main-map) > footer > small {
   cursor: pointer;
 }
 
+.edit-modal-footer .btn-secondary {
+  min-height: 46px;
+  border-color: #d6c9d9;
+  color: #4a454c;
+  padding: 11px 16px;
+  cursor: pointer;
+}
+
 .btn-danger {
   border: 0;
   border-radius: 12px;
@@ -2447,6 +2524,16 @@ body#content-body:has(.content-main-map) > footer > small {
   color: #fff;
   font-weight: 800;
   padding: 10px 14px;
+  cursor: pointer;
+}
+
+.edit-modal-footer .btn-danger {
+  min-height: 46px;
+  border: 1px solid #d4aaaa;
+  background: #fff7f7;
+  color: #9a2f2f;
+  font-weight: 750;
+  padding: 11px 16px;
   cursor: pointer;
 }
 
@@ -3020,7 +3107,6 @@ body#content-body:has(.content-main-map) > footer > small {
 #editEndTime,
 #editTitle,
 #editDescription,
-#searchInput,
 #placeName,
 #placeAddress,
 #memoInput {
@@ -3168,20 +3254,6 @@ body#content-body:has(.content-main-map) > footer > small {
   min-width: 0;
   overflow: visible;
   background: transparent;
-}
-
-#searchInput {
-  min-width: 0;
-}
-
-#searchBtn {
-  min-width: 72px;
-  min-height: 48px;
-  border: none;
-  border-radius: 14px;
-  background: #2f3747;
-  color: #fff;
-  cursor: pointer;
 }
 
 .suggestions-box {
