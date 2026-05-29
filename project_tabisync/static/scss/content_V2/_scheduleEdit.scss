@@ -264,7 +264,6 @@
 #editEndTime,
 #editTitle,
 #editDescription,
-#searchInput,
 #placeName,
 #placeAddress,
 #memoInput {
@@ -414,19 +413,7 @@
   background: transparent;
 }
 
-#searchInput {
-  min-width: 0;
-}
 
-#searchBtn {
-  min-width: 72px;
-  min-height: 48px;
-  border: none;
-  border-radius: 14px;
-  background: #2f3747;
-  color: #fff;
-  cursor: pointer;
-}
 
 .suggestions-box {
   position: relative;

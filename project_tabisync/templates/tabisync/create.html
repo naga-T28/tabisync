@@ -42,12 +42,12 @@
                 <input class="input-password input-password-last" type="email" name="reset_email" placeholder="再設定用メールアドレス(任意)">
                 </div>
                 <div class="cf-turnstile" data-sitekey="0x4AAAAAABg8TmGAOQbU-N_J"></div>
-                <p class="input-user-agreement-check"><a href="{% url "tabisync:user_agreement"%}">利用規約<a>に同意して、</p>
+                <p class="input-user-agreement-check"><a href="{% url 'tabisync:user_agreement' %}">利用規約</a>に同意して、</p>
                 <button class="enter-input-btn" type="submit">作成する</button>
                 <div class="precautions-area">
                     <ul>
-                        <li>自宅住所、電話番号、クレジットカード番号といった個人情報の記載はおやめください。</li>
-                        <li>入力内容は個人を特定できない形で、AI学習や研究のために活用させていただくことがあります。</li>
+                        <li>安全のため、住所・電話番号・クレジットカード番号などの個人情報は入力しないでください。</li>
+                        <li>入力内容は、サービス改善のために個人を特定できない形で利用する場合があります。詳しくは<a href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a>をご確認ください。</li>
                         <li>パスワードの再発行を希望される場合は、事前に再設定用のメールアドレスを登録している必要があります。未登録の場合は再発行できません。</li>
                     </ul>
                 </div>
