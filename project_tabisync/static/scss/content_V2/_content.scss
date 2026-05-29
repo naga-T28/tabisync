@@ -385,6 +385,10 @@
   margin-top: 6px;
 }
 
+.schedule-row.is-next-schedule + .schedule-route-link-wrapper + .schedule-row {
+  margin-top: 6px;
+}
+
 .row-display {
   display: grid;
   grid-template-columns: 55px 40px minmax(0, 1fr);
@@ -609,6 +613,45 @@
 
 .place-open-btn:hover .place-name-text {
   text-decoration: underline;
+}
+
+.schedule-route-link-wrapper {
+  display: flex;
+  padding: 0;
+  margin-top: -2px;
+}
+
+.schedule-route-link {
+  min-height: 36px;
+  width: 100%;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #d9dde6;
+  border-top: 1px solid #d9dde6;
+  padding: 6px 20px;
+  color: #3f4b55;
+  background: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 1px;
+  text-decoration: none;
+
+  div{
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
+      i {
+      color: #7b4bb2;
+      font-size: 0.9rem;
+  }
+  }
+
+  &:hover {
+    border-color: #cfc0dc;
+    background: #fbf8fd;
+  }
 }
 
 .empty-day-message {
