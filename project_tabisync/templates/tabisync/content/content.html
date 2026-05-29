@@ -101,7 +101,11 @@
               {% if group.schedules %}
                 {% for s in group.schedules %}
                   <div class="schedule-row"
-                      data-start-datetime="{% if group.choice.calendar_date and s.start_time %}{{ group.choice.calendar_date }}T{{ s.start_time|time:'H:i:s' }}{% endif %}">
+                      data-start-datetime="{% if group.choice.calendar_date and s.start_time %}{{ group.choice.calendar_date }}T{{ s.start_time|time:'H:i:s' }}{% endif %}"
+                      {% if s.place and s.place.place_id %}
+                        data-place-id="{{ s.place.place_id|escape }}"
+                        data-place-name="{{ s.place.name|escape }}"
+                      {% endif %}>
                     <div class="row-display">
                       <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
                         <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
@@ -504,6 +508,49 @@ function highlightNextSchedule() {
   }
 }
 
+function buildGoogleMapsRouteUrl(fromRow, toRow) {
+  const fromPlaceId = fromRow.dataset.placeId;
+  const toPlaceId = toRow.dataset.placeId;
+  if (!fromPlaceId || !toPlaceId) return "";
+
+  const params = new URLSearchParams({
+    api: "1",
+    origin: fromRow.dataset.placeName || "Google",
+    origin_place_id: fromPlaceId,
+    destination: toRow.dataset.placeName || "Google",
+    destination_place_id: toPlaceId
+  });
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function addRouteButtonsBetweenPlaces() {
+  document.querySelectorAll(".day-panel").forEach(panel => {
+    const rows = [...panel.querySelectorAll(".schedule-row")];
+
+    rows.forEach((row, index) => {
+      const nextRow = rows[index + 1];
+      if (!nextRow) return;
+
+      const routeUrl = buildGoogleMapsRouteUrl(row, nextRow);
+      if (!routeUrl) return;
+
+      const route = document.createElement("div");
+      route.className = "schedule-route-link-wrapper";
+
+      const link = document.createElement("a");
+      link.className = "schedule-route-link";
+      link.href = routeUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.innerHTML = '<div><i class="fa-solid fa-route" aria-hidden="true"></i><span>移動経路を見る</span></div><i class="fa-solid fa-angles-right"></i>';
+
+      route.appendChild(link);
+      row.insertAdjacentElement("afterend", route);
+    });
+  });
+}
+
 function openPlaceModal(place) {
   document.getElementById("modalTitle").textContent = place.name || "";
   document.getElementById("modalAdress").textContent = place.address || "住所情報なし";
@@ -541,6 +588,7 @@ document.addEventListener("click", function(e) {
 
 document.addEventListener("DOMContentLoaded", function() {
   formatScheduleDates();
+  addRouteButtonsBetweenPlaces();
   activateTodayPanelIfExists();
   highlightNextSchedule();
 });
