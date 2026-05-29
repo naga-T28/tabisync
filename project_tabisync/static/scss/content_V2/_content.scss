@@ -370,7 +370,7 @@
 .schedule-row {
   border-bottom: 1px solid #c4c4c4;
   padding: 14px 0;
-  min-height: 85px;
+  min-height: 100px;
 }
 
 .schedule-row:last-child {
@@ -390,6 +390,7 @@
   grid-template-columns: 55px 40px minmax(0, 1fr);
   column-gap: 8px;
   align-items: stretch;
+  min-height: 80px;
 }
 
 /* =========================
