@@ -600,27 +600,39 @@ body#content-body:has(.content-main-map) > footer > small {
    5) Suggestions (Place Search)
    ========================= */
 /* NOTE: suggestions-box / suggestion-item は重複していたため統合 */
-.suggestions-box{
-  position: relative;
+.search-wrapper > .suggestions-box{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
   z-index: 13000;
+  display: none;
   background: #fff;
   border: 1px solid #e2d9e6;
   border-radius: 12px;
-  margin-top: 8px;
   max-height: 220px;
   overflow-y: auto;
   box-shadow: 0 12px 28px rgba(42, 34, 48, 0.12);
 }
-.suggestion-item{
+.search-wrapper > .suggestions-box.is-active{
+  display: block;
+}
+.search-wrapper .suggestion-item{
   padding: 12px 14px;
   border-bottom: 1px solid #f0e9f2;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  margin-bottom: 0;
   cursor: pointer;
   background: #fff;
   color: #30383b;
   line-height: 1.5;
   font-size: 0.95rem;
 }
-.suggestion-item:hover{ background: #fbf7fc; }
+.search-wrapper .suggestion-item:last-child{ border-bottom: 0; }
+.search-wrapper .suggestion-item:hover{ background: #fbf7fc; }
 
 /* =========================
    6) Modals - View (閲覧)
@@ -811,15 +823,24 @@ body#content-body:has(.content-main-map) > footer > small {
 }
 
 .search-wrapper{
+  position: relative;
   width: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   overflow: visible;
   background: #fff;
   margin-bottom: 4px;
 }
 .search-wrapper{
+  > div:first-child{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
   input{
     flex: 1;
     min-width: 0;
