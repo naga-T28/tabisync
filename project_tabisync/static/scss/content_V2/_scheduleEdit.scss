@@ -70,6 +70,7 @@
      ========================= */
   .row-display {
     display: grid;
+    height: 100%;
     grid-template-columns: 55px 40px minmax(0, 1fr);
     column-gap: 8px;
     align-items: stretch;
