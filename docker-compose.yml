@@ -1,0 +1,37 @@
+version: '3.12'
+
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - ../.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backup:/backup
+    networks:
+      - tabisync
+
+  prod_tabisync:
+    container_name: prod_tabisync
+    build:
+      context: .
+      dockerfile: ./containers/django/Dockerfile
+    environment:
+      - DJANGO_SETTINGS_MODULE=project_tabisync.settings
+    env_file:
+      - ../prod-env/.env
+    volumes:
+      - .:/code
+      - ../../web_app/tabisync/prod/shared/staticfiles:/code/project_tabisync/staticfiles
+    ports:
+      - "8000:8000"
+    command: sh -c "/usr/local/bin/entrypoint.sh"
+    networks:
+      - tabisync
+
+volumes:
+  pgdata:
+
+networks:
+  tabisync:
+      driver: bridge
