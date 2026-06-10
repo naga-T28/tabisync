@@ -27,6 +27,7 @@ class Itinerary(models.Model):
     design_number = models.PositiveIntegerField(default=1)
     concierge_daily_limit = models.PositiveIntegerField(default=5)
     want_to_go_limit = models.PositiveIntegerField(default=30)
+    blog_embed_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     qr_code = models.ImageField(upload_to="qr_codes/", blank=True)
     cover_image = models.ImageField(upload_to=itinerary_cover_upload_to, blank=True)
     cover_image_updated_on = models.DateField(blank=True, null=True)

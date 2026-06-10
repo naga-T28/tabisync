@@ -171,6 +171,27 @@
       </div>
     {% endif %}
     <div class="box5-6 schedule-share-box">
+      <h2 class="box-title">ブログ用iframeを出力</h2>
+      <div class="box-content">
+        <p class="copy-url-note">指定した日付の旅程表を同じデザインで自身のブログ等に埋め込むことが出来ます。</p>
+        <div class="blog-html-controls" aria-label="ブログ用HTMLの出力日">
+          <label class="blog-html-field">
+            <span>出力する日付</span>
+            <select id="blogHtmlDay" class="blog-html-select">
+              {% for group in grouped_days %}
+                <option value="{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:blog_schedule_embed' pk=itinerary.pk open_token=itinerary.blog_embed_token day=group.choice.day_num %}">{{ group.choice.day_num }}日目{% if group.choice.calendar_date %}（{{ group.choice.calendar_date }}）{% endif %}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <button type="button" id="copyBlogHtmlButton" class="copy-blog-html-button" onclick="copyBlogScheduleHtml()">
+          <i class="fa-solid fa-copy" aria-hidden="true"></i>
+          <span>iframeをコピー</span>
+        </button>
+        <p id="blogHtmlCopyStatus" class="blog-html-copy-status" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="box5-6 schedule-share-box">
       <h2 class="box-title">しおりを共有</h2>
       <div class="box-content">
         <p class="copy-url-note">以下のリンクをコピーして、このしおりを共有できます。（※リンクをタップすると自動的にコピーされます）</p>
@@ -549,6 +570,321 @@ function addRouteButtonsBetweenPlaces() {
       row.insertAdjacentElement("afterend", route);
     });
   });
+}
+
+const blogFontAwesomeTag = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
+const blogScheduleStyle = `<style>
+.tabisync-blog-schedule {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-top: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #333;
+  font-family: "Noto Sans JP", sans-serif;
+  box-sizing: border-box;
+}
+.tabisync-blog-schedule .day-panel {
+  display: block;
+  width: 95%;
+  margin: 0;
+}
+.tabisync-blog-schedule .day-heading-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.tabisync-blog-schedule .day-heading {
+  margin: 0;
+  color: #333;
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+.tabisync-blog-schedule .schedule-row {
+  border-bottom: 1px solid #c4c4c4;
+  padding: 14px 0;
+  min-height: 100px;
+}
+.tabisync-blog-schedule .schedule-row:last-child {
+  border-bottom: none;
+}
+.tabisync-blog-schedule .row-display {
+  display: grid;
+  grid-template-columns: 55px 40px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: stretch;
+  min-height: 80px;
+}
+.tabisync-blog-schedule .row-time-text {
+  width: 55px;
+  height: 100%;
+  font-weight: 600;
+  padding-top: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+.tabisync-blog-schedule .row-time-text span {
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  font-size: 16px;
+  z-index: 1;
+  background-clip: padding-box;
+}
+.tabisync-blog-schedule .row-time-text::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  width: 0;
+  height: 24px;
+  transform: translateX(-50%);
+  border-left: 2px dotted #5e5e5e;
+  border-radius: 999px;
+  z-index: 0;
+}
+.tabisync-blog-schedule .row-time-text.has-end-time::before {
+  border-left-style: solid;
+}
+.tabisync-blog-schedule .row-icon-column {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 0;
+}
+.tabisync-blog-schedule .schedule-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  position: relative;
+  color: #7b4bb2;
+  font-size: 14px;
+  --schedule-icon-bg: #f2f3f7;
+  background: var(--schedule-icon-bg);
+}
+.tabisync-blog-schedule .schedule-icon::after {
+  content: "";
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  width: 0;
+  height: 24px;
+  transform: translateX(-50%);
+  border-left: 2px solid var(--schedule-icon-bg);
+  border-radius: 999px;
+}
+.tabisync-blog-schedule .schedule-title-default { color: #7b4bb2; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-default { --schedule-icon-bg: #eee3fb; }
+.tabisync-blog-schedule .schedule-title-food { color: #c25a1a; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-food { --schedule-icon-bg: #fbe7d8; }
+.tabisync-blog-schedule .schedule-title-move { color: #2563a8; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-move { --schedule-icon-bg: #dcecff; }
+.tabisync-blog-schedule .schedule-title-photo { color: #7b4bb2; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-photo { --schedule-icon-bg: #eee3fb; }
+.tabisync-blog-schedule .schedule-title-stay { color: #26745f; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-stay { --schedule-icon-bg: #dcefe9; }
+.tabisync-blog-schedule .schedule-title-shopping { color: #b43f68; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-shopping { --schedule-icon-bg: #f8dfea; }
+.tabisync-blog-schedule .schedule-title-event { color: #9a6a00; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-event { --schedule-icon-bg: #f7ebc9; }
+.tabisync-blog-schedule .schedule-title-flag { color: #d34a4a; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-flag { --schedule-icon-bg: #fbe1e1; }
+.tabisync-blog-schedule .schedule-title-flight { color: #1f7fbf; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-flight { --schedule-icon-bg: #dcefff; }
+.tabisync-blog-schedule .schedule-title-car { color: #4f6f2d; }
+.tabisync-blog-schedule .schedule-icon.schedule-title-car { --schedule-icon-bg: #e5efd7; }
+.tabisync-blog-schedule .row-main-text {
+  min-width: 0;
+}
+.tabisync-blog-schedule .display-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.tabisync-blog-schedule .display-place-line {
+  padding-left: 0;
+  margin-top: 0;
+}
+.tabisync-blog-schedule .display-description {
+  margin-top: 10px;
+  color: #666;
+  white-space: pre-wrap;
+  gap: 10px;
+  display: flex;
+  align-items: flex-start;
+}
+.tabisync-blog-schedule .display-description i {
+  margin-top: 5px;
+}
+.tabisync-blog-schedule .row-place-line {
+  margin-top: 10px;
+  gap: 10px;
+}
+.tabisync-blog-schedule .place-open-btn,
+.tabisync-blog-schedule .place-open-text,
+.tabisync-blog-schedule .place-open-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: default;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+.tabisync-blog-schedule .place-open-btn i,
+.tabisync-blog-schedule .place-open-text i,
+.tabisync-blog-schedule .place-open-link i {
+  margin-top: 5px;
+}
+.tabisync-blog-schedule .place-open-link {
+  cursor: pointer;
+}
+.tabisync-blog-schedule .place-open-link:hover .place-name-text {
+  text-decoration: underline;
+}
+.tabisync-blog-schedule .empty-day-message {
+  color: #777;
+  padding: 14px 0;
+}
+@media (max-width: 520px) {
+  .tabisync-blog-schedule .row-display {
+    grid-template-columns: 55px 40px minmax(0, 1fr);
+  }
+}
+</style>`;
+
+function buildGoogleMapsSearchUrl(placeId, placeName) {
+  const params = new URLSearchParams({ api: "1", query: placeName || "Google" });
+  if (placeId) params.set("query_place_id", placeId);
+  return `https://www.google.com/maps/search/?${params.toString()}`;
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function buildBlogScheduleHtml() {
+  const daySelect = document.getElementById("blogHtmlDay");
+  const selectedOption = daySelect ? daySelect.options[daySelect.selectedIndex] : null;
+  if (selectedOption && selectedOption.value) {
+    const title = `TabiSync 旅程表 ${selectedOption.textContent.trim()}`;
+    return `<iframe src="${escapeHtmlAttribute(selectedOption.value)}" title="${escapeHtmlAttribute(title)}" width="100%" height="520" style="width:100%;border:0;overflow:hidden;" loading="lazy"></iframe>`;
+  }
+
+  const panels = getPanels();
+  if (!daySelect || !panels.length) return "";
+
+  const selectedIndex = Number(daySelect.value);
+  const selectedPanel = panels[selectedIndex];
+  if (!selectedPanel) return "";
+
+  const section = document.createElement("section");
+  section.className = "tabisync-blog-schedule";
+
+  [selectedPanel].forEach(panel => {
+    const clonedPanel = panel.cloneNode(true);
+    clonedPanel.classList.remove("is-active");
+    clonedPanel.removeAttribute("id");
+    clonedPanel.removeAttribute("role");
+    clonedPanel.removeAttribute("aria-labelledby");
+    clonedPanel.removeAttribute("data-day-key");
+    clonedPanel.removeAttribute("data-calendar-date");
+    clonedPanel.removeAttribute("data-day-num");
+    clonedPanel.querySelectorAll(".edit-schedule-link-wrapper, .schedule-route-link-wrapper, .display-description").forEach(node => node.remove());
+    clonedPanel.querySelectorAll(".place-open-btn").forEach(button => {
+      const row = button.closest(".schedule-row");
+      const placeId = row ? row.dataset.placeId || "" : "";
+      const placeName = row ? row.dataset.placeName || button.textContent.trim() : button.textContent.trim();
+      const placeLink = document.createElement(placeName ? "a" : "span");
+      placeLink.className = button.className.replace("place-open-btn", placeName ? "place-open-link" : "place-open-text");
+      placeLink.innerHTML = button.innerHTML;
+      if (placeName) {
+        placeLink.href = buildGoogleMapsSearchUrl(placeId, placeName);
+        placeLink.target = "_blank";
+        placeLink.rel = "noopener noreferrer";
+      }
+      button.replaceWith(placeLink);
+    });
+    clonedPanel.querySelectorAll("[onclick], [role], [aria-controls], [aria-selected], [tabindex]").forEach(node => {
+      node.removeAttribute("onclick");
+      node.removeAttribute("role");
+      node.removeAttribute("aria-controls");
+      node.removeAttribute("aria-selected");
+      node.removeAttribute("tabindex");
+    });
+    clonedPanel.querySelectorAll("[data-start-datetime], [data-place-id], [data-place-name], [data-day-key], [data-calendar-date], [data-day-num]").forEach(node => {
+      node.removeAttribute("data-start-datetime");
+      node.removeAttribute("data-place-id");
+      node.removeAttribute("data-place-name");
+      node.removeAttribute("data-day-key");
+      node.removeAttribute("data-calendar-date");
+      node.removeAttribute("data-day-num");
+    });
+    section.appendChild(clonedPanel);
+  });
+
+  return `${blogFontAwesomeTag}\n${blogScheduleStyle}\n${section.outerHTML}`;
+}
+
+async function copyBlogScheduleHtml() {
+  const status = document.getElementById("blogHtmlCopyStatus");
+  const button = document.getElementById("copyBlogHtmlButton");
+  const daySelect = document.getElementById("blogHtmlDay");
+  const selectedOption = daySelect ? daySelect.options[daySelect.selectedIndex] : null;
+  const embedUrl = selectedOption ? selectedOption.value : "";
+  const title = selectedOption ? `TabiSync 旅程表 ${selectedOption.textContent.trim()}` : "TabiSync 旅程表";
+  const html = embedUrl ? `<iframe src="${escapeHtmlAttribute(embedUrl)}" title="${escapeHtmlAttribute(title)}" width="100%" height="520" style="width:100%;border:0;overflow:hidden;" loading="lazy"></iframe>` : "";
+
+  if (!html) {
+    if (status) status.textContent = "コピーできる旅程がありません。";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(html);
+    if (status) status.textContent = "ブログ用iframeをコピーしました。";
+    if (button) button.classList.add("is-copied");
+  } catch (error) {
+    const textArea = document.createElement("textarea");
+    textArea.value = html;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.top = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    const copied = document.execCommand("copy");
+    textArea.remove();
+    if (status) status.textContent = copied ? "ブログ用iframeをコピーしました。" : "コピーに失敗しました。";
+    if (button && copied) button.classList.add("is-copied");
+  }
+
+  window.setTimeout(() => {
+    if (button) button.classList.remove("is-copied");
+  }, 1800);
 }
 
 function openPlaceModal(place) {
