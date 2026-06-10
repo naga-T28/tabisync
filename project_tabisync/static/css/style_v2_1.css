@@ -1332,6 +1332,73 @@ article.privacy-policy,
   text-overflow: ellipsis;
 }
 
+.blog-html-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.blog-html-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #555;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.blog-html-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid #d5d0c8;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #333;
+  font: inherit;
+}
+
+.blog-html-select:focus {
+  outline: 2px solid rgba(105, 91, 73, 0.24);
+  outline-offset: 2px;
+  border-color: #8d7c64;
+}
+
+.copy-blog-html-button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #333;
+  color: #fff;
+  font-size: 0.94rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.copy-blog-html-button:hover {
+  background: #4a4a4a;
+  transform: translateY(-1px);
+}
+
+.copy-blog-html-button.is-copied {
+  background: #2f6f4e;
+}
+
+.blog-html-copy-status {
+  min-height: 1.4em;
+  margin-top: 10px;
+  color: #555;
+  font-size: 0.86rem;
+}
+
 .share-qr-wrapper {
   width: 100%;
   min-width: 0;
@@ -4185,6 +4252,32 @@ body#concierge-body {
 
 .concierge-input-dock .concierge-form {
   pointer-events: auto;
+}
+
+.concierge-usage-count {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  min-height: 28px;
+  margin: 0 auto 8px;
+  padding: 4px 10px;
+  border: 1px solid rgba(47, 55, 71, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #6f7783;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 22px rgba(28, 36, 51, 0.08);
+}
+
+.concierge-usage-count strong {
+  color: #2f3747;
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .concierge-input-wrap {
