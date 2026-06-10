@@ -833,6 +833,43 @@ def build_day_choices(itinerary):
     return []
 
 
+def build_google_maps_search_url(place):
+    if not place:
+        return ""
+
+    params = {"api": "1", "query": place.name or "Google"}
+    if place.place_id:
+        params["query_place_id"] = place.place_id
+    return f"https://www.google.com/maps/search/?{urllib.parse.urlencode(params)}"
+
+
+@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
+class BlogScheduleEmbedView(TemplateView):
+    template_name = "tabisync/content/blog_schedule_embed.html"
+
+    def get(self, request, pk, open_token, day, *args, **kwargs):
+        itinerary = get_object_or_404(Itinerary, pk=pk, blog_embed_token=open_token)
+        day_choices = build_day_choices(itinerary)
+        choice = next((item for item in day_choices if item.get("day_num") == day), None)
+        if not choice:
+            raise Http404("指定された日付の旅程が見つかりません。")
+
+        schedules = [
+            schedule for schedule in itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id")
+            if get_schedule_day_index(itinerary, schedule) == day
+        ]
+        for schedule in schedules:
+            schedule.blog_maps_url = build_google_maps_search_url(schedule.place)
+
+        response = render(request, self.template_name, {
+            "itinerary": itinerary,
+            "choice": choice,
+            "schedules": schedules,
+        })
+        response["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+
 def normalize_memo_v2_notes(raw_content):
     if not raw_content:
         return []
@@ -1653,11 +1690,15 @@ class ConciergeV2View(View):
         if self.itinerary.start_date and self.itinerary.end_date:
             first_date_str = self.itinerary.start_date.strftime("%Y.%m.%d")
             last_date_str = self.itinerary.end_date.strftime("%Y.%m.%d")
+        concierge_daily_limit = self.itinerary.get_concierge_daily_limit()
+        concierge_today_count = self._get_today_usage_count()
 
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
             "first_date_str": first_date_str,
             "last_date_str": last_date_str,
+            "concierge_daily_limit": concierge_daily_limit,
+            "concierge_today_count": min(concierge_today_count, concierge_daily_limit),
         })
 
     def post(self, request, pk, token):

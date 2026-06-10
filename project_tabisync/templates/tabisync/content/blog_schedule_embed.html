@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ itinerary.title }} {{ choice.day_num }}日目 | TabiSync</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      color: #333;
+      font-family: "Noto Sans JP", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .tabisync-blog-schedule {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 1em 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .day-panel {
+      display: block;
+      width: 95%;
+      margin: 0;
+    }
+
+    .day-heading-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .day-heading {
+      margin: 0;
+      color: #333;
+      font-size: 1.5em;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .day-heading-date {
+      font-size: 0.72em;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .schedule-row {
+      border-bottom: 1px solid #c4c4c4;
+      padding: 14px 0;
+      min-height: 100px;
+    }
+
+    .schedule-list > .schedule-row:last-child {
+      border-bottom: none;
+    }
+
+    .row-display {
+      display: grid;
+      grid-template-columns: 55px 40px minmax(0, 1fr);
+      column-gap: 8px;
+      align-items: stretch;
+      min-height: 80px;
+    }
+
+    .row-time-text {
+      width: 55px;
+      height: 100%;
+      font-weight: 600;
+      padding-top: 2px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .row-time-text span {
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      font-size: 16px;
+      z-index: 1;
+      background-clip: padding-box;
+    }
+
+    .row-time-text::before {
+      content: "";
+      position: absolute;
+      top: 32px;
+      left: 50%;
+      width: 0;
+      height: 24px;
+      transform: translateX(-50%);
+      border-left: 2px dotted #5e5e5e;
+      border-radius: 999px;
+      z-index: 0;
+    }
+
+    .row-time-text.has-end-time::before {
+      border-left-style: solid;
+    }
+
+    .row-icon-column {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 0;
+    }
+
+    .schedule-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 32px;
+      position: relative;
+      color: #7b4bb2;
+      font-size: 14px;
+      --schedule-icon-bg: #f2f3f7;
+      background: var(--schedule-icon-bg);
+    }
+
+    .schedule-icon::after {
+      content: "";
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+      width: 0;
+      height: 24px;
+      transform: translateX(-50%);
+      border-left: 2px solid var(--schedule-icon-bg);
+      border-radius: 999px;
+    }
+
+    .schedule-title-default { color: #7b4bb2; }
+    .schedule-icon.schedule-title-default { --schedule-icon-bg: #eee3fb; }
+    .schedule-title-food { color: #c25a1a; }
+    .schedule-icon.schedule-title-food { --schedule-icon-bg: #fbe7d8; }
+    .schedule-title-move { color: #2563a8; }
+    .schedule-icon.schedule-title-move { --schedule-icon-bg: #dcecff; }
+    .schedule-title-photo { color: #7b4bb2; }
+    .schedule-icon.schedule-title-photo { --schedule-icon-bg: #eee3fb; }
+    .schedule-title-stay { color: #26745f; }
+    .schedule-icon.schedule-title-stay { --schedule-icon-bg: #dcefe9; }
+    .schedule-title-shopping { color: #b43f68; }
+    .schedule-icon.schedule-title-shopping { --schedule-icon-bg: #f8dfea; }
+    .schedule-title-event { color: #9a6a00; }
+    .schedule-icon.schedule-title-event { --schedule-icon-bg: #f7ebc9; }
+    .schedule-title-flag { color: #d34a4a; }
+    .schedule-icon.schedule-title-flag { --schedule-icon-bg: #fbe1e1; }
+    .schedule-title-flight { color: #1f7fbf; }
+    .schedule-icon.schedule-title-flight { --schedule-icon-bg: #dcefff; }
+    .schedule-title-car { color: #4f6f2d; }
+    .schedule-icon.schedule-title-car { --schedule-icon-bg: #e5efd7; }
+
+    .row-main-text {
+      min-width: 0;
+    }
+
+    .display-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .display-place-line {
+      padding-left: 0;
+      margin-top: 0;
+    }
+
+    .row-place-line {
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .place-open-link,
+    .place-open-text {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border: none;
+      background: none;
+      padding: 0;
+      text-align: left;
+      cursor: default;
+      color: inherit;
+      font: inherit;
+      text-decoration: none;
+    }
+
+    .place-open-link {
+      cursor: pointer;
+    }
+
+    .place-open-link i,
+    .place-open-text i {
+      margin-top: 5px;
+    }
+
+    .place-open-link:hover .place-name-text {
+      text-decoration: underline;
+    }
+
+    .empty-day-message {
+      color: #777;
+      padding: 14px 0;
+    }
+
+    @media (max-width: 520px) {
+      .row-display {
+        grid-template-columns: 55px 40px minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="tabisync-blog-schedule">
+    <section class="day-panel">
+
+      <div class="schedule-list">
+        {% if schedules %}
+          {% for s in schedules %}
+            <div class="schedule-row">
+              <div class="row-display">
+                <div class="row-time-text {% if s.end_time %}has-end-time{% endif %}">
+                  <span class="display-start-time">{{ s.start_time|time:'H:i' }}</span>
+                  {% if s.end_time %}<span class="display-end-time">{{ s.end_time|time:'H:i' }}</span>{% endif %}
+                </div>
+
+                <div class="row-icon-column">
+                  <span class="schedule-icon {{ s.get_title_color_class }}" aria-hidden="true">
+                    <i class="fa-solid {{ s.get_icon_class }}"></i>
+                  </span>
+                </div>
+
+                <div class="row-main-text">
+                  <div class="display-title {{ s.get_title_color_class }}">{{ s.title }}</div>
+                  {% if s.place %}
+                    <div class="row-place-line display-place-line">
+                      {% if s.blog_maps_url %}
+                        <a class="place-open-link" href="{{ s.blog_maps_url }}" target="_blank" rel="noopener noreferrer">
+                          <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{{ s.place.name }}</span>
+                        </a>
+                      {% else %}
+                        <span class="place-open-text">
+                          <i class="fa-solid fa-location-dot"></i> <span class="place-name-text">{{ s.place.name }}</span>
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-day-message">この日の予定はまだありません。</div>
+        {% endif %}
+      </div>
+    </section>
+  </section>
+</body>
+</html>

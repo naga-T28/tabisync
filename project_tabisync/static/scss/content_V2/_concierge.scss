@@ -353,6 +353,32 @@ body#concierge-body {
   pointer-events: auto;
 }
 
+.concierge-usage-count {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  min-height: 28px;
+  margin: 0 auto 8px;
+  padding: 4px 10px;
+  border: 1px solid rgba(47, 55, 71, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #6f7783;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 22px rgba(28, 36, 51, 0.08);
+}
+
+.concierge-usage-count strong {
+  color: #2f3747;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .concierge-input-wrap {
   display: flex;
   align-items: center;

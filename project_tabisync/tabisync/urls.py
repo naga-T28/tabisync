@@ -25,6 +25,7 @@ urlpatterns = [
     path('updates/',views.UpdatesView.as_view(), name='updates'),
     path("offline/", views.offline_view, name="offline"),
     path("robots.txt", views.robots_txt_view, name="robots_txt"),
+    path("<int:pk>/<uuid:open_token>/<int:day>/", views.BlogScheduleEmbedView.as_view(), name="blog_schedule_embed"),
     path('content/<int:pk>/<uuid:token>/', views.ItineraryDetailView.as_view(), name='content'),
     path('content/<int:pk>/<uuid:token>/edit', views.EditView.as_view(), name='edit'),
     path('content/<int:pk>/<uuid:token>/memo/', views.MemoDetailView.as_view(), name='content_memo'),
