@@ -29,6 +29,7 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView  # add_2025.06.07
 from django_ratelimit.decorators import ratelimit
@@ -844,6 +845,7 @@ def build_google_maps_search_url(place):
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
+@method_decorator(xframe_options_exempt, name='dispatch')
 class BlogScheduleEmbedView(TemplateView):
     template_name = "tabisync/content/blog_schedule_embed.html"
 
