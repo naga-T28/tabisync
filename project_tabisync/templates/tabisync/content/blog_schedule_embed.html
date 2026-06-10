@@ -13,7 +13,7 @@
     html,
     body {
       margin: 0;
-      padding: 0;
+      padding: 0 0 42px;
       background: transparent;
       color: #333;
       font-family: "Noto Sans JP", sans-serif;
@@ -229,6 +229,29 @@
       padding: 14px 0;
     }
 
+    .tabisync-embed-caption {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      z-index: 20;
+      padding: 4px 7px;
+      display: inline-flex;
+      align-items: center;
+      background: rgba(80, 80, 80, 0.46);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      text-decoration: none;
+      backdrop-filter: blur(6px);
+    }
+
+    .tabisync-embed-caption:hover {
+      background: rgba(80, 80, 80, 0.62);
+      color: #fff;
+      text-decoration: underline;
+    }
+
     @media (max-width: 520px) {
       .row-display {
         grid-template-columns: 55px 40px minmax(0, 1fr);
@@ -281,5 +304,8 @@
       </div>
     </section>
   </section>
+  <a class="tabisync-embed-caption" href="{% url 'tabisync:home' %}" target="_blank" rel="noopener noreferrer" aria-label="TabiSyncを開く">
+    <span>Created with TabiSync</span>
+  </a>
 </body>
 </html>
