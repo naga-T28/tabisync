@@ -1,5 +1,28 @@
 {% extends "base.html" %}
-{% block title %}プロフィール{% endblock %}
+{% block title %}運営者プロフィール | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncの運営者プロフィールです。旅行しおり共有サービスを開発しているnagaTの紹介と、旅行ブログへのリンクを掲載しています。{% endblock %}
+{% block og_title %}運営者プロフィール | TabiSync{% endblock %}
+{% block og_description %}TabiSyncの運営・開発者nagaTのプロフィールです。旅行しおり共有サービスへの想いとブログを紹介しています。{% endblock %}
+{% block twitter_title %}運営者プロフィール | TabiSync{% endblock %}
+{% block twitter_description %}TabiSyncの運営・開発者nagaTのプロフィールです。旅行しおり共有サービスへの想いとブログを紹介しています。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "nagaT",
+  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:profile' %}",
+  "sameAs": [
+    "https://blog.naga-t.jp"
+  ],
+  "worksFor": {
+    "@type": "Organization",
+    "name": "TabiSync",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block contents %}
 {% load static %}

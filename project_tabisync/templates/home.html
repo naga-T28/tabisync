@@ -1,5 +1,40 @@
 {% extends "base_home.html" %}
-{% block title %}ホーム{% endblock %}
+{% block title %}TabiSync | ログインなしで使える旅行しおり共有サービス{% endblock %}
+{% block meta_description %}TabiSyncは、登録不要で旅程・行きたい場所・持ち物・メモをURL共有できる旅行しおりサービスです。AIコンシェルジュに相談しながら、友達や家族との旅行計画をまとめられます。{% endblock %}
+{% block og_title %}TabiSync | ログインなしで使える旅行しおり共有サービス{% endblock %}
+{% block og_description %}登録不要で旅行のしおりを作成・共有。旅程、行きたい場所、持ち物、メモをまとめ、AIコンシェルジュに旅行計画を相談できます。{% endblock %}
+{% block twitter_title %}TabiSync | ログインなしで使える旅行しおり共有サービス{% endblock %}
+{% block twitter_description %}登録不要で旅行のしおりを作成・共有。旅程、行きたい場所、持ち物、メモをまとめ、AIコンシェルジュに相談できます。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "TabiSync",
+  "applicationCategory": "TravelApplication",
+  "operatingSystem": "Web",
+  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}",
+  "description": "ログインなしで旅程、行きたい場所、持ち物、メモをURL共有できる旅行しおりサービスです。",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "JPY"
+  },
+  "featureList": [
+    "旅行しおりの作成",
+    "旅程のURL共有",
+    "行きたい場所の共有",
+    "持ち物リスト",
+    "AIコンシェルジュ"
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "TabiSync",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block contents %}
 {% load static %}

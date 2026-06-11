@@ -1,5 +1,52 @@
 {% extends "base.html" %}
-{% block title %}よくある質問{% endblock %}
+{% block title %}よくある質問 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncのよくある質問です。登録なしで使えるか、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティについて確認できます。{% endblock %}
+{% block og_title %}よくある質問 | TabiSync{% endblock %}
+{% block og_description %}TabiSyncの使い方、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティに関するFAQです。{% endblock %}
+{% block twitter_title %}よくある質問 | TabiSync{% endblock %}
+{% block twitter_description %}TabiSyncの使い方、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティに関するFAQです。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "本当に登録なしで使えますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "はい。アカウント登録なしでしおりを作成し、URLで共有できます。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "しおりの作成方法を教えてください。",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "トップページのしおり作成ボタンから、日程や予定などを入力することで簡単に作成できます。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "作成したしおりはあとから編集できますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "はい、右下の編集ボタンからいつでも内容の編集は可能です。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "AIコンシェルジュでは何ができますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "登録した旅程、行きたい場所、メモをもとに、予定の相談、持ち物の提案、雨の日の代替案、移動の確認などができます。"
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block contents %}
 <main class="page-main">
