@@ -25,6 +25,16 @@ body {
   padding-bottom: 50px;
 }
 
+::selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
+
+::-moz-selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
+
 .page-main {
   flex: 1; /* メイン部分が残りの高さを取る */
   margin-top: 40px; /* ヘッダーの高さ分だけ下げる */
@@ -855,6 +865,11 @@ article.privacy-policy,
 .day-tab.is-active {
   color: #AF29BB;
   font-weight: 700;
+  border-bottom: #AF29BB 3px solid;
+}
+
+.day-tab:hover {
+  color: #AF29BB;
   border-bottom: #AF29BB 3px solid;
 }
 
