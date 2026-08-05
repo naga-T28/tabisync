@@ -4,6 +4,16 @@
   box-sizing: border-box;
 }
 
+::selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
+
+::-moz-selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
+
 html {
   scroll-behavior: smooth;
 }
