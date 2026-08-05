@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 
 
@@ -15,6 +16,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # DEBUG設定
 DEBUG = env_bool('DEBUG', False)
+
+# manage.py test 実行時はdjango-ratelimitを無効化する。
+# レート制限はプロセス全体で共有されるキャッシュ(デフォルトのLocMemCache)を使うため、
+# テストスイート全体で同一IP(テストクライアントは127.0.0.1固定)への大量リクエストが
+# 蓄積し、rate-limit対象viewのテストが実行順序によって偶発的に403で失敗しうる。
+# レート制限自体の挙動はどのテストも検証していないため、テスト時は無効化する。
+RATELIMIT_ENABLE = "test" not in sys.argv
 
 # Turnstile keys（Cloudflare管理画面から取得）
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")

@@ -14,6 +14,14 @@ from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
 from ..models import Itinerary
+from .access_control import (
+    EditPasswordRequiredMixin,
+    ViewPasswordRequiredMixin,
+    get_itinerary_or_404,
+    has_edit_access,
+    has_view_access,
+    require_view_access,
+)
 from .itinerary_helpers import (
     build_day_choices,
     build_google_maps_search_url,
@@ -34,10 +42,11 @@ from .utils import (
 
 
 def itinerary_qr_code_view(request, pk, token):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+    itinerary = get_itinerary_or_404(pk, token)
 
-    if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-        return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
+    gate_response = require_view_access(request, itinerary)
+    if gate_response is not None:
+        return gate_response
 
     share_url = build_itinerary_share_url(request, itinerary)
     ensure_itinerary_qr_code(itinerary, share_url)
@@ -52,15 +61,9 @@ def itinerary_qr_code_view(request, pk, token):
 
 
 def itinerary_cover_image_view(request, pk, token):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+    itinerary = get_itinerary_or_404(pk, token)
 
-    view_session_key = f"view_auth_{pk}_{token}"
-    edit_session_key = f"edit_auth_{pk}"
-    if (
-        itinerary.view_password
-        and not request.session.get(view_session_key, False)
-        and not request.session.get(edit_session_key, False)
-    ):
+    if itinerary.view_password and not has_view_access(request, itinerary) and not has_edit_access(request, itinerary):
         raise Http404("Cover image was not found.")
 
     if not itinerary.cover_image or not itinerary.cover_image.storage.exists(itinerary.cover_image.name):
@@ -153,19 +156,11 @@ class CreateView(View):
 
 # 公開用のしおり表示画面
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ItineraryDetailV2View(TemplateView):
+class ItineraryDetailV2View(ViewPasswordRequiredMixin, TemplateView):
     template_name = "tabisync/content/content.html"
 
-    def _get_itinerary(self, pk, token):
-        return get_object_or_404(Itinerary, pk=pk, token=token)
-
     def get(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-
-        if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-            response = redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
+        itinerary = self.itinerary
 
         schedules = list(itinerary.schedules.select_related("place").all().order_by(
             "day_index", "start_time", "order", "id"
@@ -193,7 +188,7 @@ class ItineraryDetailV2View(TemplateView):
         qr_code_url = build_itinerary_qr_code_url(itinerary)
         cover_image_url = get_itinerary_cover_url(itinerary)
 
-        response = render(request, self.template_name, {
+        return render(request, self.template_name, {
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
@@ -203,8 +198,6 @@ class ItineraryDetailV2View(TemplateView):
             "qr_code_url": qr_code_url,
             "cover_image_url": cover_image_url,
         })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
 
 
@@ -241,21 +234,9 @@ class BlogScheduleEmbedView(TemplateView):
 # v2編集画面
 # =========================
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class EditContentFormV2View(View):
+class EditContentFormV2View(EditPasswordRequiredMixin, View):
     template_name = "tabisync/content/edit_content.html"
-    password_template = "tabisync/edit_password.html"
-
-    def _get_itinerary(self, pk, token):
-        return get_object_or_404(Itinerary, pk=pk, token=token)
-
-    def _render_password(self, request, itinerary, pk, token):
-        response = render(request, self.password_template, {
-            "itinerary": itinerary,
-            "pk": pk,
-            "token": token,
-        })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+    edit_redirect_url_name = "content_edit_form_v2"
 
     def _render_form(self, request, itinerary, extra_context=None, status=200):
         context = {
@@ -265,36 +246,13 @@ class EditContentFormV2View(View):
         }
         if extra_context:
             context.update(extra_context)
-        response = render(request, self.template_name, context, status=status)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+        return render(request, self.template_name, context, status=status)
 
     def get(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-        session_key = f"edit_auth_{itinerary.pk}"
-
-        if itinerary.edit_password and not request.session.get(session_key):
-            return self._render_password(request, itinerary, pk, token)
-
-        return self._render_form(request, itinerary)
+        return self._render_form(request, self.itinerary)
 
     def post(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-        session_key = f"edit_auth_{itinerary.pk}"
-
-        if itinerary.edit_password and not request.session.get(session_key):
-            password = request.POST.get("password", "")
-            if itinerary.check_edit_password(password):
-                request.session[session_key] = True
-                return redirect(reverse("tabisync:content_edit_form_v2", kwargs={"pk": pk, "token": token}))
-            response = render(request, self.password_template, {
-                "error": "パスワードが間違っています。",
-                "itinerary": itinerary,
-                "pk": pk,
-                "token": token,
-            })
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
+        itinerary = self.itinerary
 
         title = (request.POST.get("title") or "").strip()
         subtitle = (request.POST.get("subtitle") or "").strip()
@@ -501,21 +459,9 @@ class EditContentFormV2View(View):
 
 # version2の編集メニュー画面
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class EditMenuV2View(View):
+class EditMenuV2View(EditPasswordRequiredMixin, View):
     template_name = "tabisync/content/edit_menu.html"
-    password_template = "tabisync/edit_password.html"
-
-    def _get_itinerary(self, pk, token):
-        return get_object_or_404(Itinerary, pk=pk, token=token)
-
-    def _render_password(self, request, itinerary, pk, token):
-        response = render(request, self.password_template, {
-            "itinerary": itinerary,
-            "pk": pk,
-            "token": token,
-        })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+    edit_redirect_url_name = "content_edit_v2"
 
     def _render_form(self, request, itinerary, extra_context=None, status=200):
         context = {
@@ -524,37 +470,11 @@ class EditMenuV2View(View):
         }
         if extra_context:
             context.update(extra_context)
-        response = render(request, self.template_name, context, status=status)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+        return render(request, self.template_name, context, status=status)
 
     def get(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-        session_key = f"edit_auth_{itinerary.pk}"
-
-        if itinerary.edit_password and not request.session.get(session_key):
-            return self._render_password(request, itinerary, pk, token)
-
-        return self._render_form(request, itinerary)
+        return self._render_form(request, self.itinerary)
 
     def post(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-        session_key = f"edit_auth_{itinerary.pk}"
-
-        if itinerary.edit_password and not request.session.get(session_key):
-            password = request.POST.get("password", "")
-            if itinerary.check_edit_password(password):
-                request.session[session_key] = True
-                return redirect(reverse("tabisync:content_edit_v2", kwargs={"pk": pk, "token": token}))
-
-            response = render(request, self.password_template, {
-                "error": "パスワードが間違っています。",
-                "itinerary": itinerary,
-                "pk": pk,
-                "token": token,
-            })
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
-
-        return self._render_form(request, itinerary)
+        return self._render_form(request, self.itinerary)
 

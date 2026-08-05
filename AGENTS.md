@@ -217,6 +217,11 @@ pipenv run python manage.py makemigrations --check --dry-run
 - コンシェルジュ入力の文字数制限
 - 会話履歴の正規化
 - V2チェックリスト保存
+- しおりの閲覧/編集アクセス制御（`views/access_control.py`。V1/V2共通のセッションキー生成、パスワード再設定後の旧セッション失効、閲覧・編集ゲートの権限表）
+
+## テスト実行時の注意
+
+- `manage.py test` 実行時は `RATELIMIT_ENABLE = False`（`settings.py`で`sys.argv`から判定）となり、`django_ratelimit` によるレート制限は無効化される。レート制限用キャッシュ(LocMemCache)はテストプロセス全体で共有されるため、有効なままだとテスト実行順序によって無関係なテストが偶発的に403で失敗しうるための対応。レート制限そのものの挙動を検証するテストは現状存在しない。
 
 ## 未定事項
 

@@ -14,6 +14,7 @@ from django_ratelimit.decorators import ratelimit
 
 from ..forms import ContactForm
 from ..models import Itinerary
+from .access_control import grant_view_access
 from .itinerary_helpers import build_public_absolute_uri
 from .utils import ratelimit_client_ip, verify_turnstile
 
@@ -44,7 +45,7 @@ class ItineraryPasswordView(View):
         input_password = request.POST.get('view_password', '')
 
         if itinerary.check_view_password(input_password):
-            request.session[f'view_auth_{pk}_{token}'] = True
+            grant_view_access(request, itinerary)
             return redirect(reverse('tabisync:content_v2', kwargs={'pk': pk, 'token': token}))
         else:
             context = {

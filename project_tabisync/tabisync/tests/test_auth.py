@@ -5,6 +5,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Itinerary
+from ..views.access_control import build_view_session_key
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -26,13 +27,13 @@ class ItineraryPasswordViewTests(TestCase):
     def test_post_with_correct_password_redirects(self, _mock_turnstile):
         response = self.client.post(self.url, {"view_password": "secret123"})
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(self.client.session.get(f"view_auth_{self.itinerary.pk}_{self.itinerary.token}"))
+        self.assertTrue(self.client.session.get(build_view_session_key(self.itinerary)))
 
     @patch("tabisync.views.auth.verify_turnstile", return_value=True)
     def test_post_with_wrong_password_shows_error(self, _mock_turnstile):
         response = self.client.post(self.url, {"view_password": "wrong"})
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(self.client.session.get(f"view_auth_{self.itinerary.pk}_{self.itinerary.token}"))
+        self.assertFalse(self.client.session.get(build_view_session_key(self.itinerary)))
 
 
 @override_settings(
