@@ -1,13 +1,19 @@
 from datetime import datetime
 
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
-from ..models import Item, Itinerary, Memo, Schedule, TravelDate
+from ..models import Item, Memo, Schedule, TravelDate
+from .access_control import (
+    ViewPasswordRequiredMixin,
+    add_noindex_header,
+    get_itinerary_or_404,
+    handle_edit_password_gate,
+)
 from .utils import (
     MAX_CHECKLISTS_PER_ITINERARY,
     MAX_ITINERARY_DAYS,
@@ -25,29 +31,12 @@ from .utils import (
 # =========================
 # memoページ
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class MemoDetailView(TemplateView):
+class MemoDetailView(ViewPasswordRequiredMixin, TemplateView):
     template_name = "tabisync/memo.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-
-        # 閲覧用パスワードが設定されているかチェック
-        if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-            # 認証されていなければパスワード入力画面へリダイレクト
-            return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+        itinerary = self.itinerary
 
         travel_dates = itinerary.travel_dates.all().order_by('date')
 
@@ -71,28 +60,12 @@ class MemoDetailView(TemplateView):
 
 # listページ
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ListDetailView(TemplateView):
+class ListDetailView(ViewPasswordRequiredMixin, TemplateView):
     template_name = "tabisync/list.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-
-        # 閲覧用パスワードが設定されているかチェック
-        if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-            # 認証されていなければパスワード入力画面へリダイレクト
-            return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+        itinerary = self.itinerary
 
         travel_dates = itinerary.travel_dates.all().order_by('date')
 
@@ -117,46 +90,32 @@ class ListDetailView(TemplateView):
 # ver.1 編集・パスワード再設定
 # =========================
 # 編集画面
+# 注: V1のみ、認可チェックより前にverify_turnstile()を要求する既存仕様があるため、
+# EditPasswordRequiredMixinは使わずhandle_edit_password_gateを直接呼び出して合成する。
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
 class EditView(View):
     template_name = "tabisync/edit.html"
-    password_template = "tabisync/edit_password.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.itinerary = get_itinerary_or_404(kwargs.get("pk"), kwargs.get("token"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, pk, token, *args, **kwargs):
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-        session_key = f"edit_auth_{itinerary.pk}"
+        gate_response = handle_edit_password_gate(request, self.itinerary, "content_edit_v2")
+        if gate_response is not None:
+            return gate_response
 
-        if itinerary.edit_password and not request.session.get(session_key):
-            response = render(request, self.password_template, {
-                "itinerary": itinerary,
-                "pk": pk,
-                "token": token
-            })
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
-
-        response = render(request, self.template_name, {"itinerary": itinerary})
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+        return add_noindex_header(render(request, self.template_name, {"itinerary": self.itinerary}))
 
     def post(self, request, pk, token, *args, **kwargs):
         if not verify_turnstile(request):
             return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
-        itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-        session_key = f"edit_auth_{itinerary.pk}"
 
-        if itinerary.edit_password and not request.session.get(session_key):
-            password = request.POST.get("password", "")
-            if itinerary.check_edit_password(password):
-                request.session[session_key] = True
-                return redirect(reverse("tabisync:content_edit_v2", kwargs={"pk": pk, "token": token}))
-            else:
-                return render(request, self.password_template, {
-                    "error": "パスワードが間違っています。",
-                    "itinerary": itinerary,
-                    "pk": pk,
-                    "token": token
-                })
+        gate_response = handle_edit_password_gate(request, self.itinerary, "content_edit_v2")
+        if gate_response is not None:
+            return gate_response
+
+        itinerary = self.itinerary
 
         # ------------------------
         # 基本情報更新
@@ -407,20 +366,8 @@ def prepare_travel_dates_with_schedules(itinerary):
 
 # ver.1 の個別ページ
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ItineraryDetailView(TemplateView):
+class ItineraryDetailView(ViewPasswordRequiredMixin, TemplateView):
     template_name = "tabisync/content.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        self.itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-
-        if self.itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-            return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

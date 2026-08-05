@@ -9,7 +9,8 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
-from ..models import Itinerary, ScheduleV2, WantToGo
+from ..models import ScheduleV2, WantToGo
+from .access_control import EditPasswordRequiredMixin, get_itinerary_or_404, require_edit_access_json
 from .itinerary_helpers import (
     build_day_choices,
     count_schedules_for_day,
@@ -23,26 +24,12 @@ from .utils import MAX_SCHEDULES_PER_DAY, ratelimit_client_ip
 
 # スケジュール本体の編集画面
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ScheduleV2EditView(View):
+class ScheduleV2EditView(EditPasswordRequiredMixin, View):
     template_name = "tabisync/content/schedule_edit.html"
-    password_template = "tabisync/edit_password.html"
-
-    def _get_itinerary(self, pk, token):
-        return get_object_or_404(Itinerary, pk=pk, token=token)
+    edit_redirect_url_name = "Scheduleedit"
 
     def get(self, request, pk, token, *args, **kwargs):
-        itinerary = self._get_itinerary(pk, token)
-        session_key = f"edit_auth_{itinerary.pk}"
-
-        if itinerary.edit_password and not request.session.get(session_key):
-            response = render(request, self.password_template, {
-                "itinerary": itinerary,
-                "pk": pk,
-                "token": token,
-            })
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
-
+        itinerary = self.itinerary
         schedules = list(itinerary.schedules.select_related("place").all().order_by("day_index", "start_time", "order", "id"))
         day_choices = build_day_choices(itinerary)
 
@@ -63,7 +50,7 @@ class ScheduleV2EditView(View):
             first_date_str = itinerary.start_date.strftime("%Y.%m.%d")
             last_date_str = itinerary.end_date.strftime("%Y.%m.%d")
 
-        response = render(request, self.template_name, {
+        return render(request, self.template_name, {
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
@@ -71,19 +58,17 @@ class ScheduleV2EditView(View):
             "first_date_str": first_date_str,
             "last_date_str": last_date_str,
         })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
 
 
 # ScheduleV2 の行を追加・更新する API
 @require_POST
 def schedule_v2_row_save(request, pk, token):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+    itinerary = get_itinerary_or_404(pk, token)
 
-    session_key = f"edit_auth_{itinerary.pk}"
-    if itinerary.edit_password and not request.session.get(session_key):
-        return JsonResponse({"status": "error", "message": "認証が必要です"}, status=403)
+    gate_response = require_edit_access_json(request, itinerary)
+    if gate_response is not None:
+        return gate_response
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -216,11 +201,11 @@ def schedule_v2_row_save(request, pk, token):
 # ScheduleV2 の行を削除する API
 @require_POST
 def schedule_v2_row_delete(request, pk, token):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+    itinerary = get_itinerary_or_404(pk, token)
 
-    session_key = f"edit_auth_{itinerary.pk}"
-    if itinerary.edit_password and not request.session.get(session_key):
-        return JsonResponse({"status": "error", "message": "認証が必要です"}, status=403)
+    gate_response = require_edit_access_json(request, itinerary)
+    if gate_response is not None:
+        return gate_response
 
     try:
         data = json.loads(request.body.decode("utf-8"))

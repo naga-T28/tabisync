@@ -6,6 +6,7 @@ from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from ..models import Itinerary, WantToGo
+from ..views.access_control import build_edit_session_key, build_view_session_key
 
 
 def _make_itinerary(**kwargs):
@@ -140,7 +141,7 @@ class WantToGoV2ViewEditAuthorizationTests(TestCase):
     def test_view_auth_alone_does_not_grant_edit_access(self):
         # view_password は設定していないが、閲覧セッションだけを持たせても編集は不可。
         session = self.client.session
-        session[f"view_auth_{self.itinerary.pk}_{self.itinerary.token}"] = True
+        session[build_view_session_key(self.itinerary)] = True
         session.save()
 
         response = self._post_json({"action": "save_want_to_go", "name": "閲覧権限だけで作成"})
@@ -150,7 +151,7 @@ class WantToGoV2ViewEditAuthorizationTests(TestCase):
     def test_edit_authentication_via_password_form_allows_subsequent_mutations(self):
         auth_response = self.client.post(self.url, {"password": "edit-secret"})
         self.assertEqual(auth_response.status_code, 302)
-        self.assertTrue(self.client.session.get(f"edit_auth_{self.itinerary.pk}"))
+        self.assertTrue(self.client.session.get(build_edit_session_key(self.itinerary)))
 
         response = self._post_json({"action": "save_want_to_go", "name": "認証後に作成"})
         data = json.loads(response.content.decode("utf-8"))
@@ -163,7 +164,7 @@ class WantToGoV2ViewEditAuthorizationTests(TestCase):
         response = self.client.post(self.url, {"password": "wrong-password"})
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "tabisync/edit_password.html")
-        self.assertFalse(self.client.session.get(f"edit_auth_{self.itinerary.pk}"))
+        self.assertFalse(self.client.session.get(build_edit_session_key(self.itinerary)))
 
 
 class WantToGoCrossItineraryTests(TestCase):

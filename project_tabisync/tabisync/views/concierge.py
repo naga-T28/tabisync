@@ -5,8 +5,7 @@ from uuid import UUID, uuid4
 
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.shortcuts import render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
@@ -15,8 +14,14 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
-from ..models import ChecklistV2, ConciergeChatLog, Itinerary, MemoV2, ScheduleV2, WantToGo
+from ..models import ChecklistV2, ConciergeChatLog, MemoV2, ScheduleV2, WantToGo
 from ..openai_concierge import OpenAIConciergeError, run_answer, run_data_selection, run_moderation
+from .access_control import (
+    ViewPasswordRequiredMixin,
+    get_itinerary_or_404,
+    require_edit_access_json,
+    require_view_access_json,
+)
 from .itinerary_helpers import (
     build_default_checklist_v2_lists,
     build_want_to_go_limit_message,
@@ -47,20 +52,8 @@ logger = logging.getLogger(__name__)
 
 
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ConciergeV2View(View):
+class ConciergeV2View(ViewPasswordRequiredMixin, View):
     template_name = "tabisync/content/concierge_v2.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.pk = kwargs.get("pk")
-        self.token = kwargs.get("token")
-        self.itinerary = get_object_or_404(Itinerary, pk=self.pk, token=self.token)
-
-        if self.itinerary.view_password and not request.session.get(f'view_auth_{self.pk}_{self.token}', False):
-            return redirect(reverse('tabisync:content_password', kwargs={'pk': self.pk, 'token': self.token}))
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
@@ -437,14 +430,15 @@ class ConciergeV2View(View):
 @require_POST
 @ratelimit(key=ratelimit_client_ip, rate='20/m', block=True)
 def concierge_v2_apply_changes(request, pk, token):
-    itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
+    itinerary = get_itinerary_or_404(pk, token)
 
-    if itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-        return JsonResponse({"status": "error", "message": "閲覧認証が必要です。"}, status=403)
+    view_gate_response = require_view_access_json(request, itinerary)
+    if view_gate_response is not None:
+        return view_gate_response
 
-    session_key = f"edit_auth_{itinerary.pk}"
-    if itinerary.edit_password and not request.session.get(session_key):
-        return JsonResponse({"status": "error", "message": "編集認証が必要です。編集ページで認証してから再度お試しください。"}, status=403)
+    edit_gate_response = require_edit_access_json(request, itinerary)
+    if edit_gate_response is not None:
+        return edit_gate_response
 
     try:
         data = json.loads(request.body.decode("utf-8"))

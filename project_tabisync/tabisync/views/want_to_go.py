@@ -3,13 +3,13 @@ import json
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
-from ..models import Itinerary, WantToGo
+from ..models import WantToGo
+from .access_control import EditPasswordRequiredMixin, ViewPasswordRequiredMixin
 from .itinerary_helpers import (
     apply_want_to_go_payload,
     build_want_to_go_limit_message,
@@ -86,20 +86,8 @@ def _apply_want_to_go_action(itinerary, data):
 
 # 行きたい場所リスト表示（閲覧専用。変更操作は Wantedit のみで受け付ける）
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class WantToGoMapView(TemplateView):
+class WantToGoMapView(ViewPasswordRequiredMixin, TemplateView):
     template_name = "tabisync/content/want_list.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        self.itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-
-        if self.itinerary.view_password and not request.session.get(f'view_auth_{pk}_{token}', False):
-            return redirect(reverse('tabisync:content_password', kwargs={'pk': pk, 'token': token}))
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,48 +97,10 @@ class WantToGoMapView(TemplateView):
 
 # 行きたい場所リスト編集
 @method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class WantToGoV2View(TemplateView):
+class WantToGoV2View(EditPasswordRequiredMixin, TemplateView):
 
     template_name = "tabisync/content/want_list.html"
-    password_template = "tabisync/edit_password.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        token = self.kwargs.get("token")
-        self.itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
-
-        session_key = f"edit_auth_{self.itinerary.pk}"
-        if self.itinerary.edit_password and not request.session.get(session_key):
-            if request.method == "POST":
-                content_type = request.headers.get("Content-Type", "")
-                if "application/json" in content_type:
-                    return JsonResponse({"status": "error", "message": "編集権限が必要です。"}, status=403)
-
-                password = request.POST.get("password", "")
-                if self.itinerary.check_edit_password(password):
-                    request.session[session_key] = True
-                    return redirect(reverse("tabisync:Wantedit", kwargs={"pk": pk, "token": token}))
-
-                response = render(request, self.password_template, {
-                    "error": "パスワードが間違っています。",
-                    "itinerary": self.itinerary,
-                    "pk": pk,
-                    "token": token,
-                })
-                response["X-Robots-Tag"] = "noindex, nofollow"
-                return response
-
-            response = render(request, self.password_template, {
-                "itinerary": self.itinerary,
-                "pk": pk,
-                "token": token,
-            })
-            response["X-Robots-Tag"] = "noindex, nofollow"
-            return response
-
-        response = super().dispatch(request, *args, **kwargs)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+    edit_redirect_url_name = "Wantedit"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
