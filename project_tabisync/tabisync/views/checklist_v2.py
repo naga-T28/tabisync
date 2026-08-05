@@ -41,7 +41,6 @@ class ChecklistV2View(View):
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
             "checklists": lists,
-            "checklists_json": json.dumps(lists, ensure_ascii=False),
             "can_edit_checklist": not self.itinerary.edit_password or request.session.get(f"edit_auth_{self.itinerary.pk}", False),
         })
 
@@ -122,7 +121,6 @@ class ChecklistV2EditView(View):
         return render(request, self.template_name, {
             "itinerary": self.itinerary,
             "checklists": lists,
-            "checklists_json": json.dumps(lists, ensure_ascii=False),
             "can_edit_checklist": True,
         })
 
