@@ -1,7 +1,8 @@
 import json
+import threading
 from datetime import date
 
-from django.test import TestCase
+from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from ..models import Itinerary, WantToGo
@@ -218,3 +219,42 @@ class WantToGoMapViewTests(TestCase):
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(WantToGo.objects.filter(itinerary=self.itinerary).count(), 0)
+
+
+class WantToGoConcurrentCreationTests(TransactionTestCase):
+    """複数リクエストが同時に件数上限へ書き込もうとしても、上限を超えないことを検証する。
+
+    テストDB(SQLite)は行ロック(select_for_update)を実質サポートしないため、
+    このテストが保証するのは「最終的なDB状態が上限を超えない」という不変条件のみであり、
+    本番のPostgreSQLで行われる真の直列化そのものを再現するものではない。
+    """
+
+    def test_concurrent_saves_do_not_exceed_limit(self):
+        itinerary = _make_itinerary(want_to_go_limit=3)
+        url = reverse("tabisync:Wantedit", kwargs={"pk": itinerary.pk, "token": itinerary.token})
+
+        thread_count = 6
+        barrier = threading.Barrier(thread_count)
+        outcomes = []
+        lock = threading.Lock()
+
+        def worker(index):
+            barrier.wait()
+            client = Client()
+            payload = {"action": "save_want_to_go", "name": f"スポット{index}"}
+            try:
+                response = client.post(url, data=json.dumps(payload), content_type="application/json")
+                outcome = response.status_code
+            except Exception:
+                outcome = "error"
+            with lock:
+                outcomes.append(outcome)
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(thread_count)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        final_count = WantToGo.objects.filter(itinerary=itinerary).count()
+        self.assertLessEqual(final_count, itinerary.want_to_go_limit, f"outcomes={outcomes}")

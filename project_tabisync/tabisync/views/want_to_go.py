@@ -1,5 +1,6 @@
 import json
 
+from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,7 +10,13 @@ from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
 from ..models import Itinerary, WantToGo
-from .itinerary_helpers import apply_want_to_go_payload, build_want_to_go_limit_message, can_add_want_to_go, get_want_to_go_limit
+from .itinerary_helpers import (
+    apply_want_to_go_payload,
+    build_want_to_go_limit_message,
+    can_add_want_to_go,
+    get_want_to_go_limit,
+    lock_itinerary_for_update,
+)
 from .utils import ratelimit_client_ip
 
 
@@ -33,21 +40,26 @@ def _apply_want_to_go_action(itinerary, data):
     action = data.get("action")
 
     if action == "save_want_to_go":
-        if not can_add_want_to_go(itinerary):
-            return JsonResponse({
-                "status": "error",
-                "message": build_want_to_go_limit_message(itinerary),
-            }, status=400)
+        # 件数チェックと作成を同一トランザクション・行ロック内で行い、
+        # 同時リクエストによる上限超過（TOCTOU競合）を防ぐ。
+        with transaction.atomic():
+            locked_itinerary = lock_itinerary_for_update(itinerary)
 
-        place = WantToGo(itinerary=itinerary)
-        apply_want_to_go_payload(place, data)
-        place.save()
-        return JsonResponse({
-            "status": "saved",
-            "id": place.id,
-            "name": place.name,
-            "address": place.address,
-        })
+            if not can_add_want_to_go(locked_itinerary):
+                return JsonResponse({
+                    "status": "error",
+                    "message": build_want_to_go_limit_message(locked_itinerary),
+                }, status=400)
+
+            place = WantToGo(itinerary=locked_itinerary)
+            apply_want_to_go_payload(place, data)
+            place.save()
+            return JsonResponse({
+                "status": "saved",
+                "id": place.id,
+                "name": place.name,
+                "address": place.address,
+            })
 
     if action in ("update_want_to_go", "delete_want_to_go"):
         place_id = data.get("id")

@@ -24,6 +24,15 @@ GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
 USE_HTTPS = env_bool("USE_HTTPS", True)
 
+# クライアントIP判定（レート制限等）で CF-Connecting-IP / X-Forwarded-For を
+# 信頼してよいプロキシのCIDR一覧（カンマ区切り、例: "10.0.0.0/8,192.0.2.10/32"）。
+# 未設定（既定）の場合は転送ヘッダーを一切信頼せず、REMOTE_ADDRのみを使用する。
+TRUSTED_PROXY_CIDRS = [
+    cidr.strip()
+    for cidr in os.environ.get("TRUSTED_PROXY_CIDRS", "").split(",")
+    if cidr.strip()
+]
+
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
 CSRF_COOKIE_SAMESITE = os.environ.get("CSRF_COOKIE_SAMESITE", "Lax")

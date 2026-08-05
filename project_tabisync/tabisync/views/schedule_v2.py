@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
@@ -14,6 +15,7 @@ from .itinerary_helpers import (
     count_schedules_for_day,
     get_schedule_day_index,
     get_schedule_display_date,
+    lock_itinerary_for_update,
     reorder_schedules_for_day,
 )
 from .utils import MAX_SCHEDULES_PER_DAY, ratelimit_client_ip
@@ -136,73 +138,78 @@ def schedule_v2_row_save(request, pk, token):
         except (TypeError, ValueError):
             return JsonResponse({"status": "error", "message": "予定IDが不正です"}, status=400)
 
-    if count_schedules_for_day(itinerary, day_index, exclude_schedule_id) >= MAX_SCHEDULES_PER_DAY:
+    # 件数チェックと作成/更新を同一トランザクション・行ロック内で行い、
+    # 同時リクエストによる1日あたり上限超過（TOCTOU競合）を防ぐ。
+    with transaction.atomic():
+        itinerary = lock_itinerary_for_update(itinerary)
+
+        if count_schedules_for_day(itinerary, day_index, exclude_schedule_id) >= MAX_SCHEDULES_PER_DAY:
+            return JsonResponse({
+                "status": "error",
+                "message": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
+            }, status=400)
+
+        date_obj = get_schedule_display_date(itinerary, day_index)
+        if not date_obj:
+            date_obj = itinerary.created_at.date() + timedelta(days=day_index - 1)
+
+        place_obj = None
+        if place_id:
+            place_obj = WantToGo.objects.filter(pk=place_id, itinerary=itinerary).first()
+
+        if row_id:
+            schedule = get_object_or_404(ScheduleV2, pk=row_id, itinerary=itinerary)
+            old_day_index = get_schedule_day_index(itinerary, schedule)
+
+            schedule.date = date_obj
+            schedule.day_index = day_index
+            schedule.title = title
+            schedule.icon = icon
+            schedule.description = description
+            schedule.start_time = start_time
+            schedule.end_time = end_time
+            schedule.place = place_obj
+            schedule.save()
+            created = False
+        else:
+            schedule = ScheduleV2.objects.create(
+                itinerary=itinerary,
+                date=date_obj,
+                day_index=day_index,
+                title=title,
+                icon=icon,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                place=place_obj,
+                order=0,
+            )
+            old_day_index = None
+            created = True
+
+        # 並び順再計算
+        reorder_schedules_for_day(itinerary, schedule.day_index)
+
+        # もとの日付グループから移動した場合は旧グループも再計算
+        if old_day_index is not None and old_day_index != schedule.day_index:
+            reorder_schedules_for_day(itinerary, old_day_index)
+
         return JsonResponse({
-            "status": "error",
-            "message": f"予定は1日につき{MAX_SCHEDULES_PER_DAY}件まで保存できます。",
-        }, status=400)
-
-    date_obj = get_schedule_display_date(itinerary, day_index)
-    if not date_obj:
-        date_obj = itinerary.created_at.date() + timedelta(days=day_index - 1)
-
-    place_obj = None
-    if place_id:
-        place_obj = WantToGo.objects.filter(pk=place_id, itinerary=itinerary).first()
-
-    if row_id:
-        schedule = get_object_or_404(ScheduleV2, pk=row_id, itinerary=itinerary)
-        old_day_index = get_schedule_day_index(itinerary, schedule)
-
-        schedule.date = date_obj
-        schedule.day_index = day_index
-        schedule.title = title
-        schedule.icon = icon
-        schedule.description = description
-        schedule.start_time = start_time
-        schedule.end_time = end_time
-        schedule.place = place_obj
-        schedule.save()
-        created = False
-    else:
-        schedule = ScheduleV2.objects.create(
-            itinerary=itinerary,
-            date=date_obj,
-            day_index=day_index,
-            title=title,
-            icon=icon,
-            description=description,
-            start_time=start_time,
-            end_time=end_time,
-            place=place_obj,
-            order=0,
-        )
-        old_day_index = None
-        created = True
-
-    # 並び順再計算
-    reorder_schedules_for_day(itinerary, schedule.day_index)
-
-    # もとの日付グループから移動した場合は旧グループも再計算
-    if old_day_index is not None and old_day_index != schedule.day_index:
-        reorder_schedules_for_day(itinerary, old_day_index)
-
-    return JsonResponse({
-        "status": "saved",
-        "created": created,
-        "id": schedule.id,
-        "title": schedule.title,
-        "icon": schedule.icon,
-        "icon_class": schedule.get_icon_class(),
-        "title_color_class": schedule.get_title_color_class(),
-        "description": schedule.description,
-        "start_time": schedule.start_time.strftime("%H:%M"),
-        "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
-        "date": f"day-{schedule.day_index}",
-        "place_id": schedule.place.id if schedule.place else "",
-        "place_name": schedule.place.name if schedule.place else "",
-        "day_index": schedule.day_index,
-    })
+            "status": "saved",
+            "created": created,
+            "id": schedule.id,
+            "title": schedule.title,
+            "icon": schedule.icon,
+            "icon_class": schedule.get_icon_class(),
+            "title_color_class": schedule.get_title_color_class(),
+            "description": schedule.description,
+            "start_time": schedule.start_time.strftime("%H:%M"),
+            "end_time": schedule.end_time.strftime("%H:%M") if schedule.end_time else "",
+            "date": f"day-{schedule.day_index}",
+            "place_id": schedule.place.id if schedule.place else "",
+            "place_name": schedule.place.name if schedule.place else "",
+            "day_index": schedule.day_index,
+        })
 
 
 
