@@ -1,4 +1,5 @@
 import ipaddress
+import json
 import logging
 import os
 import re
@@ -76,34 +77,67 @@ def verify_turnstile(request):
 
 
 
-def get_client_ip(request):
-    cf_connecting_ip = request.META.get("HTTP_CF_CONNECTING_IP")
-    if cf_connecting_ip:
-        candidate = cf_connecting_ip.strip()
-        try:
-            ipaddress.ip_address(candidate)
-            return candidate
-        except ValueError:
-            logger.warning("Ignoring invalid CF-Connecting-IP header: %r", cf_connecting_ip)
+UNKNOWN_CLIENT_IP = "unknown"
 
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        for part in x_forwarded_for.split(","):
-            candidate = part.strip()
-            if not candidate:
-                continue
+
+def _is_trusted_proxy_addr(remote_addr):
+    # REMOTE_ADDR（直前のホップ）が信頼済みプロキシのCIDRに含まれる場合のみTrue。
+    # settings.TRUSTED_PROXY_CIDRSが未設定なら常にFalse（転送ヘッダーは信頼しない）。
+    if not remote_addr:
+        return False
+
+    try:
+        addr = ipaddress.ip_address(remote_addr)
+    except ValueError:
+        return False
+
+    for cidr in getattr(settings, "TRUSTED_PROXY_CIDRS", None) or []:
+        try:
+            network = ipaddress.ip_network(cidr, strict=False)
+        except ValueError:
+            logger.warning("Ignoring invalid TRUSTED_PROXY_CIDRS entry: %r", cidr)
+            continue
+        if addr in network:
+            return True
+
+    return False
+
+
+def get_client_ip(request):
+    remote_addr = (request.META.get("REMOTE_ADDR") or "").strip()
+
+    # 直前のホップが信頼済みプロキシの場合のみ、転送ヘッダーの値を採用する。
+    # 未信頼の送信元からの偽装ヘッダーは無視する。
+    if _is_trusted_proxy_addr(remote_addr):
+        cf_connecting_ip = request.META.get("HTTP_CF_CONNECTING_IP")
+        if cf_connecting_ip:
+            candidate = cf_connecting_ip.strip()
             try:
                 ipaddress.ip_address(candidate)
                 return candidate
             except ValueError:
-                continue
+                logger.warning("Ignoring invalid CF-Connecting-IP header: %r", cf_connecting_ip)
 
-    remote_addr = (request.META.get("REMOTE_ADDR") or "").strip()
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            for part in x_forwarded_for.split(","):
+                candidate = part.strip()
+                if not candidate:
+                    continue
+                try:
+                    ipaddress.ip_address(candidate)
+                    return candidate
+                except ValueError:
+                    continue
+
     try:
         ipaddress.ip_address(remote_addr)
         return remote_addr
     except ValueError:
-        return ""
+        # REMOTE_ADDRが取得できない/不正な場合、空文字を共有キーにして
+        # 利用者全員が同一のレート制限バケットに混在しないよう明示的な代替キーを返す。
+        logger.warning("Unable to determine a valid client IP; REMOTE_ADDR=%r", remote_addr)
+        return UNKNOWN_CLIENT_IP
 
 
 

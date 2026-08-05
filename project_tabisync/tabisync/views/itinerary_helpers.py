@@ -9,8 +9,20 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.urls import reverse
 
+from ..models import Itinerary
+
 
 logger = logging.getLogger(__name__)
+
+
+def lock_itinerary_for_update(itinerary):
+    """しおり単位の上限付き作成処理（行きたい場所・予定・AI利用枠）を直列化するため、
+    Itinerary行をロックして再取得する。PostgreSQL本番環境では行ロックとして機能し、
+    同時リクエストによる上限超過を防ぐ（SQLiteはFOR UPDATEに対応していないため、
+    ロックとしては機能せずno-opの通常SELECTになる）。
+    呼び出しは必ず transaction.atomic() の中で行うこと。
+    """
+    return Itinerary.objects.select_for_update().get(pk=itinerary.pk)
 
 
 def get_itinerary_cover_url(itinerary):
