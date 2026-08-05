@@ -13,7 +13,15 @@ body {
   margin-bottom: 100px;
   background: variables.$white;
 }
+::selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
 
+::-moz-selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
 article.user-agreement,
 article.privacy-policy,
 .updates-article {
