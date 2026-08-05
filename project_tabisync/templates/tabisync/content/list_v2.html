@@ -27,7 +27,7 @@
 
 </div>
 
-<script id="checklists-data" type="application/json">{{ checklists_json|safe }}</script>
+{{ checklists|json_script:"checklists-data" }}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const shell = document.querySelector(".checklist-ios-shell");
