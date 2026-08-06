@@ -23,6 +23,7 @@ from .access_control import (
     require_view_access_json,
 )
 from .itinerary_helpers import (
+    apply_want_to_go_payload,
     build_default_checklist_v2_lists,
     build_want_to_go_limit_message,
     can_add_want_to_go,
@@ -32,7 +33,6 @@ from .itinerary_helpers import (
     lock_itinerary_for_update,
     normalize_checklist_v2_content,
     normalize_memo_v2_notes,
-    parse_optional_int,
     reorder_schedules_for_day,
 )
 from .utils import (
@@ -44,6 +44,7 @@ from .utils import (
     MAX_SCHEDULES_PER_DAY,
     build_public_service_error_message,
     count_memo_words,
+    parse_json_object_body,
     ratelimit_client_ip,
 )
 
@@ -74,10 +75,9 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
         })
 
     def post(self, request, pk, token):
-        try:
-            body = json.loads(request.body.decode("utf-8"))
-        except (TypeError, ValueError, json.JSONDecodeError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです。"}, status=400)
+        body, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         user_message = str(body.get("message") or "").strip()
         if not user_message:
@@ -440,10 +440,9 @@ def concierge_v2_apply_changes(request, pk, token):
     if edit_gate_response is not None:
         return edit_gate_response
 
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return JsonResponse({"status": "error", "message": "不正なJSONです。"}, status=400)
+    data, error_response = parse_json_object_body(request)
+    if error_response is not None:
+        return error_response
 
     actions = data.get("edit_actions", [])
     if not isinstance(actions, list) or not actions:
@@ -621,6 +620,27 @@ def _apply_concierge_schedule_action(itinerary, action, raw_action, touched_sche
 
 
 
+def _build_want_to_go_data_from_action(raw_action):
+    # concierge独自のフィールド名(place_name/title/description)をapply_want_to_go_payload
+    # が期待する形式へ正規化する。キーが存在する項目だけ検証・適用されるため、
+    # AIが省略した項目は既存値を維持したまま更新できる（部分更新の意味論を維持）。
+    data = {}
+    name = raw_action.get("place_name") or raw_action.get("title")
+    if name is not None:
+        data["name"] = name
+    if raw_action.get("address") is not None:
+        data["address"] = raw_action.get("address")
+    memo = raw_action.get("memo") or raw_action.get("description")
+    if memo is not None:
+        data["memo"] = memo
+    if raw_action.get("day") is not None:
+        data["day"] = raw_action.get("day")
+    if raw_action.get("priority") is not None:
+        data["priority"] = raw_action.get("priority")
+    return data
+
+
+
 def _find_or_create_concierge_place(itinerary, raw_action):
     place_name = str(raw_action.get("place_name") or "").strip()
     if not place_name:
@@ -633,14 +653,10 @@ def _find_or_create_concierge_place(itinerary, raw_action):
     if not can_add_want_to_go(itinerary):
         raise ValueError(build_want_to_go_limit_message(itinerary))
 
-    return WantToGo.objects.create(
-        itinerary=itinerary,
-        name=place_name[:200],
-        address=str(raw_action.get("address") or "").strip()[:300],
-        memo=str(raw_action.get("memo") or "").strip(),
-        planned_day=parse_optional_int(raw_action.get("day"), default=0) or 0,
-        priority=parse_optional_int(raw_action.get("priority"), default=3) or 3,
-    )
+    place = WantToGo(itinerary=itinerary)
+    apply_want_to_go_payload(place, _build_want_to_go_data_from_action(raw_action), itinerary, require_name=True)
+    place.save()
+    return place
 
 
 
@@ -657,15 +673,9 @@ def _apply_concierge_want_action(itinerary, action, raw_action):
         if not can_add_want_to_go(itinerary):
             raise ValueError(build_want_to_go_limit_message(itinerary))
 
-        name = _clean_concierge_text(raw_action.get("place_name") or raw_action.get("title"), 200, "場所名", required=True)
-        place = WantToGo.objects.create(
-            itinerary=itinerary,
-            name=name,
-            address=str(raw_action.get("address") or "").strip()[:300],
-            memo=str(raw_action.get("memo") or raw_action.get("description") or "").strip(),
-            planned_day=parse_optional_int(raw_action.get("day"), default=0) or 0,
-            priority=parse_optional_int(raw_action.get("priority"), default=3) or 3,
-        )
+        place = WantToGo(itinerary=itinerary)
+        apply_want_to_go_payload(place, _build_want_to_go_data_from_action(raw_action), itinerary, require_name=True)
+        place.save()
         return {"action": action, "id": place.id, "label": "行きたい場所を追加しました"}
 
     if action == "want_update":
@@ -673,19 +683,7 @@ def _apply_concierge_want_action(itinerary, action, raw_action):
         place = WantToGo.objects.filter(pk=place_id, itinerary=itinerary).first()
         if not place:
             raise ValueError("対象の場所が見つかりません。")
-        name = str(raw_action.get("place_name") or raw_action.get("title") or "").strip()
-        if name:
-            place.name = name[:200]
-        address = str(raw_action.get("address") or "").strip()
-        if address:
-            place.address = address[:300]
-        memo = str(raw_action.get("memo") or raw_action.get("description") or "").strip()
-        if memo:
-            place.memo = memo
-        if raw_action.get("day") is not None:
-            place.planned_day = parse_optional_int(raw_action.get("day"), default=0) or 0
-        if raw_action.get("priority") is not None:
-            place.priority = parse_optional_int(raw_action.get("priority"), default=3) or 3
+        apply_want_to_go_payload(place, _build_want_to_go_data_from_action(raw_action), itinerary)
         place.save()
         return {"action": action, "id": place.id, "label": "行きたい場所を更新しました"}
 

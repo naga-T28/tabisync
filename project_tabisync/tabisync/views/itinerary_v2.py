@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from PIL import Image, UnidentifiedImageError
 
+from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -13,7 +14,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
-from ..models import Itinerary
+from ..models import Itinerary, ScheduleV2
 from .access_control import (
     EditPasswordRequiredMixin,
     ViewPasswordRequiredMixin,
@@ -424,34 +425,42 @@ class EditContentFormV2View(EditPasswordRequiredMixin, View):
         if cover_image:
             itinerary.cover_image = cover_image
             itinerary.cover_image_updated_on = today
-        itinerary.save()
+
+        # しおり本体の更新と、日程変更に伴う予定の日付一括シフトを
+        # 同一トランザクションで行い、途中失敗による不整合を防ぐ。
+        with transaction.atomic():
+            itinerary.save()
+
+            fallback_base_date = itinerary.created_at.date()
+            changed_schedules = []
+            for schedule in schedules:
+                day_index = existing_schedule_day_indexes.get(schedule.id)
+                if not day_index:
+                    continue
+
+                changed = False
+                if schedule.day_index != day_index:
+                    schedule.day_index = day_index
+                    changed = True
+
+                target_date = get_schedule_display_date(itinerary, day_index)
+                if not target_date:
+                    target_date = fallback_base_date + timedelta(days=day_index - 1)
+
+                if schedule.date != target_date:
+                    schedule.date = target_date
+                    changed = True
+
+                if changed:
+                    changed_schedules.append(schedule)
+
+            if changed_schedules:
+                ScheduleV2.objects.bulk_update(changed_schedules, ["day_index", "date"])
 
         if cover_image and old_cover_image and old_cover_image != itinerary.cover_image.name:
             storage = itinerary.cover_image.storage
             if storage.exists(old_cover_image):
                 storage.delete(old_cover_image)
-
-        fallback_base_date = itinerary.created_at.date()
-        for schedule in schedules:
-            day_index = existing_schedule_day_indexes.get(schedule.id)
-            if not day_index:
-                continue
-
-            update_fields = []
-            if schedule.day_index != day_index:
-                schedule.day_index = day_index
-                update_fields.append("day_index")
-
-            target_date = get_schedule_display_date(itinerary, day_index)
-            if not target_date:
-                target_date = fallback_base_date + timedelta(days=day_index - 1)
-
-            if schedule.date != target_date:
-                schedule.date = target_date
-                update_fields.append("date")
-
-            if update_fields:
-                schedule.save(update_fields=update_fields)
 
         return redirect(reverse("tabisync:content_v2", kwargs={"pk": itinerary.pk, "token": itinerary.token}))
 

@@ -8,6 +8,7 @@ from ..views.utils import (
     count_memo_words,
     get_client_ip,
     get_inclusive_day_count,
+    parse_json_object_body,
     ratelimit_client_ip,
     validate_checklist_limits,
     validate_memo_notes_limits,
@@ -139,8 +140,13 @@ class ClientIpEdgeCaseTests(TestCase):
         self.assertEqual(ratelimit_client_ip(None, request), "198.51.100.10")
 
 
+@patch.dict("os.environ", {"CLOUDFLARE_TURNSTILE_SECRET_KEY": "test-secret"})
 class VerifyTurnstileTests(TestCase):
-    """verify_turnstileがjson.loadsを使うため、json未importの回帰を防ぐ。"""
+    """verify_turnstileがjson.loadsを使うため、json未importの回帰を防ぐ。
+
+    CLOUDFLARE_TURNSTILE_SECRET_KEYはこのクラス全体でモックし、
+    実行環境の.env設定に依存しないようにする。
+    """
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -166,6 +172,60 @@ class VerifyTurnstileTests(TestCase):
     def test_returns_false_without_token(self):
         request = self.factory.post("/", {})
         self.assertFalse(verify_turnstile(request))
+
+    @patch.dict("os.environ", {"CLOUDFLARE_TURNSTILE_SECRET_KEY": ""})
+    @patch("tabisync.views.utils.urllib.request.urlopen")
+    def test_returns_false_and_skips_network_call_when_secret_not_configured(self, mock_urlopen):
+        request = self.factory.post("/", {"cf-turnstile-response": "token"})
+        self.assertFalse(verify_turnstile(request))
+        mock_urlopen.assert_not_called()
+
+    @patch("tabisync.views.utils.urllib.request.urlopen")
+    def test_returns_false_on_timeout(self, mock_urlopen):
+        import socket
+
+        mock_urlopen.side_effect = socket.timeout("timed out")
+
+        request = self.factory.post("/", {"cf-turnstile-response": "token"})
+        self.assertFalse(verify_turnstile(request))
+
+    @patch("tabisync.views.utils.urllib.request.urlopen")
+    def test_uses_configured_timeout(self, mock_urlopen):
+        from ..views.utils import TURNSTILE_TIMEOUT_SECONDS
+
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'{"success": true}'
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        request = self.factory.post("/", {"cf-turnstile-response": "token"})
+        verify_turnstile(request)
+
+        self.assertEqual(mock_urlopen.call_args.kwargs.get("timeout"), TURNSTILE_TIMEOUT_SECONDS)
+
+    @patch("tabisync.views.utils.urllib.request.urlopen")
+    def test_returns_false_on_malformed_response_body(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = b"not-json"
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        request = self.factory.post("/", {"cf-turnstile-response": "token"})
+        self.assertFalse(verify_turnstile(request))
+
+    @patch("tabisync.views.utils.urllib.request.urlopen")
+    def test_sends_resolved_client_ip_as_remoteip(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'{"success": true}'
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        request = self.factory.post(
+            "/",
+            {"cf-turnstile-response": "token"},
+            REMOTE_ADDR="203.0.113.9",
+        )
+        verify_turnstile(request)
+
+        sent_request = mock_urlopen.call_args.args[0]
+        self.assertIn(b"203.0.113.9", sent_request.data)
 
 
 class PublicErrorMessageTests(TestCase):
@@ -233,3 +293,59 @@ class ValidateChecklistLimitsTests(TestCase):
     def test_allows_lists_within_limits(self):
         lists = [{"title": "持ち物", "items": [{"text": "充電器"}]}]
         self.assertIsNone(validate_checklist_limits(lists))
+
+
+class ParseJsonObjectBodyTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_valid_object_body_returns_data_and_no_error(self):
+        request = self.factory.post("/", data='{"a": 1}', content_type="application/json")
+        data, error_response = parse_json_object_body(request)
+        self.assertEqual(data, {"a": 1})
+        self.assertIsNone(error_response)
+
+    def test_wrong_content_type_returns_400(self):
+        request = self.factory.post("/", data='{"a": 1}', content_type="text/plain")
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_empty_body_returns_400(self):
+        request = self.factory.post("/", data="", content_type="application/json")
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_array_top_level_returns_400(self):
+        request = self.factory.post("/", data="[1, 2, 3]", content_type="application/json")
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_scalar_top_level_returns_400(self):
+        request = self.factory.post("/", data='"just a string"', content_type="application/json")
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_malformed_json_returns_400(self):
+        request = self.factory.post("/", data="{not valid json", content_type="application/json")
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_invalid_utf8_returns_400_not_500(self):
+        request = self.factory.generic(
+            "POST", "/", data=b"\xff\xfe\xfd", content_type="application/json"
+        )
+        data, error_response = parse_json_object_body(request)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)
+
+    def test_oversized_body_returns_400(self):
+        oversized = '{"a": "' + ("x" * 100) + '"}'
+        request = self.factory.post("/", data=oversized, content_type="application/json")
+        data, error_response = parse_json_object_body(request, max_bytes=10)
+        self.assertIsNone(data)
+        self.assertEqual(error_response.status_code, 400)

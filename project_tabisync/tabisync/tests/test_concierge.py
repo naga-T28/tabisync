@@ -6,7 +6,7 @@ from unittest.mock import patch
 from django.test import Client, RequestFactory, TestCase, TransactionTestCase
 from django.urls import reverse
 
-from ..models import ConciergeChatLog, Itinerary
+from ..models import ConciergeChatLog, Itinerary, WantToGo
 from ..openai_concierge import OpenAIConciergeError
 from ..views.concierge import ConciergeV2View
 
@@ -273,3 +273,78 @@ class ConciergeDailyLimitConcurrencyTests(TransactionTestCase):
 
         final_count = ConciergeChatLog.objects.filter(itinerary=itinerary).count()
         self.assertLessEqual(final_count, itinerary.concierge_daily_limit, f"outcomes={outcomes}")
+
+
+class ConciergeApplyChangesWantToGoValidationTests(TestCase):
+    """Task 007: AI(コンシェルジュ)経由の行きたい場所作成/更新も、
+    JS経由と同じ検証(緯度経度・day・priority)を通ることを確認する。"""
+
+    def setUp(self):
+        self.itinerary = Itinerary.objects.create(
+            title="Test Trip",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 3),
+        )
+        self.url = reverse(
+            "tabisync:V2_concierge_apply",
+            kwargs={"pk": self.itinerary.pk, "token": self.itinerary.token},
+        )
+
+    def _apply(self, action):
+        return self.client.post(
+            self.url,
+            data=json.dumps({"edit_actions": [action]}),
+            content_type="application/json",
+        )
+
+    def test_want_create_with_valid_fields_succeeds(self):
+        response = self._apply({
+            "action": "want_create",
+            "place_name": "首里城",
+            "day": 1,
+            "priority": 4,
+        })
+        data = json.loads(response.content.decode("utf-8"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["status"], "ok")
+        place = WantToGo.objects.get(itinerary=self.itinerary)
+        self.assertEqual(place.planned_day, 1)
+        self.assertEqual(place.priority, 4)
+
+    def test_want_create_with_out_of_range_day_is_rejected(self):
+        response = self._apply({
+            "action": "want_create",
+            "place_name": "範囲外スポット",
+            "day": 99,
+        })
+        data = json.loads(response.content.decode("utf-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(data["status"], "error")
+        self.assertFalse(WantToGo.objects.filter(itinerary=self.itinerary).exists())
+
+    def test_want_create_with_invalid_priority_is_rejected(self):
+        response = self._apply({
+            "action": "want_create",
+            "place_name": "優先度異常",
+            "priority": 99,
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(WantToGo.objects.filter(itinerary=self.itinerary).exists())
+
+    def test_want_update_with_invalid_day_is_rejected_without_partial_apply(self):
+        place = self.itinerary.want_to_go_list.create(name="既存スポット", planned_day=1, priority=3)
+        response = self._apply({
+            "action": "want_update",
+            "id": place.id,
+            "day": 99,
+            "priority": 5,
+        })
+        data = json.loads(response.content.decode("utf-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(data["status"], "error")
+        place.refresh_from_db()
+        self.assertEqual(place.planned_day, 1)
+        self.assertEqual(place.priority, 3)

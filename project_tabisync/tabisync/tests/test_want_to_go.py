@@ -259,3 +259,93 @@ class WantToGoConcurrentCreationTests(TransactionTestCase):
 
         final_count = WantToGo.objects.filter(itinerary=itinerary).count()
         self.assertLessEqual(final_count, itinerary.want_to_go_limit, f"outcomes={outcomes}")
+
+
+class WantToGoFieldValidationTests(TestCase):
+    """Task 007: 緯度経度・day・priority・文字数の不正値が400として拒否され、
+    黙ってNone/デフォルトへ丸められないことを確認する。"""
+
+    def setUp(self):
+        self.itinerary = _make_itinerary(want_to_go_limit=100)
+        self.url = reverse("tabisync:Wantedit", kwargs={"pk": self.itinerary.pk, "token": self.itinerary.token})
+
+    def _post(self, payload):
+        return self.client.post(self.url, data=json.dumps(payload), content_type="application/json")
+
+    def _assert_rejected(self, payload):
+        response = self._post(payload)
+        data = json.loads(response.content.decode("utf-8"))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(data["status"], "error")
+        self.assertEqual(WantToGo.objects.filter(itinerary=self.itinerary).count(), 0)
+
+    def test_latitude_boundaries_are_accepted(self):
+        for lat in (-90, 90, 0):
+            with self.subTest(lat=lat):
+                response = self._post({"action": "save_want_to_go", "name": f"スポット{lat}", "lat": lat})
+                self.assertEqual(response.status_code, 200)
+
+    def test_latitude_out_of_range_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "不正緯度", "lat": 90.1})
+        self._assert_rejected({"action": "save_want_to_go", "name": "不正緯度2", "lat": -90.1})
+
+    def test_longitude_out_of_range_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "不正経度", "lng": 180.1})
+        self._assert_rejected({"action": "save_want_to_go", "name": "不正経度2", "lng": -180.1})
+
+    def test_non_numeric_latitude_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "不正値", "lat": "not-a-number"})
+
+    def test_day_within_itinerary_range_is_accepted(self):
+        # _make_itinerary は 2026-01-01〜01-03 の3日間 -> day 0〜3が有効
+        for day in (0, 1, 3):
+            with self.subTest(day=day):
+                response = self._post({"action": "save_want_to_go", "name": f"Day{day}", "day": day})
+                self.assertEqual(response.status_code, 200)
+
+    def test_day_out_of_itinerary_range_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "範囲外Day", "day": 4})
+        self._assert_rejected({"action": "save_want_to_go", "name": "負のDay", "day": -1})
+
+    def test_priority_within_1_to_5_is_accepted(self):
+        for priority in (1, 5, 3):
+            with self.subTest(priority=priority):
+                response = self._post({"action": "save_want_to_go", "name": f"優先度{priority}", "priority": priority})
+                self.assertEqual(response.status_code, 200)
+
+    def test_priority_out_of_range_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "優先度0", "priority": 0})
+        self._assert_rejected({"action": "save_want_to_go", "name": "優先度6", "priority": 6})
+
+    def test_name_over_max_length_is_rejected(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": "あ" * 201})
+
+    def test_address_over_max_length_is_rejected(self):
+        self._assert_rejected({
+            "action": "save_want_to_go",
+            "name": "正常な名前",
+            "address": "あ" * 301,
+        })
+
+    def test_missing_name_is_rejected_on_create(self):
+        self._assert_rejected({"action": "save_want_to_go", "name": ""})
+
+    def test_update_without_name_keeps_existing_name(self):
+        # 部分更新: nameを指定しなければ既存値を維持する（現行仕様の固定）。
+        place = self.itinerary.want_to_go_list.create(name="既存スポット")
+        response = self._post({"action": "update_want_to_go", "id": place.id, "priority": 5})
+        self.assertEqual(response.status_code, 200)
+        place.refresh_from_db()
+        self.assertEqual(place.name, "既存スポット")
+        self.assertEqual(place.priority, 5)
+
+    def test_update_with_invalid_value_is_rejected_and_does_not_partially_apply(self):
+        place = self.itinerary.want_to_go_list.create(name="既存スポット", priority=3)
+        response = self._post({"action": "update_want_to_go", "id": place.id, "priority": 3, "lat": 999})
+        data = json.loads(response.content.decode("utf-8"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(data["status"], "error")
+        place.refresh_from_db()
+        self.assertIsNone(place.latitude)
+        self.assertEqual(place.priority, 3)

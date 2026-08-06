@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.urls import reverse
 
-from ..models import Itinerary
+from ..models import Itinerary, ScheduleV2
 
 
 logger = logging.getLogger(__name__)
@@ -132,34 +132,132 @@ def parse_optional_int(value, default=None):
 
 
 
-def apply_want_to_go_payload(place, data):
-    # Google Places 由来でも手入力でも同じ保存ロジックを使う
-    place.place_id = (data.get("place_id") or "").strip()
-    place.name = (data.get("name") or place.name).strip()
-    place.address = (data.get("address") or "").strip()
-    place.latitude = parse_optional_float(data.get("lat"))
-    place.longitude = parse_optional_float(data.get("lng"))
-    place.rating = parse_optional_float(data.get("rating"))
-    place.memo = data.get("memo", place.memo)
-    place.planned_day = parse_optional_int(data.get("day"), default=0)
-    place.stay_minutes = parse_optional_int(data.get("stay_minutes"))
-    place.priority = parse_optional_int(data.get("priority"), default=3)
-    place.tag = (data.get("tag") or "").strip()
+def _validate_optional_text(value, max_length, field_name):
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if len(text) > max_length:
+        raise ValueError(f"{field_name}は{max_length}文字以内で入力してください。")
+    return text
+
+
+def _validate_optional_float(value, field_name):
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name}の形式が不正です。")
+
+
+def _validate_optional_float_range(value, minimum, maximum, field_name):
+    parsed = _validate_optional_float(value, field_name)
+    if parsed is None:
+        return None
+    if not (minimum <= parsed <= maximum):
+        raise ValueError(f"{field_name}は{minimum}〜{maximum}の範囲で指定してください。")
+    return parsed
+
+
+def _validate_day(value, itinerary):
+    if value in (None, ""):
+        return 0
+    try:
+        day = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("Dayの形式が不正です。")
+    max_day = itinerary.total_days or 0
+    if day < 0 or day > max_day:
+        raise ValueError(f"Dayは0〜{max_day}の範囲で指定してください。")
+    return day
+
+
+def _validate_optional_non_negative_int(value, field_name):
+    if value in (None, ""):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name}の形式が不正です。")
+    if parsed < 0:
+        raise ValueError(f"{field_name}は0以上で指定してください。")
+    return parsed
+
+
+def _validate_priority(value):
+    if value in (None, ""):
+        return 3
+    try:
+        priority = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("行きたい度の形式が不正です。")
+    if priority not in (1, 2, 3, 4, 5):
+        raise ValueError("行きたい度は1〜5で指定してください。")
+    return priority
+
+
+def apply_want_to_go_payload(place, data, itinerary, *, require_name=False):
+    """行きたい場所の入力値を検証してplaceへ適用する。
+
+    Google Places由来でも手入力でも、JS経由でもAI(コンシェルジュ)経由でも
+    同じ検証ロジックを通す。dataにキーが存在する項目だけ検証・適用するため、
+    部分更新（AIによる差分更新など）の意味論を維持しつつ、新規作成時には
+    未指定項目にデフォルト値を適用する。不正な値は黙ってNone/デフォルトへ
+    丸めず、ValueError(message)を送出する（呼び出し側で400へ変換すること）。
+    """
+    is_create = place.pk is None
+
+    if "place_id" in data:
+        place.place_id = _validate_optional_text(data.get("place_id"), 200, "place_id")
+
+    if "name" in data:
+        name = _validate_optional_text(data.get("name"), 200, "名称")
+        if name:
+            place.name = name
+        elif require_name:
+            raise ValueError("名称を入力してください。")
+    elif require_name and not place.name:
+        raise ValueError("名称を入力してください。")
+
+    if "address" in data:
+        place.address = _validate_optional_text(data.get("address"), 300, "住所")
+
+    if "lat" in data:
+        place.latitude = _validate_optional_float_range(data.get("lat"), -90, 90, "緯度")
+    if "lng" in data:
+        place.longitude = _validate_optional_float_range(data.get("lng"), -180, 180, "経度")
+    if "rating" in data:
+        place.rating = _validate_optional_float(data.get("rating"), "評価")
+
+    if "memo" in data:
+        place.memo = str(data.get("memo") or "")
+
+    if "day" in data:
+        place.planned_day = _validate_day(data.get("day"), itinerary)
+    elif is_create:
+        place.planned_day = 0
+
+    if "stay_minutes" in data:
+        place.stay_minutes = _validate_optional_non_negative_int(data.get("stay_minutes"), "滞在時間")
+
+    if "priority" in data:
+        place.priority = _validate_priority(data.get("priority"))
+    elif is_create:
+        place.priority = 3
+
+    if "tag" in data:
+        place.tag = _validate_optional_text(data.get("tag"), 50, "タグ")
+
+    return place
 
 
 
 # =========================
 # v2スケジュール編集用ヘルパー
 # =========================
-# ScheduleV2 が持つ day_index と旧 date ベースの値を吸収する
+# day_indexはTask 006のmigrationでNOT NULL化済みのため、常に保存済みの値をそのまま返す。
 def get_schedule_day_index(itinerary, schedule):
-    if schedule.day_index:
-        return schedule.day_index
-
-    if itinerary.start_date and schedule.date:
-        return (schedule.date - itinerary.start_date).days + 1
-
-    return None
+    return schedule.day_index
 
 
 
@@ -172,19 +270,21 @@ def get_schedule_display_date(itinerary, day_index):
 
 
 def reorder_schedules_for_day(itinerary, day_index):
-    # 同じ Day 内の予定を開始時刻順に並び替えて order を振り直す
+    # 同じ Day 内の予定を開始時刻順に並び替えて order を振り直す。
+    # 対象日の行だけをDB側でfilterし、変更が必要な行のみbulk_updateで一括更新する。
     if day_index is None:
         return
 
-    day_schedules = [
-        schedule for schedule in itinerary.schedules.all().order_by("start_time", "id")
-        if get_schedule_day_index(itinerary, schedule) == day_index
-    ]
+    day_schedules = list(itinerary.schedules.filter(day_index=day_index).order_by("start_time", "id"))
 
+    to_update = []
     for i, schedule in enumerate(day_schedules):
         if schedule.order != i:
             schedule.order = i
-            schedule.save(update_fields=["order"])
+            to_update.append(schedule)
+
+    if to_update:
+        ScheduleV2.objects.bulk_update(to_update, ["order"])
 
 
 
@@ -192,13 +292,10 @@ def count_schedules_for_day(itinerary, day_index, exclude_schedule_id=None):
     if day_index is None:
         return 0
 
-    count = 0
-    for schedule in itinerary.schedules.all():
-        if exclude_schedule_id and schedule.id == exclude_schedule_id:
-            continue
-        if get_schedule_day_index(itinerary, schedule) == day_index:
-            count += 1
-    return count
+    qs = itinerary.schedules.filter(day_index=day_index)
+    if exclude_schedule_id:
+        qs = qs.exclude(pk=exclude_schedule_id)
+    return qs.count()
 
 
 
