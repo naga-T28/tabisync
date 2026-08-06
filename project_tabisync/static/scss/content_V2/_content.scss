@@ -1,5 +1,6 @@
 @use "../base/variables" as variables;
 
+
 .content-main{
     width: 100%;
     min-height: 100vh;
@@ -257,6 +258,11 @@
 .day-tab.is-active {
   color: #AF29BB;
   font-weight: 700;
+  border-bottom: #AF29BB 3px solid;
+}
+
+.day-tab:hover {
+  color: #AF29BB;
   border-bottom: #AF29BB 3px solid;
 }
 

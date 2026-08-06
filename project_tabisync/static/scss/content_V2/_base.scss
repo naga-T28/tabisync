@@ -23,6 +23,15 @@ body {
     min-height: 100vh;
     padding-bottom: 50px;
 }
+::selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
+
+::-moz-selection {
+  background-color: #6B2AC0;
+  color: #fff;
+}
 .page-main {
   flex: 1;  /* メイン部分が残りの高さを取る */
   margin-top: 40px; /* ヘッダーの高さ分だけ下げる */
