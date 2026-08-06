@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 
 from django.db import transaction
@@ -19,7 +18,7 @@ from .itinerary_helpers import (
     lock_itinerary_for_update,
     reorder_schedules_for_day,
 )
-from .utils import MAX_SCHEDULES_PER_DAY, ratelimit_client_ip
+from .utils import MAX_SCHEDULES_PER_DAY, parse_json_object_body, ratelimit_client_ip
 
 
 # スケジュール本体の編集画面
@@ -70,10 +69,9 @@ def schedule_v2_row_save(request, pk, token):
     if gate_response is not None:
         return gate_response
 
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except Exception:
-        return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+    data, error_response = parse_json_object_body(request)
+    if error_response is not None:
+        return error_response
 
     row_id = data.get("id")
     title = (data.get("title") or "").strip()[:30]
@@ -207,23 +205,22 @@ def schedule_v2_row_delete(request, pk, token):
     if gate_response is not None:
         return gate_response
 
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except Exception:
-        return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+    data, error_response = parse_json_object_body(request)
+    if error_response is not None:
+        return error_response
 
     row_id = data.get("id")
     if not row_id:
         return JsonResponse({"status": "error", "message": "idがありません"}, status=400)
 
-    schedule = get_object_or_404(ScheduleV2, pk=row_id, itinerary=itinerary)
-    target_day_index = get_schedule_day_index(itinerary, schedule)
-    schedule.delete()
-
-    if target_day_index is None:
-        return JsonResponse({"status": "deleted"})
-
-    reorder_schedules_for_day(itinerary, target_day_index)
+    # 削除と並び順再計算を同一トランザクション・行ロック内で行い、途中失敗時に
+    # 削除だけが反映されて並び順が崩れた状態が残らないようにする。
+    with transaction.atomic():
+        itinerary = lock_itinerary_for_update(itinerary)
+        schedule = get_object_or_404(ScheduleV2, pk=row_id, itinerary=itinerary)
+        target_day_index = get_schedule_day_index(itinerary, schedule)
+        schedule.delete()
+        reorder_schedules_for_day(itinerary, target_day_index)
 
     return JsonResponse({"status": "deleted"})
 

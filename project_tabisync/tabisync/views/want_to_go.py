@@ -1,5 +1,3 @@
-import json
-
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.http import JsonResponse
@@ -17,7 +15,7 @@ from .itinerary_helpers import (
     get_want_to_go_limit,
     lock_itinerary_for_update,
 )
-from .utils import ratelimit_client_ip
+from .utils import parse_json_object_body, ratelimit_client_ip
 
 
 def _build_want_to_go_context(itinerary):
@@ -52,7 +50,10 @@ def _apply_want_to_go_action(itinerary, data):
                 }, status=400)
 
             place = WantToGo(itinerary=locked_itinerary)
-            apply_want_to_go_payload(place, data)
+            try:
+                apply_want_to_go_payload(place, data, locked_itinerary, require_name=True)
+            except ValueError as exc:
+                return JsonResponse({"status": "error", "message": str(exc)}, status=400)
             place.save()
             return JsonResponse({
                 "status": "saved",
@@ -69,7 +70,10 @@ def _apply_want_to_go_action(itinerary, data):
         place = get_object_or_404(WantToGo, pk=place_id, itinerary=itinerary)
 
         if action == "update_want_to_go":
-            apply_want_to_go_payload(place, data)
+            try:
+                apply_want_to_go_payload(place, data, itinerary)
+            except ValueError as exc:
+                return JsonResponse({"status": "error", "message": str(exc)}, status=400)
             place.save()
             return JsonResponse({
                 "status": "updated",
@@ -108,9 +112,8 @@ class WantToGoV2View(EditPasswordRequiredMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except (TypeError, ValueError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+        data, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         return _apply_want_to_go_action(self.itinerary, data)

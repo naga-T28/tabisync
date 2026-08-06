@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.db.models import Prefetch
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -337,30 +338,33 @@ class EditView(View):
 # ver.1 表示用ヘルパー
 # =========================
 def get_travel_date_range_context(travel_dates):
-    # テンプレート表示用に、旅程の開始日・終了日を同じ形式でまとめる
-    if not travel_dates.exists():
+    # テンプレート表示用に、旅程の開始日・終了日を同じ形式でまとめる。
+    # 渡されたQuerySet/リストは一度だけ評価してキャッシュし、exists/first/lastを
+    # 個別に発行しない（呼び出し元がこの後同じQuerySetをcontextへ入れて
+    # テンプレートで反復しても追加クエリは発生しない）。
+    travel_dates = list(travel_dates)
+    if not travel_dates:
         return {
             "first_date_str": None,
             "last_date_str": None,
         }
 
-    first_date = travel_dates.first().date
-    last_date = travel_dates.last().date
     return {
-        "first_date_str": first_date.strftime('%Y.%m.%d'),
-        "last_date_str": last_date.strftime('%Y.%m.%d'),
+        "first_date_str": travel_dates[0].date.strftime('%Y.%m.%d'),
+        "last_date_str": travel_dates[-1].date.strftime('%Y.%m.%d'),
     }
 
 
 
 def prepare_travel_dates_with_schedules(itinerary):
-    # TravelDate ごとに開始時刻順の予定を付与する
-    travel_dates = itinerary.travel_dates.all().order_by('date')
-
-    for travel_date in travel_dates:
-        travel_date.sorted_schedules = travel_date.schedules.all().order_by('start_time')
-
-    return travel_dates
+    # TravelDateごとに開始時刻順の予定をPrefetchで一括取得する。
+    # to_attrを使わず`schedules`関連マネージャ自体をキャッシュするため、
+    # テンプレート側の`travel_date.schedules.all`はそのままprefetch結果を使い、
+    # TravelDateの件数に比例したN+1クエリが発生しない。
+    schedules_prefetch = Prefetch("schedules", queryset=Schedule.objects.order_by("start_time"))
+    return list(
+        itinerary.travel_dates.all().order_by("date").prefetch_related(schedules_prefetch)
+    )
 
 
 

@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.html import strip_tags
 
@@ -24,6 +24,8 @@ MAX_CHECKLIST_ITEMS_PER_LIST = 30
 MAX_COVER_IMAGE_SIZE = settings.MAX_COVER_IMAGE_UPLOAD_BYTES
 ALLOWED_COVER_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MEMO_WORD_PATTERN = re.compile(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*|[぀-ヿ㐀-鿿]")
+TURNSTILE_TIMEOUT_SECONDS = float(os.environ.get("TURNSTILE_TIMEOUT_SECONDS", "5"))
+MAX_JSON_BODY_BYTES = int(os.environ.get("MAX_JSON_BODY_BYTES", str(256 * 1024)))
 
 
 # =========================
@@ -48,11 +50,15 @@ def robots_txt_view(request):
 
 def verify_turnstile(request):
     secret_key = os.environ.get('CLOUDFLARE_TURNSTILE_SECRET_KEY')
-    token = request.POST.get('cf-turnstile-response')
-    remoteip = request.META.get('REMOTE_ADDR')
+    if not secret_key:
+        logger.error("CLOUDFLARE_TURNSTILE_SECRET_KEY is not configured; rejecting Turnstile verification.")
+        return False
 
+    token = request.POST.get('cf-turnstile-response')
     if not token:
         return False
+
+    remoteip = get_client_ip(request)
 
     data = urllib.parse.urlencode({
         'secret': secret_key,
@@ -68,11 +74,11 @@ def verify_turnstile(request):
     req.add_header("Content-type", "application/x-www-form-urlencoded")
 
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=TURNSTILE_TIMEOUT_SECONDS) as resp:
             response_data = json.loads(resp.read().decode())
             return response_data.get('success', False)
-    except Exception as e:
-        print("Turnstile verify error:", e)
+    except Exception:
+        logger.warning("Turnstile verification request failed.", exc_info=True)
         return False
 
 
@@ -191,4 +197,44 @@ def validate_checklist_limits(lists):
             return f"{title}は{MAX_CHECKLIST_ITEMS_PER_LIST}個まで保存できます。"
 
     return None
+
+
+
+def parse_json_object_body(request, max_bytes=None):
+    """JSON APIエンドポイント共通のリクエストボディ検証。
+
+    Content-Type必須チェック→サイズ上限→UTF-8デコード→JSONデコード→
+    トップレベルがオブジェクト(dict)かどうかを検証する。
+    成功時は (dict, None) を、失敗時は (None, 400のJsonResponse) を返す。
+    """
+    limit = max_bytes if max_bytes is not None else MAX_JSON_BODY_BYTES
+
+    content_type = request.headers.get("Content-Type", "")
+    if "application/json" not in content_type:
+        return None, JsonResponse({
+            "status": "error",
+            "message": "Content-Typeはapplication/jsonである必要があります。",
+        }, status=400)
+
+    body = request.body
+    if len(body) > limit:
+        return None, JsonResponse({"status": "error", "message": "リクエストボディが大きすぎます。"}, status=400)
+
+    try:
+        text = body.decode("utf-8")
+    except UnicodeDecodeError:
+        return None, JsonResponse({"status": "error", "message": "不正なUTF-8です。"}, status=400)
+
+    try:
+        data = json.loads(text)
+    except (TypeError, ValueError):
+        return None, JsonResponse({"status": "error", "message": "不正なJSONです。"}, status=400)
+
+    if not isinstance(data, dict):
+        return None, JsonResponse({
+            "status": "error",
+            "message": "JSONのトップレベルはオブジェクトである必要があります。",
+        }, status=400)
+
+    return data, None
 

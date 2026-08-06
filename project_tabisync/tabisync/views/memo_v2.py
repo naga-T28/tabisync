@@ -10,7 +10,7 @@ from django_ratelimit.decorators import ratelimit
 from ..models import MemoV2
 from .access_control import EditPasswordRequiredMixin, ViewPasswordRequiredMixin, has_edit_access, require_edit_access_json
 from .itinerary_helpers import normalize_memo_v2_notes
-from .utils import ratelimit_client_ip, validate_memo_notes_limits
+from .utils import parse_json_object_body, ratelimit_client_ip, validate_memo_notes_limits
 
 
 # v2メモページ
@@ -35,10 +35,9 @@ class MemoV2View(ViewPasswordRequiredMixin, View):
             return gate_response
 
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-        except (TypeError, ValueError, json.JSONDecodeError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+        data, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         if isinstance(data.get("notes"), list):
             notes = normalize_memo_v2_notes(json.dumps(data.get("notes", []), ensure_ascii=False))
@@ -73,10 +72,9 @@ class MemoV2EditView(EditPasswordRequiredMixin, View):
 
     def post(self, request, pk, token):
         memo, _ = MemoV2.objects.get_or_create(itinerary=self.itinerary)
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-        except (TypeError, ValueError, json.JSONDecodeError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+        data, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         if isinstance(data.get("notes"), list):
             notes = normalize_memo_v2_notes(json.dumps(data.get("notes", []), ensure_ascii=False))

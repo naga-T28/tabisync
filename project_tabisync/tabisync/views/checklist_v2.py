@@ -10,7 +10,7 @@ from django_ratelimit.decorators import ratelimit
 from ..models import ChecklistV2
 from .access_control import EditPasswordRequiredMixin, ViewPasswordRequiredMixin, has_edit_access, require_edit_access_json
 from .itinerary_helpers import build_default_checklist_v2_lists, normalize_checklist_v2_content
-from .utils import ratelimit_client_ip, validate_checklist_limits
+from .utils import parse_json_object_body, ratelimit_client_ip, validate_checklist_limits
 
 
 # v2リスト表示ページ
@@ -39,10 +39,9 @@ class ChecklistV2View(ViewPasswordRequiredMixin, View):
 
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
 
-        try:
-            data = json.loads(request.body)
-        except (TypeError, ValueError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+        data, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
         limit_error = validate_checklist_limits(lists)
@@ -78,10 +77,9 @@ class ChecklistV2EditView(EditPasswordRequiredMixin, View):
     def post(self, request, pk, token):
         checklist, _ = ChecklistV2.objects.get_or_create(itinerary=self.itinerary)
 
-        try:
-            data = json.loads(request.body)
-        except (TypeError, ValueError):
-            return JsonResponse({"status": "error", "message": "不正なJSONです"}, status=400)
+        data, error_response = parse_json_object_body(request)
+        if error_response is not None:
+            return error_response
 
         lists = normalize_checklist_v2_content(json.dumps(data.get("lists", []), ensure_ascii=False))
         limit_error = validate_checklist_limits(lists)
