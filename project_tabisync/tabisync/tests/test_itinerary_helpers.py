@@ -23,7 +23,8 @@ class ScheduleDayIndexTests(TestCase):
             end_date=date(2026, 1, 3),
         )
 
-    def test_prefers_explicit_day_index(self):
+    def test_returns_stored_day_index(self):
+        # day_indexはTask 006のmigrationでNOT NULL化されており、常に保存済みの値をそのまま返す。
         schedule = self.itinerary.schedules.create(
             date=date(2026, 1, 1),
             day_index=2,
@@ -31,14 +32,6 @@ class ScheduleDayIndexTests(TestCase):
             start_time="09:00",
         )
         self.assertEqual(get_schedule_day_index(self.itinerary, schedule), 2)
-
-    def test_falls_back_to_date_diff(self):
-        schedule = self.itinerary.schedules.create(
-            date=date(2026, 1, 3),
-            title="予定",
-            start_time="09:00",
-        )
-        self.assertEqual(get_schedule_day_index(self.itinerary, schedule), 3)
 
 
 class BuildDayChoicesTests(TestCase):

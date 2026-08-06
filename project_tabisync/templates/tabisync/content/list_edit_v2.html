@@ -24,7 +24,7 @@
   </div>
 </div>
 
-<script id="checklists-data" type="application/json">{{ checklists_json|safe }}</script>
+{{ checklists|json_script:"checklists-data" }}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const editor = document.getElementById("checklistEditor");

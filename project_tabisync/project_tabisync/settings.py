@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 
 
@@ -16,6 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # DEBUG設定
 DEBUG = env_bool('DEBUG', False)
 
+# manage.py test 実行時はdjango-ratelimitを無効化する。
+# レート制限はプロセス全体で共有されるキャッシュ(デフォルトのLocMemCache)を使うため、
+# テストスイート全体で同一IP(テストクライアントは127.0.0.1固定)への大量リクエストが
+# 蓄積し、rate-limit対象viewのテストが実行順序によって偶発的に403で失敗しうる。
+# レート制限自体の挙動はどのテストも検証していないため、テスト時は無効化する。
+RATELIMIT_ENABLE = "test" not in sys.argv
+
 # Turnstile keys（Cloudflare管理画面から取得）
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
 TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
@@ -23,6 +31,15 @@ GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
 USE_HTTPS = env_bool("USE_HTTPS", True)
+
+# クライアントIP判定（レート制限等）で CF-Connecting-IP / X-Forwarded-For を
+# 信頼してよいプロキシのCIDR一覧（カンマ区切り、例: "10.0.0.0/8,192.0.2.10/32"）。
+# 未設定（既定）の場合は転送ヘッダーを一切信頼せず、REMOTE_ADDRのみを使用する。
+TRUSTED_PROXY_CIDRS = [
+    cidr.strip()
+    for cidr in os.environ.get("TRUSTED_PROXY_CIDRS", "").split(",")
+    if cidr.strip()
+]
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")

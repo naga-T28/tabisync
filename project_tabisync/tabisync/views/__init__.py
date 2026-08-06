@@ -1,3 +1,17 @@
+from .access_control import (
+    EditPasswordRequiredMixin,
+    ViewPasswordRequiredMixin,
+    build_edit_session_key,
+    build_view_session_key,
+    grant_edit_access,
+    grant_view_access,
+    handle_edit_password_gate,
+    has_edit_access,
+    has_view_access,
+    require_edit_access_json,
+    require_view_access,
+    require_view_access_json,
+)
 from .utils import (
     ALLOWED_COVER_IMAGE_CONTENT_TYPES,
     CONCIERGE_USER_MESSAGE_MAX_LENGTH,
@@ -36,6 +50,7 @@ from .itinerary_helpers import (
     get_schedule_day_index,
     get_schedule_display_date,
     get_want_to_go_limit,
+    lock_itinerary_for_update,
     normalize_checklist_v2_content,
     normalize_memo_v2_notes,
     parse_optional_float,
@@ -88,6 +103,18 @@ from .legacy_v1 import (
 )
 
 __all__ = [
+    "EditPasswordRequiredMixin",
+    "ViewPasswordRequiredMixin",
+    "build_edit_session_key",
+    "build_view_session_key",
+    "grant_edit_access",
+    "grant_view_access",
+    "handle_edit_password_gate",
+    "has_edit_access",
+    "has_view_access",
+    "require_edit_access_json",
+    "require_view_access",
+    "require_view_access_json",
     "ALLOWED_COVER_IMAGE_CONTENT_TYPES",
     "CONCIERGE_USER_MESSAGE_MAX_LENGTH",
     "MAX_CHECKLIST_ITEMS_PER_LIST",
@@ -123,6 +150,7 @@ __all__ = [
     "get_schedule_day_index",
     "get_schedule_display_date",
     "get_want_to_go_limit",
+    "lock_itinerary_for_update",
     "normalize_checklist_v2_content",
     "normalize_memo_v2_notes",
     "parse_optional_float",
