@@ -28,7 +28,7 @@ TabiSync は、旅程、行きたい場所、メモ、チェックリストな�
 3. `project_tabisync/project_tabisync/settings.py`: 環境、DB、セキュリティ、外部設定
 4. `project_tabisync/tabisync/models.py`: データモデル
 5. `project_tabisync/tabisync/urls.py`: 画面・エンドポイント一覧
-6. `project_tabisync/tabisync/views.py`: 主要なアプリケーション処理
+6. `project_tabisync/tabisync/views/`: 役割別に分割されたアプリケーション処理（`utils.py`, `itinerary_helpers.py` に共通ヘルパー、機能ごとに `itinerary_v2.py`, `schedule_v2.py`, `want_to_go.py`, `memo_v2.py`, `checklist_v2.py`, `concierge.py`, `auth.py`, `legacy_v1.py` 等）
 7. 対象の `templates/`、`static/js/`、`static/scss/`、テスト
 
 ## ディレクトリ構成
@@ -58,13 +58,13 @@ TabiSync/
     │   └── wsgi.py
     ├── tabisync/               # メインDjangoアプリ
     │   ├── models.py
-    │   ├── views.py
+    │   ├── views/               # 役割別に分割されたview（旧views.py）
     │   ├── urls.py
     │   ├── forms.py
     │   ├── admin.py
     │   ├── openai_concierge.py
     │   ├── sitemaps.py
-    │   ├── tests.py
+    │   ├── tests/                # 役割別に分割されたテスト（旧tests.py）
     │   └── migrations/
     ├── templates/
     │   ├── tabisync/
@@ -107,7 +107,7 @@ TabiSync/
 - AIコンシェルジュは「安全判定 → 必要データ選択 → 回答生成」の順でOpenAI APIを呼び、必要に応じて編集候補を返します。
 - AIによる編集は、確認用の回答生成と `concierge_v2_apply_changes` による適用を分離した現在の設計を維持してください。
 - ユーザー向けエラーでは、非DEBUG環境に内部例外や外部APIの詳細を露出しないでください。
-- `views.py` には日数、1日当たり予定数、メモ、チェックリスト、画像容量などの上限定数があります。保存経路を追加する場合も同じ制約を適用してください。
+- `views/utils.py` には日数、1日当たり予定数、メモ、チェックリスト、画像容量などの上限定数があります。保存経路を追加する場合も同じ制約を適用してください。
 
 ## フロントエンド
 
@@ -162,7 +162,7 @@ pipenv run python manage.py makemigrations --check --dry-run
 注意事項:
 
 - `package.json` の `npm test` は未設定で、常にエラー終了します。検証コマンドとして使用しないでください。
-- テストは現在 `project_tabisync/tabisync/tests.py` に集約されています。
+- テストは `project_tabisync/tabisync/tests/` 配下に、対象view/機能ごとにファイル分割されています。
 - 外部APIを呼ぶテストでは実通信を避け、モックを使用してください。
 - UI変更では自動テストに加え、対象ページのモバイル・デスクトップ表示と主要操作を手動確認してください。
 
@@ -186,6 +186,7 @@ pipenv run python manage.py makemigrations --check --dry-run
 - OpenAI: `OPENAI_API_KEY`, `OPENAI_LIGHT_MODEL`, `OPENAI_ANSWER_MODEL`、各プロンプト・タイムアウト設定
 - Upload: `MAX_COVER_IMAGE_UPLOAD_BYTES`, `MAX_REQUEST_BODY_BYTES`
 - Gunicorn: `GUNICORN_TIMEOUT`, `GUNICORN_GRACEFUL_TIMEOUT`
+- Proxy: `TRUSTED_PROXY_CIDRS`（任意。カンマ区切りのCIDR一覧、例: `10.0.0.0/8,192.0.2.10/32`。レート制限等のクライアントIP判定で `CF-Connecting-IP`/`X-Forwarded-For` を信頼してよい直前ホップの範囲を指定する。未設定時は転送ヘッダーを一切信頼せず `REMOTE_ADDR` のみを使用する安全側の既定値になる。外側Nginx等のリバースプロキシが到達するアドレス範囲を設定すること）
 
 新しい環境変数を追加した場合は、秘密値を記載せず変数名、用途、必須か任意かをこの文書またはREADMEへ追記してください。
 
@@ -196,13 +197,14 @@ pipenv run python manage.py makemigrations --check --dry-run
 - GitHub Actionsの `.github/workflows/deploy.yml` は、`main` を本番、`test` をステージングとしてVPSへデプロイします。
 - デプロイはrsync、Docker Compose再ビルド、外側のNginx等を含む `~/web_app` の起動で構成されています。
 - デプロイ、GitHub Secrets、VPS、外部サービスの状態変更は、明示的な依頼と権限なしに実施しないでください。
+- Cloudflare経由でのアクセスを前提とする場合（`CF-Connecting-IP` を使ったクライアントIP判定・レート制限が機能するため）、オリジンサーバー（外側Nginx）への直接アクセスをCloudflareのIPレンジ以外から遮断するようファイアウォール/Nginx設定で構成すること。直接アクセスを許してしまうと、攻撃者が任意の `CF-Connecting-IP`/`X-Forwarded-For` を送信してレート制限を回避できる。あわせて `TRUSTED_PROXY_CIDRS` に、Django（Gunicorn）へ到達する直前ホップ（外側Nginx等）のアドレス範囲を設定すること。この項目は現在のリポジトリだけでは実際のVPS/Nginx設定を確認できないため、デプロイ担当者が実環境に合わせて設定・確認する。
 
 ## 変更時のルール
 
 - 作業前に `git status --short` を確認し、ユーザーの既存変更を保持してください。
 - 依頼と無関係なファイルを整形・修正しないでください。
 - 生成済みCSSに既存差分がある場合、SCSSコンパイルによる広範な上書きに注意してください。
-- 大きな `views.py` を変更するときも、依頼と関係するビューとヘルパーに範囲を限定してください。
+- `views/` を変更するときも、依頼と関係するビューとヘルパーに範囲を限定してください。
 - URL名、テンプレート名、`related_name` は複数箇所から参照されるため、変更前にリポジトリ全体を検索してください。
 - セキュリティ、パスワード、トークン、レート制限、入力上限を弱める変更は行わないでください。
 - 実装変更には、可能な範囲で回帰テストを追加してください。
@@ -215,6 +217,11 @@ pipenv run python manage.py makemigrations --check --dry-run
 - コンシェルジュ入力の文字数制限
 - 会話履歴の正規化
 - V2チェックリスト保存
+- しおりの閲覧/編集アクセス制御（`views/access_control.py`。V1/V2共通のセッションキー生成、パスワード再設定後の旧セッション失効、閲覧・編集ゲートの権限表）
+
+## テスト実行時の注意
+
+- `manage.py test` 実行時は `RATELIMIT_ENABLE = False`（`settings.py`で`sys.argv`から判定）となり、`django_ratelimit` によるレート制限は無効化される。レート制限用キャッシュ(LocMemCache)はテストプロセス全体で共有されるため、有効なままだとテスト実行順序によって無関係なテストが偶発的に403で失敗しうるための対応。レート制限そのものの挙動を検証するテストは現状存在しない。
 
 ## 未定事項
 

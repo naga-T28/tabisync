@@ -107,7 +107,7 @@ class ScheduleV2(models.Model):
         related_name="schedules"
     )
     date = models.DateField()
-    day_index = models.PositiveIntegerField(blank=True, null=True)
+    day_index = models.PositiveIntegerField()
     title = models.CharField(max_length=30)   # 要件に合わせる
     icon = models.CharField(max_length=20, choices=ICON_CHOICES, default=ICON_DEFAULT)
     description = models.TextField(blank=True)
@@ -124,6 +124,9 @@ class ScheduleV2(models.Model):
 
     class Meta:
         ordering = ["date", "order"]
+        indexes = [
+            models.Index(fields=["itinerary", "day_index", "start_time", "order"], name="schedulev2_day_order_idx"),
+        ]
 
     def __str__(self):
         return f"{self.date} {self.title}"
