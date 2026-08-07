@@ -221,7 +221,9 @@ document.addEventListener("DOMContentLoaded", function () {
     html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
     html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // 絶対URL(https?://)または"/"始まりの同一オリジン相対パスのみ許可する。
+    // javascript:等の危険なスキームや相対パス以外の記法にはマッチしない。
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     return html;
   }
 
@@ -292,6 +294,119 @@ document.addEventListener("DOMContentLoaded", function () {
     return blocks.join("");
   }
 
+  const googleMapsApiKey = "{{ google_maps_api_key|default:'' }}";
+  let googleMapsLoadPromise = null;
+
+  function ensureGoogleMapsLoaded() {
+    if (window.google && window.google.maps) return Promise.resolve();
+    if (!googleMapsApiKey) return Promise.reject(new Error("Google Maps未設定"));
+    if (googleMapsLoadPromise) return googleMapsLoadPromise;
+
+    googleMapsLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Google Mapsの読み込みに失敗しました。"));
+      document.head.appendChild(script);
+    });
+    return googleMapsLoadPromise;
+  }
+
+  function buildGoogleMapsSearchUrl(place) {
+    const params = new URLSearchParams({ api: "1", query: place.name || "Google" });
+    if (place.place_id) params.set("query_place_id", place.place_id);
+    return `https://www.google.com/maps/search/?${params.toString()}`;
+  }
+
+  // 地図componentは常に「場所名+住所+外部リンク」のカード一覧をまず描画する(iframe不使用)。
+  // 座標を持つ場所が1件以上あれば、Google Maps JS APIを遅延ロードしてマーカー描画を追加する。
+  // ロード失敗時はカード一覧のみが残るグレースフルデグレードとする。
+  function renderMapComponent(component) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "concierge-ui-component concierge-ui-map";
+
+    const title = document.createElement("p");
+    title.className = "concierge-ui-map-title";
+    title.textContent = component.title || "地図";
+    wrapper.appendChild(title);
+
+    const places = Array.isArray(component.places) ? component.places : [];
+    if (!places.length) return wrapper;
+
+    const list = document.createElement("ul");
+    list.className = "concierge-ui-map-list";
+    places.forEach((place) => {
+      const item = document.createElement("li");
+      item.className = "concierge-ui-map-item";
+
+      const name = document.createElement("span");
+      name.className = "concierge-ui-map-item-name";
+      name.textContent = place.name || "";
+      item.appendChild(name);
+
+      if (place.address) {
+        const address = document.createElement("span");
+        address.className = "concierge-ui-map-item-address";
+        address.textContent = place.address;
+        item.appendChild(address);
+      }
+
+      const link = document.createElement("a");
+      link.className = "concierge-ui-map-item-link";
+      link.href = place.maps_url || buildGoogleMapsSearchUrl(place);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Google Mapsで開く";
+      item.appendChild(link);
+
+      list.appendChild(item);
+    });
+    wrapper.appendChild(list);
+
+    const geoPlaces = places.filter((place) => Number.isFinite(place.lat) && Number.isFinite(place.lng));
+    if (!geoPlaces.length) return wrapper;
+
+    const mapId = `concierge-map-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const mapCanvas = document.createElement("div");
+    mapCanvas.className = "concierge-ui-map-canvas";
+    mapCanvas.id = mapId;
+    mapCanvas.setAttribute("role", "img");
+    mapCanvas.setAttribute("aria-label", `${component.title || "地図"}の地図表示`);
+    wrapper.appendChild(mapCanvas);
+
+    ensureGoogleMapsLoaded()
+      .then(() => {
+        const canvasEl = document.getElementById(mapId);
+        if (!canvasEl) return;
+        const map = new window.google.maps.Map(canvasEl, {
+          center: { lat: geoPlaces[0].lat, lng: geoPlaces[0].lng },
+          zoom: 12,
+        });
+        const bounds = new window.google.maps.LatLngBounds();
+        geoPlaces.forEach((place) => {
+          const position = { lat: place.lat, lng: place.lng };
+          new window.google.maps.Marker({ position, map, title: place.name || "" });
+          bounds.extend(position);
+        });
+        if (geoPlaces.length > 1) map.fitBounds(bounds);
+      })
+      .catch(() => {
+        mapCanvas.remove();
+      });
+
+    return wrapper;
+  }
+
+  function renderUiComponents(container, components) {
+    if (!Array.isArray(components)) return;
+    components.slice(0, 3).forEach((component) => {
+      if (!component || component.type !== "map") return;
+      container.appendChild(renderMapComponent(component));
+    });
+  }
+
   function migrateLegacyHistory() {
     const legacyConversationId = window.sessionStorage.getItem(legacyStorageKey);
     const legacyHistory = window.sessionStorage.getItem(legacyHistoryKey);
@@ -316,9 +431,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const bubble = document.createElement("div");
     bubble.className = "concierge-message-bubble";
-    if (options.renderedHtml) {
-      bubble.innerHTML = options.renderedHtml;
-    } else if (options.markdown) {
+    if (options.markdown) {
       bubble.innerHTML = renderMarkdown(text);
     } else {
       bubble.textContent = text;
@@ -326,6 +439,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     article.appendChild(label);
     article.appendChild(bubble);
+
+    if (role === "assistant" && Array.isArray(options.uiComponents) && options.uiComponents.length) {
+      renderUiComponents(article, options.uiComponents);
+    }
 
     if (role === "assistant" && Array.isArray(options.editActions) && options.editActions.length) {
       const changeSetId = options.changeSetId || `changes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -371,8 +488,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!Array.isArray(parsed) || !parsed.length) return false;
       chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
       chatHistory.forEach((item) => addMessage(item.role, item.content, {
-        renderedHtml: item.rendered_html || "",
+        markdown: item.role === "assistant",
         editActions: item.edit_actions || [],
+        uiComponents: item.ui_components || [],
         changeSetId: item.change_set_id || "",
       }));
       return chatHistory.length > 0;
@@ -445,17 +563,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const assistantReply = data.reply || "返答を生成できませんでした。";
       const editActions = Array.isArray(data.edit_actions) ? data.edit_actions : [];
+      const uiComponents = Array.isArray(data.ui_components) ? data.ui_components : [];
       const changeSetId = editActions.length ? `changes-${Date.now()}-${Math.random().toString(16).slice(2)}` : "";
       addMessage("assistant", assistantReply, {
         markdown: true,
         editActions,
+        uiComponents,
         changeSetId,
       });
       chatHistory.push({
         role: "assistant",
         content: assistantReply,
-        rendered_html: renderMarkdown(assistantReply),
         edit_actions: editActions,
+        ui_components: uiComponents,
         change_set_id: changeSetId,
       });
       persistHistory();
@@ -538,13 +658,12 @@ document.addEventListener("DOMContentLoaded", function () {
   migrateLegacyHistory();
 
   if (!restoreHistory()) {
-    const welcomeMessage = "旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。利用規約と注意事項を必ずお読みの上、ご利用ください。質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」";
-    const welcomeMessageHtml = '旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。<a href="{% url "tabisync:concierge_terms" %}" target="_blank" rel="noopener noreferrer">利用規約と注意事項</a>を必ずお読みの上、ご利用ください。<br>質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」';
-    addMessage("assistant", welcomeMessage, { renderedHtml: welcomeMessageHtml });
+    const termsUrl = "{% url 'tabisync:concierge_terms' %}";
+    const welcomeMessage = `旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。[利用規約と注意事項](${termsUrl})を必ずお読みの上、ご利用ください。\n質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」`;
+    addMessage("assistant", welcomeMessage, { markdown: true });
     chatHistory.push({
       role: "assistant",
       content: welcomeMessage,
-      rendered_html: welcomeMessageHtml,
     });
     persistHistory();
   }
