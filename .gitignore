@@ -21,6 +21,7 @@ node_modules
 db.sqlite3
 /media
 /staticfiles
+project_tabisync/staticfiles
 *.log
 
 # PyCharm / VSCode

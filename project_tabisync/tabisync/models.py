@@ -250,8 +250,40 @@ class ConciergeChatLog(models.Model):
     assistant_message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Skill/Tool駆動Agent(concierge_agent)導入に伴うrun単位の要約フィールド。
+    # engine="legacy"は固定3段階処理、"agent"はAgent loop経由。
+    engine = models.CharField(max_length=16, default="legacy", blank=True)
+    selected_skill_ids = models.JSONField(default=list, blank=True)
+    openai_call_count = models.PositiveIntegerField(default=0)
+    tool_call_count = models.PositiveIntegerField(default=0)
+    ui_component_types = models.JSONField(default=list, blank=True)
+    edit_action_count = models.PositiveIntegerField(default=0)
+    run_status = models.CharField(max_length=32, blank=True)
+
     class Meta:
         ordering = ["conversation_id", "turn_index", "id"]
 
     def __str__(self):
         return f"Concierge log {self.itinerary_id} #{self.turn_index}"
+
+
+class ConciergeToolCallLog(models.Model):
+    """ConciergeChatLog 1件(=1 run)内で実行された個々のTool呼び出しの記録。
+
+    住所全文・メモ本文などの個人情報は保存しない(args_summaryは要約のみ)。
+    """
+    run = models.ForeignKey(ConciergeChatLog, on_delete=models.CASCADE, related_name="tool_calls")
+    sequence_index = models.PositiveIntegerField()
+    tool_id = models.CharField(max_length=64)
+    tool_version = models.PositiveIntegerField()
+    status = models.CharField(max_length=16)
+    duration_ms = models.PositiveIntegerField(null=True, blank=True)
+    error_type = models.CharField(max_length=64, blank=True)
+    args_summary = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["run_id", "sequence_index"]
+
+    def __str__(self):
+        return f"Tool call {self.tool_id} #{self.sequence_index} (run={self.run_id})"
