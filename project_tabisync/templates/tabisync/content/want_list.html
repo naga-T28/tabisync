@@ -3,7 +3,16 @@
 
 {% block contents %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initPlaceSearch" async defer></script>
+{{ map_display_config|json_script:"tabisync-map-config" }}
+<link rel="stylesheet" href="{% static 'css/vendor/maplibre-gl/maplibre-gl.css' %}">
+<script src="{% static 'js/map_renderer.js' %}"></script>
+<script>
+  window.TABISYNC_MAP_CONFIG = Object.assign(
+    JSON.parse(document.getElementById("tabisync-map-config").textContent),
+    { workerUrl: "{% static 'js/vendor/maplibre-gl/maplibre-gl-worker.mjs' %}" }
+  );
+</script>
 
 <div class="content-main-map">
 <div class="place-wrapper">
@@ -194,8 +203,7 @@
 </div>
 </div>
 <script>
-let map;
-let markers = [];
+let mapRenderer = null;
 let currentDayFilterValues = [];
 let currentSortFilter = "day";
 
@@ -346,60 +354,40 @@ function syncPlaceDetailToggle() {
     icon.textContent = details.open ? "➖" : "➕";
 }
 
-function initMap() {
-
-    map = new google.maps.Map(document.getElementById("map"), {
+// Google Places検索service専用の初期化。schedule_edit.htmlのinitPlaceSearchと同じく、
+// DOMに追加しないdummy mapでPlacesServiceを起動し、可視#mapとは分離する。
+function initPlaceSearch() {
+    const dummyMapEl = document.createElement("div");
+    const dummyMap = new google.maps.Map(dummyMapEl, {
         center: { lat: 35.681236, lng: 139.767125 },
         zoom: 4
     });
 
-    // Places API services（検索/詳細取得用）
-    placesService = new google.maps.places.PlacesService(map);
+    placesService = new google.maps.places.PlacesService(dummyMap);
     if (google.maps.places && google.maps.places.AutocompleteService) {
         autocompleteService = new google.maps.places.AutocompleteService();
     }
+}
 
-    const bounds = new google.maps.LatLngBounds();
-
-    placesData.forEach(place => {
-
-        // lat/lngが無いデータはスキップ（JSエラー防止）
-        if (place.lat === null || place.lng === null || place.lat === undefined || place.lng === undefined) return;
-        const position = { lat: place.lat, lng: place.lng };
-
-        // 数値に変換
-        const dayNumber = parseInt(place.planned_day) || 0;
-
-        const marker = new google.maps.Marker({
-            position: position,
-            map: map,
-            title: place.name,
-            icon: getMarkerSymbol(dayNumber)
-        });
-
-
-        markers.push({ marker, day: dayNumber, place_id: place.place_id, dbid: place.id });
-
-
-        marker.addListener("click", () => {
-            openModal(place);
-        });
-
-        bounds.extend(position);
+// 可視地図はMap Display Adapter(map_renderer.js)経由でMapLibreへ委譲する。
+// provider障害時はfallbackで#mapを非表示にし、場所カードとGoogle Mapsリンクを残す。
+function initVisibleMap() {
+    const container = document.getElementById("map");
+    window.createMapRenderer(container, {
+        places: placesData,
+        onMarkerClick: (place) => openModal(place),
+        markerStyle: (place) => ({ color: getDayColor(parseInt(place.planned_day) || 0) }),
+        fallback: () => { container.style.display = "none"; },
+    }).then((renderer) => {
+        mapRenderer = renderer;
+        applyFilter();
+    }).catch(() => {
+        mapRenderer = null;
     });
-
-    if (placesData.length > 0) {
-        map.fitBounds(bounds);
-    }
-    syncDayFilterCount();
-    syncSortFilterLabel();
-    sortCards();
-    applyFilter();
 }
 
 // Dayごとの色分け
-// Dayごとの色分け（Symbolで描画）
-function getMarkerSymbol(day) {
+function getDayColor(day) {
   // Day→色（必要なら好みで調整OK）
   const colors = {
     0:  "#4e4e4e", // 未定: グレー
@@ -425,17 +413,7 @@ function getMarkerSymbol(day) {
     20: "#d0b070"
   };
 
-  const fill = (day > 20) ? "#d09c60" : (colors[day] || "#8a8a8a");
-
-  return {
-    path: google.maps.SymbolPath.CIRCLE,
-    fillColor: fill,
-    fillOpacity: 1,
-    strokeColor: "#ffffff",
-    strokeOpacity: 1,
-    strokeWeight: 2,
-    scale: 10, // サイズ
-  };
+  return (day > 20) ? "#d09c60" : (colors[day] || "#8a8a8a");
 }
 // カードをクリックしたとき
 function openModalFromCard(placeId) {
@@ -551,10 +529,12 @@ function applyFilter() {
     });
 
     // markers
-    markers.forEach(({marker, day}) => {
-        const show = !hasDayFilter || selectedDays.has(String(day));
-        marker.setMap(show ? map : null);
-    });
+    if (mapRenderer) {
+        mapRenderer.markers.forEach(({ place, setVisible }) => {
+            const day = String(parseInt(place.planned_day) || 0);
+            setVisible(!hasDayFilter || selectedDays.has(day));
+        });
+    }
 }
 
 
@@ -895,6 +875,15 @@ try {
 function closeModal() {
     document.getElementById("placeModal").classList.remove("active");
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    // カード一覧の表示・並び替え・フィルタはGoogle Maps/MapLibreの読み込み成否に関係なく動く。
+    syncDayFilterCount();
+    syncSortFilterLabel();
+    sortCards();
+    applyFilter();
+    initVisibleMap();
+});
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
