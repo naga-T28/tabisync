@@ -122,25 +122,18 @@ def _extract_response_text(parsed):
     raise OpenAIConciergeError("レスポンス本文を解釈できませんでした。")
 
 
-def call_openai_responses_api(
-    prompt_text,
-    schema=None,
-    model=None,
-    max_output_tokens=800,
-    timeout_seconds=None,
-):
+def post_responses_api_raw(payload, timeout_seconds=None):
+    """OpenAI Responses APIへ任意のpayloadをPOSTし、パース済みJSON(dict)をそのまま返す。
+
+    Agent loop(tools/function_call/function_call_outputを含む生のoutput配列)など、
+    構造化テキストの単純な抽出では済まない呼び出し元向けの低レベル関数。
+    HTTP・タイムアウト・JSONデコードのエラー正規化(OpenAIConciergeError化)はここに集約する。
+    """
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise OpenAIConciergeError("OPENAI_API_KEY が設定されていません。")
 
-    target_model = model or OPENAI_LIGHT_MODEL
     request_timeout = timeout_seconds or OPENAI_API_TIMEOUT_SECONDS
-    payload = (
-        _json_schema_payload(target_model, prompt_text, schema, max_output_tokens)
-        if schema
-        else _text_payload(target_model, prompt_text, max_output_tokens)
-    )
-
     request = urllib.request.Request(
         OPENAI_RESPONSES_ENDPOINT,
         data=json.dumps(payload).encode("utf-8"),
@@ -165,10 +158,25 @@ def call_openai_responses_api(
         ) from exc
 
     try:
-        parsed = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError as exc:
         raise OpenAIConciergeError("レスポンスJSONを解釈できませんでした。") from exc
 
+
+def call_openai_responses_api(
+    prompt_text,
+    schema=None,
+    model=None,
+    max_output_tokens=800,
+    timeout_seconds=None,
+):
+    target_model = model or OPENAI_LIGHT_MODEL
+    payload = (
+        _json_schema_payload(target_model, prompt_text, schema, max_output_tokens)
+        if schema
+        else _text_payload(target_model, prompt_text, max_output_tokens)
+    )
+    parsed = post_responses_api_raw(payload, timeout_seconds=timeout_seconds)
     return _extract_response_text(parsed), payload
 
 

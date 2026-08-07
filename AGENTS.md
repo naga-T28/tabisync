@@ -29,7 +29,8 @@ TabiSync は、旅程、行きたい場所、メモ、チェックリストな�
 4. `project_tabisync/tabisync/models.py`: データモデル
 5. `project_tabisync/tabisync/urls.py`: 画面・エンドポイント一覧
 6. `project_tabisync/tabisync/views/`: 役割別に分割されたアプリケーション処理（`utils.py`, `itinerary_helpers.py` に共通ヘルパー、機能ごとに `itinerary_v2.py`, `schedule_v2.py`, `want_to_go.py`, `memo_v2.py`, `checklist_v2.py`, `concierge.py`, `auth.py`, `legacy_v1.py` 等）
-7. 対象の `templates/`、`static/js/`、`static/scss/`、テスト
+7. AIコンシェルジュに関する依頼のみ: `project_tabisync/tabisync/concierge_agent/`（registry・agent loop・usage・tracing、`skills/`・`tools/` Markdown定義）と `project_tabisync/tabisync/concierge_tools/`（Tool実装）
+8. 対象の `templates/`、`static/js/`、`static/scss/`、テスト
 
 ## ディレクトリ構成
 
@@ -63,6 +64,8 @@ TabiSync/
     │   ├── forms.py
     │   ├── admin.py
     │   ├── openai_concierge.py
+    │   ├── concierge_agent/     # AIコンシェルジュAgent基盤（registry/agent loop/usage/tracing、skills/・tools/ Markdown定義）
+    │   ├── concierge_tools/     # concierge_agentのTool実装（read/proposal/ui、edit_actions共通service）
     │   ├── sitemaps.py
     │   ├── tests/                # 役割別に分割されたテスト（旧tests.py）
     │   └── migrations/
@@ -92,7 +95,8 @@ TabiSync/
 - `WantToGo`: 行きたい場所と位置情報
 - `MemoV2`: CKEditor 5を利用したメモ
 - `ChecklistV2`: JSON文字列として保存するチェックリスト
-- `ConciergeChatLog`: AIコンシェルジュの入力、判定、コンテキスト、回答ログ
+- `ConciergeChatLog`: AIコンシェルジュの入力、判定、コンテキスト、回答ログ（run単位。`engine`列でlegacy/agentを区別）
+- `ConciergeToolCallLog`: Agent経路（`engine="agent"`）でのTool呼び出し単位のログ（`ConciergeChatLog`にFK）
 
 `TravelDate`、`Schedule`、`Memo`、`Item` とV1用テンプレート・SCSSも残っています。依頼で明示されない限り、V2の変更をV1へ展開しないでください。既存V1コードの削除や移行も行わないでください。
 
@@ -104,8 +108,9 @@ TabiSync/
 - `ScheduleV2.place` は任意指定で、`WantToGo` 削除時には `SET_NULL` になります。
 - `MemoV2` と `ChecklistV2` は `Itinerary` と1対1です。
 - チェックリストの `content` はDB上では `TextField` です。読み書き時のJSON正規化と上限チェックを維持してください。
-- AIコンシェルジュは「安全判定 → 必要データ選択 → 回答生成」の順でOpenAI APIを呼び、必要に応じて編集候補を返します。
-- AIによる編集は、確認用の回答生成と `concierge_v2_apply_changes` による適用を分離した現在の設計を維持してください。
+- AIコンシェルジュには2経路があります。既定は従来どおり「安全判定 → 必要データ選択 → 回答生成」の固定3段階（`views/concierge.py::_post_legacy_mode`）。`CONCIERGE_AGENT_ENABLED`（または`CONCIERGE_AGENT_ENABLED_ITINERARY_IDS`で対象しおりを限定）を有効にすると、安全判定のあと`concierge_agent`のSkill/Tool駆動Agent loop（`_post_agent_mode`）が使われます。どちらも日次利用枠の予約・確定・解放は`concierge_agent/usage.py::DailyRunUsageService`を共通で通します。
+- Agent経路のSkill/Toolは `tabisync/concierge_agent/skills/*.md` と `tabisync/concierge_agent/tools/*.md`（1 Skill = 1 Markdown、1 Tool = 1 Markdown）で定義し、`concierge_agent/registry.py`が起動時（Django system check）に検証します。ToolのMarkdown `handler`欄が指せるPython関数は`registry.py`内の許可リストに登録されたものだけです。Markdown追加・変更時は対応するPython実装（`concierge_tools/`）とこの許可リストの両方を更新してください。
+- AIによる編集は、確認用の回答生成と `concierge_v2_apply_changes` による適用を分離した設計を維持してください（legacy経路の`edit_actions`、Agent経路の`propose_changes`Toolのいずれも、この分離を壊さないこと）。Agent経路の`propose_changes`はDBセーブポイント内で検証するだけで、呼び出し自体はしおりを一切変更しません。
 - ユーザー向けエラーでは、非DEBUG環境に内部例外や外部APIの詳細を露出しないでください。
 - `views/utils.py` には日数、1日当たり予定数、メモ、チェックリスト、画像容量などの上限定数があります。保存経路を追加する場合も同じ制約を適用してください。
 
@@ -184,6 +189,14 @@ pipenv run python manage.py makemigrations --check --dry-run
 - Google Maps: `GOOGLE_MAPS_API_KEY`
 - Turnstile: `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `CLOUDFLARE_TURNSTILE_SECRET_KEY`
 - OpenAI: `OPENAI_API_KEY`, `OPENAI_LIGHT_MODEL`, `OPENAI_ANSWER_MODEL`、各プロンプト・タイムアウト設定
+- AIコンシェルジュAgent経路（`concierge_agent`。任意、未設定時は全て安全側の既定値でlegacy経路のまま動作）:
+  - `CONCIERGE_AGENT_ENABLED`（既定`false`）: Agent経路のグローバル有効化フラグ
+  - `CONCIERGE_AGENT_ENABLED_ITINERARY_IDS`（既定空、カンマ区切りpk一覧）: 設定時はこの一覧のしおりのみAgent経路になり、`CONCIERGE_AGENT_ENABLED`より優先される（内部QAや限定公開向け）
+  - `OPENAI_AGENT_MODEL`（既定は`OPENAI_ANSWER_MODEL`と同じ）: Agent loopのtool-callingステップで使うモデル
+  - `OPENAI_AGENT_STEP_TIMEOUT_SECONDS`（既定は`OPENAI_ANSWER_TIMEOUT_SECONDS`と同じ）: Agent loop1ステップあたりのタイムアウト
+  - `CONCIERGE_AGENT_MAX_OPENAI_CALLS_PER_RUN`（既定`6`）: 1 run（1リクエスト）あたりのOpenAI呼び出し回数上限
+  - `CONCIERGE_AGENT_MAX_TOOL_CALLS_PER_RUN`（既定`6`）: 1 runあたりのTool呼び出し回数上限（Skill Markdownの`max_tool_calls`との小さい方が実際に適用される）
+  - `CONCIERGE_AGENT_MAX_RUN_SECONDS`（既定`25`）: 1 run全体の経過時間上限
 - Upload: `MAX_COVER_IMAGE_UPLOAD_BYTES`, `MAX_REQUEST_BODY_BYTES`
 - Gunicorn: `GUNICORN_TIMEOUT`, `GUNICORN_GRACEFUL_TIMEOUT`
 - Proxy: `TRUSTED_PROXY_CIDRS`（任意。カンマ区切りのCIDR一覧、例: `10.0.0.0/8,192.0.2.10/32`。レート制限等のクライアントIP判定で `CF-Connecting-IP`/`X-Forwarded-For` を信頼してよい直前ホップの範囲を指定する。未設定時は転送ヘッダーを一切信頼せず `REMOTE_ADDR` のみを使用する安全側の既定値になる。外側Nginx等のリバースプロキシが到達するアドレス範囲を設定すること）
@@ -218,6 +231,7 @@ pipenv run python manage.py makemigrations --check --dry-run
 - 会話履歴の正規化
 - V2チェックリスト保存
 - しおりの閲覧/編集アクセス制御（`views/access_control.py`。V1/V2共通のセッションキー生成、パスワード再設定後の旧セッション失効、閲覧・編集ゲートの権限表）
+- AIコンシェルジュAgent経路（`tests/test_concierge_agent_registry.py`: Skill/Tool Markdown定義の検証・system check、`tests/test_concierge_tools.py`: 各Toolのitineraryスコープ・座標非公開・propose_changesの非DB変更、`tests/test_concierge_agent_loop.py`: Agent loopの停止条件・未許可Tool拒否・キャッシュ・ui_components/edit_actionsの再構成、`tests/test_concierge_usage_limits.py`: run内利用上限と日次予約サービス、`tests/test_concierge_view_flag.py`: feature flag分岐とlegacy/agent両経路のview統合）
 
 ## テスト実行時の注意
 
