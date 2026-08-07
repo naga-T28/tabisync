@@ -29,6 +29,13 @@ TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
 TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
+# 可視地図の表示provider設定（Google Places検索とは独立）。
+# Task 002: Phase1はOpenFreeMap public instance。値はサーバー設定のみが出所で、
+# 利用者入力(クエリ/localStorage)からは変更できない。
+MAP_DISPLAY_PROVIDER = os.getenv("MAP_DISPLAY_PROVIDER", "openfreemap")
+MAP_STYLE_URL = os.getenv("MAP_STYLE_URL", "https://tiles.openfreemap.org/styles/liberty")
+MAP_TILE_URL = os.getenv("MAP_TILE_URL", "")
+
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
 USE_HTTPS = env_bool("USE_HTTPS", True)
 
@@ -213,6 +220,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'project_tabisync.context_processors.google_maps',
+                'project_tabisync.context_processors.map_display',
             ],
         },
     },

@@ -41,6 +41,15 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+        {{ map_display_config|json_script:"tabisync-map-config" }}
+        <link rel="stylesheet" href="{% static 'css/vendor/maplibre-gl/maplibre-gl.css' %}">
+        <script src="{% static 'js/map_renderer.js' %}"></script>
+        <script>
+          window.TABISYNC_MAP_CONFIG = Object.assign(
+            JSON.parse(document.getElementById("tabisync-map-config").textContent),
+            { workerUrl: "{% static 'js/vendor/maplibre-gl/maplibre-gl-worker.mjs' %}" }
+          );
+        </script>
     </head>
     <body id="concierge-body">
       <main class="content-main-concierge">
@@ -294,26 +303,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return blocks.join("");
   }
 
-  const googleMapsApiKey = "{{ google_maps_api_key|default:'' }}";
-  let googleMapsLoadPromise = null;
-
-  function ensureGoogleMapsLoaded() {
-    if (window.google && window.google.maps) return Promise.resolve();
-    if (!googleMapsApiKey) return Promise.reject(new Error("Google Maps未設定"));
-    if (googleMapsLoadPromise) return googleMapsLoadPromise;
-
-    googleMapsLoadPromise = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Google Mapsの読み込みに失敗しました。"));
-      document.head.appendChild(script);
-    });
-    return googleMapsLoadPromise;
-  }
-
   function buildGoogleMapsSearchUrl(place) {
     const params = new URLSearchParams({ api: "1", query: place.name || "Google" });
     if (place.place_id) params.set("query_place_id", place.place_id);
@@ -321,8 +310,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // 地図componentは常に「場所名+住所+外部リンク」のカード一覧をまず描画する(iframe不使用)。
-  // 座標を持つ場所が1件以上あれば、Google Maps JS APIを遅延ロードしてマーカー描画を追加する。
-  // ロード失敗時はカード一覧のみが残るグレースフルデグレードとする。
+  // 座標を持つ場所が1件以上あれば、Map Display Adapter(map_renderer.js)経由でMapLibreの
+  // マーカー描画を追加する。ロード失敗時はカード一覧のみが残るグレースフルデグレードとする。
   function renderMapComponent(component) {
     const wrapper = document.createElement("div");
     wrapper.className = "concierge-ui-component concierge-ui-map";
@@ -376,25 +365,12 @@ document.addEventListener("DOMContentLoaded", function () {
     mapCanvas.setAttribute("aria-label", `${component.title || "地図"}の地図表示`);
     wrapper.appendChild(mapCanvas);
 
-    ensureGoogleMapsLoaded()
-      .then(() => {
-        const canvasEl = document.getElementById(mapId);
-        if (!canvasEl) return;
-        const map = new window.google.maps.Map(canvasEl, {
-          center: { lat: geoPlaces[0].lat, lng: geoPlaces[0].lng },
-          zoom: 12,
-        });
-        const bounds = new window.google.maps.LatLngBounds();
-        geoPlaces.forEach((place) => {
-          const position = { lat: place.lat, lng: place.lng };
-          new window.google.maps.Marker({ position, map, title: place.name || "" });
-          bounds.extend(position);
-        });
-        if (geoPlaces.length > 1) map.fitBounds(bounds);
-      })
-      .catch(() => {
-        mapCanvas.remove();
-      });
+    window.createMapRenderer(mapCanvas, {
+      places: geoPlaces,
+      fallback: () => mapCanvas.remove(),
+    }).catch(() => {
+      mapCanvas.remove();
+    });
 
     return wrapper;
   }

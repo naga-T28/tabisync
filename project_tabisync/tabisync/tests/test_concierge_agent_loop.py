@@ -142,6 +142,10 @@ class AgentLoopTests(TestCase):
         self.assertEqual(len(result.ui_components), 1)
         self.assertEqual(result.ui_components[0]["type"], "map")
         self.assertEqual(result.ui_components[0]["want_to_go_ids"], [place.id])
+        self.assertEqual(result.ui_components[0]["places"][0]["id"], place.id)
+        self.assertEqual(result.ui_components[0]["places"][0]["name"], "首里城")
+        self.assertEqual(result.ui_components[0]["places"][0]["lat"], 26.2)
+        self.assertEqual(result.ui_components[0]["places"][0]["lng"], 127.7)
 
     @patch("tabisync.concierge_agent.agent.post_responses_api_raw")
     def test_propose_changes_accepted_actions_become_edit_actions(self, mock_post):
