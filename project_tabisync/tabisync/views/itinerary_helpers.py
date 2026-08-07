@@ -261,6 +261,44 @@ def get_schedule_day_index(itinerary, schedule):
 
 
 
+def build_schedule_map_data(itinerary, grouped_days):
+    """選択中の日ごとに、座標付きスポットだけを地図用の構造化データへ変換する(Task 003)。
+
+    WantToGo.id単位で日内重複排除する。座標欠落・範囲外・別Itineraryのplaceは含めない。
+    grouped_daysの予定は既にstart_time, order, id順のためその表示順を維持する。
+    """
+    data = {}
+    for group in grouped_days:
+        day_num = group["choice"].get("day_num")
+        seen_ids = set()
+        places = []
+        for schedule in group["schedules"]:
+            place = schedule.place
+            if not place or place.itinerary_id != itinerary.pk:
+                continue
+            if place.id in seen_ids:
+                continue
+            lat, lng = place.latitude, place.longitude
+            if lat is None or lng is None:
+                continue
+            if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                continue
+            seen_ids.add(place.id)
+            places.append({
+                "id": place.id,
+                "name": place.name,
+                "address": place.address or "",
+                "memo": place.memo or "",
+                "lat": lat,
+                "lng": lng,
+                "planned_day": place.planned_day,
+                "place_id": place.place_id or "",
+            })
+        data[str(day_num)] = places
+    return data
+
+
+
 def get_schedule_display_date(itinerary, day_index):
     # day_index から表示用の日付を逆算する
     if itinerary.start_date and day_index:

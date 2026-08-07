@@ -121,6 +121,20 @@ class ShowMapToolTests(TestCase):
         self.assertEqual(returned_ids, [place_a.id])
         self.assertEqual(ui_component["want_to_go_ids"], [place_a.id])
         self.assertEqual(ui_component["type"], "map")
+        self.assertEqual([place["id"] for place in ui_component["places"]], [place_a.id])
+
+    def test_show_map_ui_component_places_match_serialized_tool_result(self):
+        place = WantToGo.objects.create(
+            itinerary=self.itinerary, name="首里城", address="那覇市", latitude=26.2, longitude=127.7,
+        )
+
+        tool_result, ui_component = ui_tools.show_map(self.run_context, [place.id], "候補地")
+
+        self.assertEqual(ui_component["places"], tool_result["places"])
+        self.assertEqual(
+            set(ui_component["places"][0].keys()),
+            {"id", "name", "address", "lat", "lng", "place_id", "maps_url"},
+        )
 
     def test_show_map_no_places_found_raises(self):
         with self.assertRaises(ToolExecutionError) as ctx:

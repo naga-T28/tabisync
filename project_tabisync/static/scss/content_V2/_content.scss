@@ -177,16 +177,14 @@
 }
 
 .schedule-side-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-  width: 100%;
-  order: 2;
+  // モバイルでは子要素(概要/地図/共有カード)を.schedule-content-layoutの直接のflex itemとして扱い、
+  // schedule-main-column(旅程表)と同じorder列で並べ替えできるようにする(Task 003)。
+  // display:contentsな要素自身はflex itemにならないため、このorderは効かない。
+  display: contents;
 }
 
 .schedule-overview-box {
-  order: 1;
+  order: 3;
   width: 100%;
 }
 
@@ -197,18 +195,25 @@
   margin-bottom: 40px;
 }
 
-.schedule-share-box {
+.schedule-map-card {
   order: 2;
   width: 100%;
 }
 
+.schedule-share-box {
+  order: 4;
+  width: 100%;
+}
+
 .schedule-overview-box,
+.schedule-map-card,
 .schedule-share-box {
   box-sizing: border-box;
   max-width: 100%;
 }
 
 .schedule-overview-box .box-content,
+.schedule-map-card .box-content,
 .schedule-share-box .box-content {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -666,6 +671,27 @@
   text-align: center;
 }
 
+// Task 003: 選択日の訪問スポット地図。高さを固定してレイアウトシフトを防ぐ。
+.schedule-map-canvas {
+  width: 100%;
+  height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eef1f5;
+}
+
+@media screen and (min-width: variables.$breakpoint-md) {
+  .schedule-map-canvas {
+    height: 280px;
+  }
+}
+
+.schedule-map-empty {
+  color: #666;
+  padding: 20px 0;
+  text-align: center;
+}
+
 .modal {
   display: none;
   position: fixed;
@@ -898,6 +924,20 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+  }
+
+  // PCではschedule-side-columnが実体を持つ箱に戻る(display:contentsを上書き)ため、
+  // その中だけで完結するorderに切り替える(概要 -> 地図 -> ブログ用iframe -> 共有)。
+  .schedule-overview-box {
+    order: 1;
+  }
+
+  .schedule-map-card {
+    order: 2;
+  }
+
+  .schedule-share-box {
+    order: 3;
   }
 
   .schedule-side-column .box5-6,
