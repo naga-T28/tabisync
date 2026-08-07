@@ -21,8 +21,9 @@ def serialize_place_for_map(place):
 def show_map(run_context, want_to_go_ids, title):
     """指定されたWantToGo idのうち、現在のItineraryに属するものだけを地図表示対象にする。
 
-    戻り値は (tool_result, ui_component) のタプル。ui_componentはID配列のみを持ち、
-    座標・住所などの実データは含めない(最終回答へは agent.py 側がこの結果から再構成する)。
+    戻り値は (tool_result, ui_component) のタプル。ui_componentのplacesはserialize_place_for_map
+    が返す構造化データ(id/name/address/lat/lng/place_id/maps_url)のみを持ち、任意HTMLや
+    任意tile URLは含まない。フロントはこれをそのまま場所一覧・地図マーカーの描画に使う。
     """
     itinerary = run_context.itinerary
     requested_ids = [
@@ -37,10 +38,12 @@ def show_map(run_context, want_to_go_ids, title):
     if not places:
         raise ToolExecutionError("show_map", "no_places_found", "対象の場所が見つかりませんでした。")
 
-    tool_result = {"places": [serialize_place_for_map(place) for place in places]}
+    serialized_places = [serialize_place_for_map(place) for place in places]
+    tool_result = {"places": serialized_places}
     ui_component = {
         "type": "map",
         "title": (str(title or "").strip()[:60]) or "地図",
         "want_to_go_ids": [place.id for place in places],
+        "places": serialized_places,
     }
     return tool_result, ui_component

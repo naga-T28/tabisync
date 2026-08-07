@@ -2,7 +2,7 @@ import json
 import threading
 from datetime import date
 
-from django.test import Client, TestCase, TransactionTestCase
+from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 
 from ..models import Itinerary, WantToGo
@@ -220,6 +220,36 @@ class WantToGoMapViewTests(TestCase):
 
         self.assertEqual(response.status_code, 405)
         self.assertEqual(WantToGo.objects.filter(itinerary=self.itinerary).count(), 0)
+
+
+class WantToGoMapDisplayConfigTests(TestCase):
+    """Task 002: 地図providerはサーバー設定のみを出所とし、設定だけで切り替えられる。"""
+
+    def setUp(self):
+        self.itinerary = _make_itinerary()
+        self.url = reverse(
+            "tabisync:Wantto",
+            kwargs={"pk": self.itinerary.pk, "token": self.itinerary.token},
+        )
+
+    def test_default_provider_is_openfreemap(self):
+        response = self.client.get(self.url)
+        content = response.content.decode("utf-8")
+
+        self.assertIn('id="tabisync-map-config"', content)
+        self.assertIn('"provider": "openfreemap"', content)
+        self.assertIn("tiles.openfreemap.org", content)
+
+    @override_settings(MAP_DISPLAY_PROVIDER="mock", MAP_STYLE_URL="")
+    def test_provider_override_does_not_affect_search_related_markup(self):
+        response = self.client.get(self.url)
+        content = response.content.decode("utf-8")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('"provider": "mock"', content)
+        # 検索service初期化・placesDataの構築は provider設定に関係なく維持される。
+        self.assertIn("initPlaceSearch", content)
+        self.assertIn("placesData", content)
 
 
 class WantToGoConcurrentCreationTests(TransactionTestCase):
