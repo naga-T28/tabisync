@@ -1112,6 +1112,165 @@ li.update-item {
   text-decoration: underline;
 }
 
+/* 検索意図別の説明・活用ページ(guide-*)共通スタイル */
+.guide-breadcrumb {
+  width: 90%;
+  margin: 0 auto 10px;
+}
+.guide-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: #828282;
+}
+.guide-breadcrumb li:not(:last-child)::after {
+  content: "\203A";
+  margin-left: 6px;
+}
+.guide-breadcrumb a {
+  color: rgb(95, 96, 97);
+  text-decoration: underline;
+}
+
+.guide-lead {
+  margin-top: 4px;
+}
+
+.guide-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0 30px;
+}
+.guide-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 24px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 2px solid rgb(175, 41, 187);
+}
+.guide-cta-btn-primary {
+  background-color: rgb(175, 41, 187);
+  color: #ffffff;
+}
+.guide-cta-btn-primary:hover {
+  background-color: #ffffff;
+  color: rgb(175, 41, 187);
+}
+.guide-cta-btn-secondary {
+  background-color: #ffffff;
+  color: rgb(95, 96, 97);
+  border-color: rgb(95, 96, 97);
+}
+.guide-cta-btn-secondary:hover {
+  background-color: rgb(95, 96, 97);
+  color: #ffffff;
+}
+
+.guide-steps {
+  counter-reset: guide-step;
+  list-style: none;
+  margin: 20px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.guide-steps li {
+  position: relative;
+  padding: 16px 16px 16px 56px;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+}
+.guide-steps li::before {
+  counter-increment: guide-step;
+  content: counter(guide-step);
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgb(175, 41, 187);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.guide-steps li h3 {
+  margin: 0 0 6px;
+  font-size: 1.05em;
+}
+.guide-steps li p {
+  margin: 0;
+}
+
+.guide-feature-list {
+  list-style: none;
+  margin: 20px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.guide-feature-list li {
+  padding: 16px;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+}
+.guide-feature-list h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 1.05em;
+}
+.guide-feature-list h3 i {
+  color: rgb(175, 41, 187);
+}
+.guide-feature-list p {
+  margin: 0;
+}
+
+.guide-related-links {
+  margin: 10px 0 20px;
+  padding-left: 1.2em;
+}
+.guide-related-links li {
+  margin-bottom: 8px;
+}
+
+.guide-figure {
+  margin: 20px 0;
+  text-align: center;
+}
+.guide-figure img {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e2e2e2;
+}
+.guide-figure figcaption {
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: #828282;
+}
+
+@media screen and (min-width: 960px) {
+  .guide-feature-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media screen and (min-width: 960px) {
   body {
     display: flex;

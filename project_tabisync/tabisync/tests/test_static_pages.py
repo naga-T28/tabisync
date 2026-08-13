@@ -4,7 +4,14 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from ..content_data import FAQ_SECTIONS
+from ..content_data import (
+    FAQ_SECTIONS,
+    GUIDE_AI_CONCIERGE_FAQ,
+    GUIDE_ALL_IN_ONE_FAQ,
+    GUIDE_COLLABORATION_FAQ,
+    GUIDE_NO_SIGNUP_FAQ,
+    GUIDE_SAMPLE_FAQ,
+)
 from ..models import Itinerary
 
 
@@ -16,11 +23,21 @@ PUBLIC_URL_NAMES = [
     "tabisync:concierge_terms",
     "tabisync:privacy_policy",
     "tabisync:updates",
+    "tabisync:create",
+    "tabisync:guide_sample",
+    "tabisync:guide_no_signup",
+    "tabisync:guide_collaboration",
+    "tabisync:guide_all_in_one",
+    "tabisync:guide_ai_concierge",
 ]
 
-# サイトマップに含まれない公開ページ(現状は薄いフォームページのため対象外)。
-PUBLIC_BUT_NOT_SITEMAPPED_URL_NAMES = [
-    "tabisync:create",
+# パンくず・FAQのJSON-LDを画面表示と突き合わせるための、ページ別FAQデータ一覧。
+GUIDE_PAGES = [
+    ("tabisync:guide_sample", GUIDE_SAMPLE_FAQ),
+    ("tabisync:guide_no_signup", GUIDE_NO_SIGNUP_FAQ),
+    ("tabisync:guide_collaboration", GUIDE_COLLABORATION_FAQ),
+    ("tabisync:guide_all_in_one", GUIDE_ALL_IN_ONE_FAQ),
+    ("tabisync:guide_ai_concierge", GUIDE_AI_CONCIERGE_FAQ),
 ]
 
 
@@ -36,7 +53,7 @@ class StaticPageTests(TestCase):
         self.assertEqual(self.client.get(reverse("tabisync:robots_txt")).status_code, 200)
 
     def test_public_pages_have_self_referencing_canonical_and_index_robots(self):
-        for url_name in PUBLIC_URL_NAMES + PUBLIC_BUT_NOT_SITEMAPPED_URL_NAMES:
+        for url_name in PUBLIC_URL_NAMES:
             with self.subTest(url_name=url_name):
                 path = reverse(url_name)
                 response = self.client.get(path)
@@ -110,8 +127,7 @@ class SitemapTests(TestCase):
         found_locs = set(_extract_locs(body))
         self.assertEqual(found_locs, expected_locs)
 
-        # create/contactはindexだが、内容拡充までサイトマップには含めない。
-        self.assertNotIn(f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:create')}", found_locs)
+        # contactはindexだが、内容拡充までサイトマップには含めない。
         self.assertNotIn(f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:contact')}", found_locs)
 
     def test_sitemap_urls_return_200_and_match_canonical(self):
@@ -188,6 +204,72 @@ class HomeStructuredDataTests(TestCase):
             set(organization["sameAs"]),
             {"https://blog.tabisync.com", "https://x.com/tabisync_com"},
         )
+
+
+class GuidePageContentTests(TestCase):
+    """Task 005で追加した検索意図別ページと、拡充したしおり作成ページを検証する。"""
+
+    def test_guide_pages_and_create_page_have_single_h1(self):
+        for url_name in [name for name, _ in GUIDE_PAGES] + ["tabisync:create"]:
+            with self.subTest(url_name=url_name):
+                content = self.client.get(reverse(url_name)).content.decode()
+                self.assertEqual(content.count("<h1"), 1)
+
+    def test_guide_pages_faq_json_ld_matches_visible_questions_and_answers(self):
+        for url_name, faq_items in GUIDE_PAGES:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                content = response.content.decode()
+                json_ld_raw = content.split(
+                    '<script type="application/ld+json">'
+                )[1].split("</script>")[0]
+                data = json.loads(json_ld_raw)
+
+                self.assertEqual(data["@context"], "https://schema.org")
+                graph_types = {node["@type"] for node in data["@graph"]}
+                self.assertEqual(graph_types, {"BreadcrumbList", "FAQPage"})
+
+                faq_node = next(node for node in data["@graph"] if node["@type"] == "FAQPage")
+                expected_pairs = [(item["question"], item["answer"]) for item in faq_items]
+                actual_pairs = [
+                    (entry["name"], entry["acceptedAnswer"]["text"])
+                    for entry in faq_node["mainEntity"]
+                ]
+                self.assertEqual(actual_pairs, expected_pairs)
+
+                for question, answer in expected_pairs:
+                    self.assertIn(question, content)
+                    self.assertIn(answer, content)
+
+    def test_guide_pages_breadcrumb_json_ld_matches_visible_breadcrumb(self):
+        for url_name, _ in GUIDE_PAGES:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                content = response.content.decode()
+                json_ld_raw = content.split(
+                    '<script type="application/ld+json">'
+                )[1].split("</script>")[0]
+                data = json.loads(json_ld_raw)
+
+                breadcrumb_node = next(node for node in data["@graph"] if node["@type"] == "BreadcrumbList")
+                self.assertEqual(breadcrumb_node["itemListElement"][0]["name"], "ホーム")
+                self.assertEqual(
+                    breadcrumb_node["itemListElement"][0]["item"],
+                    f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:home')}",
+                )
+                self.assertIn('aria-current="page"', content)
+
+    def test_create_page_has_breadcrumb_json_ld_and_body_content(self):
+        response = self.client.get(reverse("tabisync:create"))
+        content = response.content.decode()
+
+        json_ld_raw = content.split(
+            '<script type="application/ld+json">'
+        )[1].split("</script>")[0]
+        data = json.loads(json_ld_raw)
+        self.assertEqual(data["@graph"][0]["@type"], "BreadcrumbList")
+        self.assertIn('aria-current="page"', content)
+        self.assertIn("日程は開始日と終了日の入力が必須で", content)
 
 
 class XRobotsTagAuditTests(TestCase):

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncで旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方を紹介します。各機能の役割、まとめて使うメリット、登録できる件数の目安を解説します。{% endblock %}
+{% block og_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block og_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
+{% block twitter_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block twitter_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</h1>
+    <p class="guide-lead">
+      旅行の準備は、旅程表、地図アプリ、メモ帳、チャットのやり取りなど情報が分散しがちです。TabiSyncは、旅程表・行きたい場所・持ち物リスト・メモを1つのしおりURLにまとめて管理できます。このページでは、それぞれの機能の役割とまとめて使うメリットを紹介します。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> サンプルを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title">4つの機能の役割</h2>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
+        <p>日程ごとに時間・タイトル・場所・メモを登録し、日ごとのタブで切り替えて確認できます。<a href="{% url 'tabisync:demo_v2_content' %}">旅程表のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
+        <p>気になる場所を優先度つきで登録し、地図上でまとめて確認できます。日程が決まっていない場所も登録でき、絞り込み・並び替えも可能です。<a href="{% url 'tabisync:demo_v2_map' %}">地図のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
+        <p>「持ち物」「お土産」「子ども用」のように用途ごとに複数のリストを作り、チェックしながら準備を進められます。<a href="{% url 'tabisync:demo_v2_list' %}">持ち物リストのサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
+        <p>見出しや箇条書きに対応したMarkdown形式で、下調べした情報や当日の注意点を自由に書き残せます。<a href="{% url 'tabisync:demo_v2_memo' %}">メモのサンプルを見る</a></p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">1つにまとめるメリット</h2>
+    <ul>
+      <li>別々のアプリやメモ帳、チャットのやり取りを探し回らずに、1つの共有URLで完結します。</li>
+      <li>友達や家族に共有するときも、旅程・行きたい場所・持ち物・メモをまとめて同じURLで見てもらえます。</li>
+      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュ</a>が旅程・行きたい場所・持ち物・メモの内容を横断的に読み取って相談に答えられます。</li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">使い方の流れ</h2>
+    <ol class="guide-steps">
+      <li>
+        <h3>旅程を入れる</h3>
+        <p>日ごとの予定を時間順に登録します。1日あたり最大15件まで登録できます。</p>
+      </li>
+      <li>
+        <h3>行きたい場所を追加して地図で確認する</h3>
+        <p>気になる場所を登録し、地図上でまとめて確認します。場所ごとに「Google Mapsで開く」から経路も確認できます。</p>
+      </li>
+      <li>
+        <h3>持ち物リストを作る</h3>
+        <p>用途ごとにリストを分けて、必要なものをチェックしながら準備します。</p>
+      </li>
+      <li>
+        <h3>メモに自由記述の情報を残す</h3>
+        <p>下調べした情報や当日の注意点をメモに残しておきます。</p>
+      </li>
+      <li>
+        <h3>URLで共有する</h3>
+        <p>すべてまとめたしおりのURLを、友達や家族に共有します。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title">登録できる件数の目安</h2>
+    <ul>
+      <li>日程は最大30日間まで登録できます。</li>
+      <li>1日あたりの予定は最大15件まで登録できます。</li>
+      <li>行きたい場所は既定で最大30件まで登録できます。</li>
+      <li>持ち物リストは最大10個まで、1リストあたり最大30項目まで登録できます。</li>
+      <li>メモは最大15件まで、1件あたり1,000語まで入力できます。</li>
+    </ul>
+    <p>
+      これらの上限は既定値であり、しおりごとに変更される場合があります。
+    </p>
+
+    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_sample' %}">旅行しおりのサンプルと作成手順</a></li>
+      <li><a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュを使った旅行計画の例と注意点</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}

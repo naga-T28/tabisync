@@ -5,12 +5,36 @@
 {% block og_description %}登録不要で旅行しおりを作成。旅程や持ち物、行きたい場所をURLで共有できます。{% endblock %}
 {% block twitter_title %}旅行しおりを作成 | TabiSync{% endblock %}
 {% block twitter_description %}登録不要で旅行しおりを作成。旅程や持ち物、行きたい場所をURLで共有できます。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ create_json_ld }}</script>
+{% endblock %}
 
 {% block contents %}
 {% load static %}
 <main class="page-main">
    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <form class="create-form" method="post">
+    <article class="privacy-policy guide-article">
+        {% include "docs/_guide_breadcrumb.html" %}
+        <h1 class="user-agreement-title">旅行しおりを作成</h1>
+        <p class="guide-lead">
+            アカウント登録なしで、旅行しおりを作成できます。タイトルと日程を入力するだけで作成でき、あとから旅程・行きたい場所・持ち物・メモを追加できます。登録が不要な仕組みは<a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a>で、サンプルは<a href="{% url 'tabisync:guide_sample' %}">旅行しおりのサンプルと作成手順</a>で確認できます。
+        </p>
+
+        <h2 class="user-agreement-sub-title">作成前に確認しておきたいこと</h2>
+        <h3>日程について</h3>
+        <p>
+            日程は開始日と終了日の入力が必須で、最大{{ max_itinerary_days }}日間まで登録できます。作成後の編集画面から、日ごとの予定を追加していきます。
+        </p>
+        <h3>パスワードについて</h3>
+        <p>
+            閲覧用パスワードと編集用パスワードを、それぞれ任意で設定できます。見るだけでよい相手には閲覧用パスワードを、内容を変更してよい相手には編集用パスワードを伝えてください。どちらも設定しない場合は、URLを知っている人であれば誰でも自由に閲覧・編集できます。パスワードを忘れた際に再設定するには、あらかじめ再設定用メールアドレスの登録が必要です。共同編集の詳しい進め方は<a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a>で解説しています。
+        </p>
+        <h3>共有方法について</h3>
+        <p>
+            作成すると、しおりごとに専用のURLが発行されます。このURLをコピーするか、しおり画面に表示されるQRコードを読み取ってもらうことで、友達や家族に共有できます。セキュリティ上の理由から、URLの再発行は行っていません。
+        </p>
+
+        <form class="create-form" method="post">
         {% csrf_token %}
         <!-- しおり基本情報 -->
         <div class="input-first-wrapper">
@@ -58,7 +82,16 @@
                 </div>
             </div>
         </div>
-      </form>      
+      </form>
+
+        <h2 class="user-agreement-sub-title">作成したしおりでできること</h2>
+        <ul class="guide-related-links">
+            <li><a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</a></li>
+            <li><a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a></li>
+            <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュを使った旅行計画の例と注意点</a></li>
+            <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+        </ul>
+    </article>
 </main>
 <script src="{% static 'js/create.js' %}" defer></script>
 {% endblock %}

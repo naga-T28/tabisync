@@ -1,0 +1,7 @@
+<nav class="guide-breadcrumb" aria-label="パンくずリスト">
+    <ol>
+        {% for label, url in breadcrumb_items %}
+        <li>{% if forloop.last %}<span aria-current="page">{{ label }}</span>{% else %}<a href="{{ url }}">{{ label }}</a>{% endif %}</li>
+        {% endfor %}
+    </ol>
+</nav>
