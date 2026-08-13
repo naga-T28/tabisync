@@ -15,7 +15,7 @@
     {% include "docs/_guide_breadcrumb.html" %}
     <h1 class="user-agreement-title">友達・家族と旅行計画を共同編集する方法</h1>
     <p class="guide-lead">
-      TabiSyncは、1つのしおりURLを友達や家族と共有し、旅程・行きたい場所・持ち物・メモをみんなで一緒に編集できます。このページでは、共同編集の仕組みと始め方、編集できる項目、複数人で編集するときのコツを紹介します。
+      1つのしおりを友達や家族と共有し、みんなで旅行の予定を作れます。ここでは、誰にどのパスワードを渡すか、共同編集を始める手順、編集が重ならないためのコツを説明します。
     </p>
     <div class="guide-cta-group">
       <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
@@ -26,56 +26,56 @@
       </a>
     </div>
 
-    <h2 class="user-agreement-sub-title">共同編集の仕組み</h2>
+    <h2 class="user-agreement-sub-title" id="permissions">まず、見る人と編集する人を分ける</h2>
     <p>
-      しおりには、閲覧用パスワードと編集用パスワードをそれぞれ個別に設定できます。閲覧だけしてほしいメンバーには閲覧用パスワード、内容を変更してよいメンバーには編集用パスワードを伝えることで、権限を分けられます。一度ブラウザでパスワードを入力すると、そのブラウザでは再入力なく編集を続けられます。
+      しおりには、閲覧用と編集用の2種類のパスワードを設定できます。予定を見るだけの人には閲覧用、内容を追加・変更する人には編集用を伝えます。全員に編集用パスワードを渡す必要はありません。
     </p>
 
-    <h2 class="user-agreement-sub-title">共同編集の始め方</h2>
+    <h2 class="user-agreement-sub-title" id="steps">共同編集を始める3ステップ</h2>
     <ol class="guide-steps">
       <li>
-        <h3>しおり作成時に編集用パスワードを設定する</h3>
-        <p><a href="{% url 'tabisync:create' %}">しおり作成ページ</a>で、編集を許可したいメンバー用に編集用パスワードを設定します（閲覧用パスワードは別で設定できます）。</p>
+        <h3>しおりを作り、パスワードを設定する</h3>
+        <p><a href="{% url 'tabisync:create' %}">しおり作成ページ</a>で、閲覧用と編集用のパスワードを必要に応じて設定します。</p>
       </li>
       <li>
-        <h3>共有したいメンバーにURLとパスワードを伝える</h3>
-        <p>作成後に発行されたURLと、必要なパスワードをメンバーに共有します。</p>
+        <h3>役割に合うパスワードを共有する</h3>
+        <p>しおりの専用URLと、相手の役割に合うパスワードを共有します。URLとパスワードは、不特定多数が見られる場所へ載せないでください。</p>
       </li>
       <li>
-        <h3>各自のスマートフォン・パソコンから編集する</h3>
-        <p>メンバーはそれぞれの端末で同じURLを開き、旅程・行きたい場所・持ち物・メモを編集できます。</p>
+        <h3>担当を決めて入力する</h3>
+        <p>各自のスマートフォンやパソコンでURLを開きます。「旅程はAさん、持ち物はBさん」のように担当を決めると、同時編集による上書きを防ぎやすくなります。</p>
       </li>
     </ol>
 
-    <h2 class="user-agreement-sub-title">共同編集できる項目</h2>
+    <h2 class="user-agreement-sub-title" id="roles">おすすめの役割分担</h2>
     <ul class="guide-feature-list">
       <li>
         <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
-        <p>日ごとの予定の追加・並び替えができます。誰かが編集すると、同じしおりを見ているメンバー全員に同じ内容が反映されます。</p>
+        <p>移動時間や予約時刻を確認する人が、日ごとの予定を追加・並び替えます。</p>
       </li>
       <li>
         <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
-        <p>気になる場所をそれぞれ追加し、優先度をつけて地図上で確認できます。</p>
+        <p>全員が候補を追加し、優先度をつけます。予定に入れる場所は、地図で位置関係を確認して決めます。</p>
       </li>
       <li>
         <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
-        <p>用途ごとにリストを分けて、担当や進捗をチェック管理できます。</p>
+        <p>共通の持ち物と個人の持ち物を分けて作り、準備できた項目をチェックします。</p>
       </li>
       <li>
         <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
-        <p>下調べした情報や相談事項を、自由記述で残しておけます。</p>
+        <p>予約番号を除く下調べ情報や、あとで相談したいことをまとめます。個人情報は書かないでください。</p>
       </li>
     </ul>
 
-    <h2 class="user-agreement-sub-title">複数人で編集するときのコツ</h2>
+    <h2 class="user-agreement-sub-title" id="tips">編集が重ならないためのコツ</h2>
     <ul>
-      <li>編集前に画面を再読み込みし、最新の内容を確認してから編集を始めましょう。</li>
-      <li>同じ項目を同時に編集すると、あとから保存した内容が反映されます。担当を決めておくと衝突を避けやすくなります。</li>
-      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュ</a>に「Day2の予定を教えて」のように聞くと、現在の内容を素早く把握できます。</li>
-      <li>編集後は<a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモの使い方</a>を参考に、情報が漏れていないか確認しましょう。</li>
+      <li>編集を始める前に画面を再読み込みし、最新の内容を確認します。</li>
+      <li>同じ項目を同時に編集しないよう、担当や時間を決めます。</li>
+      <li>同じ項目を編集した場合は、あとから保存した内容が反映されます。保存後に内容を見直してください。</li>
+      <li>現在は編集履歴が表示されません。大きな変更はメッセージアプリなどで仲間に知らせると安心です。</li>
     </ul>
 
-    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
     {% for item in faq_items %}
     <details class="qa-6">
         <summary>{{ item.question }}</summary>

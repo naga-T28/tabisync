@@ -81,26 +81,7 @@
 
             {% block contents %}{% endblock %}
 
-            <div class="pre-footer-social">
-                <p class="pre-footer-social-label">公式Xはこちら</p>
-                <ul class="footer-social" aria-label="公式SNS">
-                    <li>
-                        <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
-                            <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
-                            <span class="footer-social-handle">@tabisync_com</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <footer>
-                <ul>
-                    <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
-                    <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
-                    <li><a class="footer-content" href="{% url 'tabisync:profile' %}">運営者プロフィール</a></li>
-                </ul>
-                <small>Copyright &copy; 2026 TabiSync All Rights Reserved.</small>
-            </footer>
+            {% include "_site_footer.html" %}
         </div>
         <script>
         (function () {
