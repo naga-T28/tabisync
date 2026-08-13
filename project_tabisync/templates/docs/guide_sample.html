@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncの旅行しおりサンプル（沖縄旅行3泊4日のデモ）と、しおりを作成するまでの手順を紹介します。旅程表・メモ・持ち物リスト・地図・AIコンシェルジュの画面を確認してから作成できます。{% endblock %}
+{% block og_title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
+{% block og_description %}TabiSyncの旅行しおりサンプルと作成手順をまとめました。沖縄旅行3泊4日のデモしおりで画面イメージを確認できます。{% endblock %}
+{% block twitter_title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
+{% block twitter_description %}TabiSyncの旅行しおりサンプルと作成手順をまとめました。沖縄旅行3泊4日のデモしおりで画面イメージを確認できます。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+{% load static %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">旅行しおりのサンプルと作成手順</h1>
+    <p class="guide-lead">
+      「実際にどんなしおりができるのか先に見てみたい」という方向けに、TabiSyncのサンプルしおりと、作成から共有までの手順をまとめました。サンプルは沖縄旅行3泊4日のダミーデータで、実際の利用者のしおりではありません。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> サンプルしおりを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title">サンプルしおり「沖縄旅行」を見る</h2>
+    <p>
+      サンプルは、那覇空港到着から美ら海水族館・古宇利島・国際通り・アメリカンビレッジ・首里城公園を巡る沖縄旅行3泊4日のデモです。以下の5画面で、実際の旅程表と同じ見た目・操作感を確認できます。デモ画面は検索結果には表示されません（<code>noindex</code>設定）が、リンクから直接アクセスできます。
+    </p>
+    <figure class="guide-figure">
+      <img src="{% static 'img/demo-v2-cover.webp' %}" alt="デモしおり「沖縄旅行」の表紙画像" loading="lazy" width="600" height="600">
+      <figcaption>サンプルしおり「沖縄旅行」の表紙画像（デモ用のダミーデータです）</figcaption>
+    </figure>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表のサンプル</h3>
+        <p>1日目〜4日目をタブで切り替えながら、時間・場所・メモを確認できます。<a href="{% url 'tabisync:demo_v2_content' %}">旅程表のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモのサンプル</h3>
+        <p>持ち物の下調べや、水族館の混雑情報などを自由記述で残す例です。<a href="{% url 'tabisync:demo_v2_memo' %}">メモのサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リストのサンプル</h3>
+        <p>「持ち物」「お土産」「子ども用」のようにリストを分けてチェック管理する例です。<a href="{% url 'tabisync:demo_v2_list' %}">持ち物リストのサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所と地図のサンプル</h3>
+        <p>行きたい場所を優先度つきで地図上に表示し、日程や並び順で絞り込める例です。<a href="{% url 'tabisync:demo_v2_map' %}">地図のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-robot" aria-hidden="true"></i> AIコンシェルジュのサンプル</h3>
+        <p>「Day2の予定を教えて」のような質問に、旅程データをもとに答える例です。<a href="{% url 'tabisync:demo_v2_concierge' %}">AIコンシェルジュのサンプルを見る</a></p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">しおりの作成手順</h2>
+    <p>
+      サンプルと同じ流れで、自分の旅行内容に置き換えて作成できます。アカウント登録は不要です。
+    </p>
+    <ol class="guide-steps">
+      <li>
+        <h3>タイトルと日程を入力する</h3>
+        <p><a href="{% url 'tabisync:create' %}">しおり作成ページ</a>で、旅行のタイトルと日程（最大30日間）を入力します。サブタイトルや概要は任意です。</p>
+      </li>
+      <li>
+        <h3>必要に応じてパスワードを設定する</h3>
+        <p>閲覧用・編集用のパスワードをそれぞれ設定できます。設定しない場合は、URLを知っている人が誰でも閲覧・編集できます。</p>
+      </li>
+      <li>
+        <h3>旅程・行きたい場所・持ち物・メモを追加する</h3>
+        <p>作成後の編集画面から、日ごとの予定、行きたい場所、持ち物リスト、メモを追加していきます。詳しくは<a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</a>で解説しています。</p>
+      </li>
+      <li>
+        <h3>URLで共有する</h3>
+        <p>発行された専用URLをコピー、またはQRコードから共有すると、友達や家族が同じしおりを確認できます。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title">制限事項</h2>
+    <ul>
+      <li>日程は最大30日間まで登録できます。</li>
+      <li>1日あたりの予定は最大15件まで登録できます。</li>
+      <li>メモは最大15件まで、1件あたり1,000語まで入力できます。</li>
+      <li>持ち物リストは最大10個まで、1リストあたり最大30項目まで登録できます。</li>
+      <li>行きたい場所は既定で最大30件まで登録できます（しおりごとに変更される場合があります）。</li>
+      <li>AIコンシェルジュは既定で1日5回まで利用できます。詳しくは<a href="{% url 'tabisync:concierge_terms' %}">AIコンシェルジュ利用規約と注意事項</a>をご覧ください。</li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュを使った旅行計画の例と注意点</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}

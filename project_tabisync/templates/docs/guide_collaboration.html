@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncのしおりを友達や家族と共同編集する方法を紹介します。閲覧用・編集用パスワードの使い分け、共同編集の始め方、編集項目、複数人で編集する際の注意点を解説します。{% endblock %}
+{% block og_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block og_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
+{% block twitter_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block twitter_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">友達・家族と旅行計画を共同編集する方法</h1>
+    <p class="guide-lead">
+      TabiSyncは、1つのしおりURLを友達や家族と共有し、旅程・行きたい場所・持ち物・メモをみんなで一緒に編集できます。このページでは、共同編集の仕組みと始め方、編集できる項目、複数人で編集するときのコツを紹介します。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> サンプルを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title">共同編集の仕組み</h2>
+    <p>
+      しおりには、閲覧用パスワードと編集用パスワードをそれぞれ個別に設定できます。閲覧だけしてほしいメンバーには閲覧用パスワード、内容を変更してよいメンバーには編集用パスワードを伝えることで、権限を分けられます。一度ブラウザでパスワードを入力すると、そのブラウザでは再入力なく編集を続けられます。
+    </p>
+
+    <h2 class="user-agreement-sub-title">共同編集の始め方</h2>
+    <ol class="guide-steps">
+      <li>
+        <h3>しおり作成時に編集用パスワードを設定する</h3>
+        <p><a href="{% url 'tabisync:create' %}">しおり作成ページ</a>で、編集を許可したいメンバー用に編集用パスワードを設定します（閲覧用パスワードは別で設定できます）。</p>
+      </li>
+      <li>
+        <h3>共有したいメンバーにURLとパスワードを伝える</h3>
+        <p>作成後に発行されたURLと、必要なパスワードをメンバーに共有します。</p>
+      </li>
+      <li>
+        <h3>各自のスマートフォン・パソコンから編集する</h3>
+        <p>メンバーはそれぞれの端末で同じURLを開き、旅程・行きたい場所・持ち物・メモを編集できます。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title">共同編集できる項目</h2>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
+        <p>日ごとの予定の追加・並び替えができます。誰かが編集すると、同じしおりを見ているメンバー全員に同じ内容が反映されます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
+        <p>気になる場所をそれぞれ追加し、優先度をつけて地図上で確認できます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
+        <p>用途ごとにリストを分けて、担当や進捗をチェック管理できます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
+        <p>下調べした情報や相談事項を、自由記述で残しておけます。</p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">複数人で編集するときのコツ</h2>
+    <ul>
+      <li>編集前に画面を再読み込みし、最新の内容を確認してから編集を始めましょう。</li>
+      <li>同じ項目を同時に編集すると、あとから保存した内容が反映されます。担当を決めておくと衝突を避けやすくなります。</li>
+      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュ</a>に「Day2の予定を教えて」のように聞くと、現在の内容を素早く把握できます。</li>
+      <li>編集後は<a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモの使い方</a>を参考に、情報が漏れていないか確認しましょう。</li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}
