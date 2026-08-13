@@ -98,15 +98,19 @@ class EditView(View):
     template_name = "tabisync/edit.html"
 
     def dispatch(self, request, *args, **kwargs):
+        # このビューはEditPasswordRequiredMixinを使わずhandle_edit_password_gateを
+        # 直接呼び出すため、noindexヘッダーはget/postの個別returnではなくここで
+        # 一括して付与し、付け忘れを防ぐ。
         self.itinerary = get_itinerary_or_404(kwargs.get("pk"), kwargs.get("token"))
-        return super().dispatch(request, *args, **kwargs)
+        response = super().dispatch(request, *args, **kwargs)
+        return add_noindex_header(response)
 
     def get(self, request, pk, token, *args, **kwargs):
         gate_response = handle_edit_password_gate(request, self.itinerary, "content_edit_v2")
         if gate_response is not None:
             return gate_response
 
-        return add_noindex_header(render(request, self.template_name, {"itinerary": self.itinerary}))
+        return render(request, self.template_name, {"itinerary": self.itinerary})
 
     def post(self, request, pk, token, *args, **kwargs):
         if not verify_turnstile(request):

@@ -6,111 +6,32 @@
 {% block twitter_title %}よくある質問 | TabiSync{% endblock %}
 {% block twitter_description %}TabiSyncの使い方、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティに関するFAQです。{% endblock %}
 {% block meta_extra %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "本当に登録なしで使えますか？",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "はい。アカウント登録なしでしおりを作成し、URLで共有できます。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "しおりの作成方法を教えてください。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "トップページのしおり作成ボタンから、日程や予定などを入力することで簡単に作成できます。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "作成したしおりはあとから編集できますか？",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "はい、右下の編集ボタンからいつでも内容の編集は可能です。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "AIコンシェルジュでは何ができますか？",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "登録した旅程、行きたい場所、メモをもとに、予定の相談、持ち物の提案、雨の日の代替案、移動の確認などができます。"
-      }
-    }
-  ]
-}
-</script>
+<script type="application/ld+json">{{ faq_json_ld }}</script>
 {% endblock %}
 
 {% block contents %}
 <main class="page-main">
   <article class="privacy-policy">
-    <h2 class="user-agreement-title">よくある質問</h2>
+    <h1 class="user-agreement-title">よくある質問</h1>
     <div class="toc-002">
         <div>
             目次
         </div>
         <ol>
-            <li><a href="#faq-account">アカウント・パスワード関連</a></li>
-            <li><a href="#faq-create">しおりの作成・編集について</a></li>
-            <li><a href="#faq-concierge">AIコンシェルジュについて</a></li>
-            <li><a href="#faq-security">セキュリティ・データについて</a></li>
+            {% for section in faq_sections %}
+            <li><a href="#{{ section.id }}">{{ section.title }}</a></li>
+            {% endfor %}
         </ol>
     </div>
-    <h3 class="user-agreement-sub-title" id="faq-account">アカウント・パスワード関連</h3>
+    {% for section in faq_sections %}
+    <h2 class="user-agreement-sub-title" id="{{ section.id }}">{{ section.title }}</h2>
+    {% for item in section.questions %}
     <details class="qa-6">
-        <summary>本当に登録なしで使えますか？</summary>
-        <p>はい。アカウント登録なしでしおりを作成し、URLで共有できます。</p>
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
     </details>
-    <details class="qa-6">
-        <summary>パスワードを忘れてしまいました。どうすれば良いですか？</summary>
-        <p>再設定用メールアドレスを登録している場合は、再設定画面から新しいパスワードを設定できます。</p>
-    </details>
-    <details class="qa-6">
-        <summary>作成したURLを忘れてしまった場合はどうすれば良いですか？</summary>
-        <p>申し訳ございませんが、セキュリティの観点からURLの再発行やご案内は行っておりません。お手数ですが、新しくしおりを作成いただきますようお願いいたします。</p>
-    </details>
-
-    <h3 class="user-agreement-sub-title" id="faq-create">しおりの作成・編集について</h3>
-    <details class="qa-6">
-        <summary>しおりの作成方法を教えてください。</summary>
-        <p>トップページの「しおり作成」ボタンから、日程や予定などを入力することで簡単に作成できます。</p>
-    </details>
-    <details class="qa-6">
-        <summary>作成したしおりはあとから編集できますか？</summary>
-        <p>はい、右下の編集ボタンからいつでも内容の編集は可能です。</p>
-    </details>
-    <details class="qa-6">
-        <summary>友達も編集できますか？</summary>
-        <p>共有URLと必要なパスワードを知っているメンバーが、同じしおりを確認・編集できます。</p>
-    </details>
-
-    <h3 class="user-agreement-sub-title" id="faq-concierge">AIコンシェルジュについて</h3>
-    <details class="qa-6">
-        <summary>AIコンシェルジュでは何ができますか？</summary>
-        <p>登録した旅程・行きたい場所・メモをもとに、予定の相談、持ち物の提案、雨の日の代替案、移動の確認などができます。</p>
-    </details>
-
-    <h3 class="user-agreement-sub-title" id="faq-security">セキュリティ・データについて</h3>
-    <details class="qa-6">
-    <summary>作成したしおりは誰に見えますか？</summary>
-    <p>しおりのURLを知っている人が閲覧できます。必要に応じてパスワードを設定してください。</p>
-    </details>
-
-    <details class="qa-6">
-    <summary>入力した情報はどのように扱われますか？</summary>
-    <p>個人を特定しない範囲でのみ利用され、第三者に提供することはありません。詳しくはプライバシーポリシーをご覧ください。</p>
-    </details>
-    <details class="qa-6">
-    <summary>入力してはいけない情報はありますか？</summary>
-    <p>住所、電話番号、クレジットカード番号など、個人を特定できる情報や重要な情報は入力しないでください。</p>
-    </details>
+    {% endfor %}
+    {% endfor %}
   </article>
 </main>
 {% endblock %}

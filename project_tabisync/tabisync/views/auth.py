@@ -14,7 +14,7 @@ from django_ratelimit.decorators import ratelimit
 
 from ..forms import ContactForm
 from ..models import Itinerary
-from .access_control import grant_view_access
+from .access_control import add_noindex_header, grant_view_access
 from .itinerary_helpers import build_public_absolute_uri
 from .utils import ratelimit_client_ip, verify_turnstile
 
@@ -33,20 +33,18 @@ class ItineraryPasswordView(View):
     def get(self, request, pk, token):
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         context = {'pk': pk, 'token': token, 'itinerary': itinerary}
-        response = render(request, self.template_name, context)
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+        return add_noindex_header(render(request, self.template_name, context))
 
     def post(self, request, pk, token):
         if not verify_turnstile(request):
-            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
-        
+            return add_noindex_header(render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'}))
+
         itinerary = get_object_or_404(Itinerary, pk=pk, token=token)
         input_password = request.POST.get('view_password', '')
 
         if itinerary.check_view_password(input_password):
             grant_view_access(request, itinerary)
-            return redirect(reverse('tabisync:content_v2', kwargs={'pk': pk, 'token': token}))
+            return add_noindex_header(redirect(reverse('tabisync:content_v2', kwargs={'pk': pk, 'token': token})))
         else:
             context = {
                 'error': 'パスワードが違います',
@@ -54,7 +52,7 @@ class ItineraryPasswordView(View):
                 'token': token,
                 'itinerary': itinerary  # ← ここが抜けていた
             }
-            return render(request, self.template_name, context)
+            return add_noindex_header(render(request, self.template_name, context))
 
 
 
@@ -160,7 +158,7 @@ class SendResetLinkView(View):
         else:
             messages.error(request, "送信できませんでした。")
 
-        return redirect(request.META.get("HTTP_REFERER", "/"))
+        return add_noindex_header(redirect(request.META.get("HTTP_REFERER", "/")))
 
     def get(self, request, *args, **kwargs):
         # POST専用にしたい場合は405返すのがベター
@@ -178,13 +176,11 @@ class ResetPasswordView(View):
         except signing.BadSignature:
             raise Http404("無効または期限切れのリンクです。")
 
-        response = render(request, "tabisync/reset_password.html", {
+        return add_noindex_header(render(request, "tabisync/reset_password.html", {
             "signed_token": signed_token,
             "type": data["type"],
-        })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
-    
+        }))
+
     def post(self, request, signed_token):
         try:
             data = signing.loads(signed_token, salt="tabisync-password-reset", max_age=3600)
@@ -196,7 +192,7 @@ class ResetPasswordView(View):
 
         if not new_pw:
             messages.error(request, "新しいパスワードを入力してください。")
-            return redirect(request.path)
+            return add_noindex_header(redirect(request.path))
 
         if data["type"] == "edit":
             itinerary.edit_password = make_password(new_pw)
@@ -207,7 +203,7 @@ class ResetPasswordView(View):
         messages.success(request, "パスワードを再設定しました。")
 
         if data["type"] == "edit":
-            return redirect("tabisync:edit", pk=data["pk"], token=data["token"])
+            return add_noindex_header(redirect("tabisync:edit", pk=data["pk"], token=data["token"]))
         else:
-            return redirect("tabisync:content", pk=data["pk"], token=data["token"])
+            return add_noindex_header(redirect("tabisync:content", pk=data["pk"], token=data["token"]))
 

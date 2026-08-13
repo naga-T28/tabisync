@@ -9,6 +9,7 @@ import urllib.request
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.html import strip_tags
 
 
@@ -38,11 +39,16 @@ def offline_view(request):
 
 # クローラ対策
 def robots_txt_view(request):
+    # /content/配下（UUID付きしおり）や認証・リセット系はrobots.txtで
+    # クロール自体を拒否しない。X-Robots-Tag: noindex, nofollowをcrawlerが
+    # 取得できるようにするため。クロール拒否は管理・内部エンドポイントのみに限定する。
     lines = [
         "User-agent: *",
-        "Disallow: /content/",
-        "Disallow: /reset-link/",
-        "Disallow: /reset/",
+        "Disallow: /admin/nagat28/",
+        "Disallow: /ckeditor5/",
+        "",
+        f"Sitemap: {settings.PUBLIC_BASE_URL}{reverse('django-sitemap')}",
+        "",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
 

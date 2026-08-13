@@ -285,6 +285,35 @@ footer ul li a.footer-content i.fas.fa-external-link-alt {
   font-size: 0.8em;
   vertical-align: middle;
 }
+footer .footer-social {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 20px;
+}
+footer .footer-social li {
+  display: flex;
+}
+footer .footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 16px;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+footer .footer-social-link:hover {
+  background: #f2b8ff;
+  border-color: #f2b8ff;
+  color: #000;
+  transform: translateY(-2px);
+}
 footer small {
   display: block;
   margin-top: 8px;
@@ -1057,6 +1086,32 @@ li.update-item {
   margin-bottom: 10px;
 }
 
+.page-404 {
+  text-align: center;
+}
+
+.page-404-title {
+  margin-top: 20px;
+  font-size: 1.4rem;
+}
+
+.page-404-text {
+  margin-top: 10px;
+  color: #000000;
+}
+
+.page-404-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.page-404-links a {
+  color: #000000;
+  text-decoration: underline;
+}
+
 @media screen and (min-width: 960px) {
   body {
     display: flex;
@@ -1079,7 +1134,27 @@ li.update-item {
     width: 650px;
   }
   .header-nav-pc-wrapper {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    color: rgb(95, 96, 97);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  }
+  .header-social-link:hover {
+    color: rgb(175, 41, 187);
+    background: #f7e8fb;
+    border-color: #f7e8fb;
   }
   .notable-point-wrapper {
     display: flex;
