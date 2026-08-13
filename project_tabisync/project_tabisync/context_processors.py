@@ -15,3 +15,12 @@ def map_display(request):
             "tileUrl": getattr(settings, "MAP_TILE_URL", "") or "",
         },
     }
+
+
+def seo(request):
+    # canonical・OGP・構造化データ・サイトマップが参照する単一の公開オリジン。
+    # request.get_host()を使わないのは、ALLOWED_HOSTSに含まれる別Hostや
+    # プロキシ設定差でcanonicalが分散するのを防ぐため。
+    return {
+        "public_base_url": settings.PUBLIC_BASE_URL,
+    }

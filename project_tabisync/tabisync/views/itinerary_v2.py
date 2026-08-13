@@ -18,6 +18,7 @@ from ..models import Itinerary, ScheduleV2
 from .access_control import (
     EditPasswordRequiredMixin,
     ViewPasswordRequiredMixin,
+    add_noindex_header,
     get_itinerary_or_404,
     has_edit_access,
     has_view_access,
@@ -57,8 +58,7 @@ def itinerary_qr_code_view(request, pk, token):
         raise Http404("QR code image was not found.")
 
     response = FileResponse(itinerary.qr_code.open("rb"), content_type="image/png")
-    response["X-Robots-Tag"] = "noindex, nofollow"
-    return response
+    return add_noindex_header(response)
 
 
 
@@ -73,9 +73,8 @@ def itinerary_cover_image_view(request, pk, token):
 
     content_type = mimetypes.guess_type(itinerary.cover_image.name)[0] or "application/octet-stream"
     response = FileResponse(itinerary.cover_image.open("rb"), content_type=content_type)
-    response["X-Robots-Tag"] = "noindex, nofollow"
     response["Cache-Control"] = "private, max-age=3600"
-    return response
+    return add_noindex_header(response)
 
 
 
@@ -225,13 +224,11 @@ class BlogScheduleEmbedView(TemplateView):
         for schedule in schedules:
             schedule.blog_maps_url = build_google_maps_search_url(schedule.place)
 
-        response = render(request, self.template_name, {
+        return add_noindex_header(render(request, self.template_name, {
             "itinerary": itinerary,
             "choice": choice,
             "schedules": schedules,
-        })
-        response["X-Robots-Tag"] = "noindex, nofollow"
-        return response
+        }))
 
 
 

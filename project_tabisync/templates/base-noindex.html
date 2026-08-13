@@ -8,7 +8,7 @@
         <meta name="robots" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Font Awesome CDN (最新版) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <!-- ファビコン -->
         <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
         <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
@@ -44,11 +44,11 @@
         <header class="page-header">
             <div class="header-wrapper">
                 <div class="header-logo">
-                    <h1>
+                    <p class="header-logo-text">
                         <a href="{% url 'tabisync:home' %}">
                             <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSync" class="logo-image">
                         </a>
-                    </h1>
+                    </p>
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div id="btn08" class="btn-trigger">
@@ -74,6 +74,9 @@
                         <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
                     </ul>
+                    <a class="header-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
                 </nav>
             </div>
         </header>
@@ -82,6 +85,13 @@
         {% endblock %}
 
         <footer>
+            <ul class="footer-social" aria-label="公式SNS">
+                <li>
+                    <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
             <ul>
                 <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
                 <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>

@@ -177,14 +177,14 @@
 }
 
 .schedule-side-column {
-  // モバイルでは子要素(概要/地図/共有カード)を.schedule-content-layoutの直接のflex itemとして扱い、
+  // モバイルでは子要素(概要/共有カード)を.schedule-content-layoutの直接のflex itemとして扱い、
   // schedule-main-column(旅程表)と同じorder列で並べ替えできるようにする(Task 003)。
   // display:contentsな要素自身はflex itemにならないため、このorderは効かない。
   display: contents;
 }
 
 .schedule-overview-box {
-  order: 3;
+  order: 2;
   width: 100%;
 }
 
@@ -195,13 +195,30 @@
   margin-bottom: 40px;
 }
 
+// 地図(schedule-map-card)はschedule-main-column内、旅程表の直下に配置されるため
+// content-layoutのflex orderには参加しない。table-boxと隣接する通常のブロック要素になり
+// margin collapseするため、明示的にmargin-topで間隔を確保する。
 .schedule-map-card {
-  order: 2;
   width: 100%;
+  margin-top: 24px;
+}
+
+// 日程表の.day-headingに合わせたラベルデザイン(中央揃え・太字)。box5-6のテープ風box-titleは使わない。
+.schedule-map-heading {
+  margin: 0 0 12px;
+  padding: 20px 20px 0;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: variables.$text-main;
+}
+
+.schedule-map-card .box-content {
+  padding-top: 0;
 }
 
 .schedule-share-box {
-  order: 4;
+  order: 3;
   width: 100%;
 }
 
@@ -927,21 +944,19 @@
   }
 
   // PCではschedule-side-columnが実体を持つ箱に戻る(display:contentsを上書き)ため、
-  // その中だけで完結するorderに切り替える(概要 -> 地図 -> ブログ用iframe -> 共有)。
+  // その中だけで完結するorderに切り替える(概要 -> ブログ用iframe -> 共有)。
+  // 地図(schedule-map-card)はschedule-main-column側にあり、旅程表の直下に表示される。
   .schedule-overview-box {
     order: 1;
   }
 
-  .schedule-map-card {
+  .schedule-share-box {
     order: 2;
   }
 
-  .schedule-share-box {
-    order: 3;
-  }
-
   .schedule-side-column .box5-6,
-  .schedule-table-box {
+  .schedule-table-box,
+  .schedule-map-card {
     width: 100%;
     margin-bottom: 0;
   }

@@ -11,14 +11,14 @@
   "@context": "https://schema.org",
   "@type": "Person",
   "name": "nagaT",
-  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:profile' %}",
+  "url": "{{ public_base_url }}{% url 'tabisync:profile' %}",
   "sameAs": [
     "https://blog.naga-t.jp"
   ],
   "worksFor": {
     "@type": "Organization",
     "name": "TabiSync",
-    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}"
+    "url": "{{ public_base_url }}{% url 'tabisync:home' %}"
   }
 }
 </script>
@@ -28,9 +28,9 @@
 {% load static %}
 <main class="page-main">
     <article class="privacy-policy">
-            <h2 class="profile-title">運営者プロフィール</h2>
+            <h1 class="profile-title">運営者プロフィール</h1>
             <img src="{% static 'img/nagat-icon.png' %}" alt="運営者プロフィール画像" class="profile-image">
-            <h3 class="profile-subtitle">nagaT</h3>
+            <h2 class="profile-subtitle">nagaT</h2>
             <p>
                 TabiSyncの運営・開発をしているnagaTです。<br> 
                 旅の予定をもっと簡単に共有できたらいいなと思い、  
