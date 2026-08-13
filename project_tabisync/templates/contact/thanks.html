@@ -5,12 +5,13 @@
 {% block og_description %}TabiSyncへのお問い合わせを受け付けました。{% endblock %}
 {% block twitter_title %}お問い合わせ完了 | TabiSync{% endblock %}
 {% block twitter_description %}TabiSyncへのお問い合わせを受け付けました。{% endblock %}
+{% block robots_meta %}noindex, follow{% endblock %}
 
 {% block contents %}
 {% load static %}
 <main class="page-main">
     <div class="contact-thanks-wrapper">
-        <h3>お問い合わせありがとうございました</h3>
+        <h1>お問い合わせありがとうございました</h1>
         <p>ご入力いただいた内容は正常に送信されました。</p>
         <a class="contact-thnks-btn" href="{% url 'tabisync:home'%}"><i class="fa-solid fa-house"></i>  ホームに戻る</a>
     </div>

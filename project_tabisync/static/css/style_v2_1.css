@@ -4586,6 +4586,35 @@ footer ul li a.footer-content i.fas.fa-external-link-alt {
   font-size: 0.8em;
   vertical-align: middle;
 }
+footer .footer-social {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 20px;
+}
+footer .footer-social li {
+  display: flex;
+}
+footer .footer-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 16px;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+footer .footer-social-link:hover {
+  background: #f2b8ff;
+  border-color: #f2b8ff;
+  color: #000;
+  transform: translateY(-2px);
+}
 footer small {
   display: block;
   margin-top: 8px;

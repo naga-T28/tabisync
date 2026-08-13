@@ -26,7 +26,29 @@
   }
 
   .header-nav-pc-wrapper {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid variables.$gray-border;
+    color: variables.$text-main;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+
+    &:hover {
+      color: variables.$accent-purple;
+      background: #f7e8fb;
+      border-color: #f7e8fb;
+    }
   }
 
   .notable-point-wrapper {

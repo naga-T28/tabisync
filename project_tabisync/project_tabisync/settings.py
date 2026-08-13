@@ -39,6 +39,12 @@ MAP_TILE_URL = os.getenv("MAP_TILE_URL", "")
 # HTTPS利用の有無（本番・ステージング環境でhttps使ってなければFalseに）
 USE_HTTPS = env_bool("USE_HTTPS", True)
 
+# 公開ページのcanonical・OGP・構造化データ・サイトマップ・robots.txtが参照する
+# 単一の公開オリジン（例: "https://tabisync.com"）。末尾スラッシュは付けない。
+# request.get_host()に依存すると、ALLOWED_HOSTSに含まれる別Hostやプロキシ設定の
+# 差によってcanonicalが分散するため、これらの出力は必ずこの値を使う。
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+
 # クライアントIP判定（レート制限等）で CF-Connecting-IP / X-Forwarded-For を
 # 信頼してよいプロキシのCIDR一覧（カンマ区切り、例: "10.0.0.0/8,192.0.2.10/32"）。
 # 未設定（既定）の場合は転送ヘッダーを一切信頼せず、REMOTE_ADDRのみを使用する。
@@ -65,6 +71,11 @@ if not DEBUG:
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
     if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
         raise Exception("ALLOWED_HOSTSが設定されていません。本番環境で必須です。")
+
+    if not PUBLIC_BASE_URL:
+        raise Exception("PUBLIC_BASE_URLが設定されていません。本番環境で必須です。")
+    if not PUBLIC_BASE_URL.startswith("https://"):
+        raise Exception("PUBLIC_BASE_URLはhttps://で始まる公開オリジンを指定してください。")
 
     # セキュリティ設定
     SECURE_SSL_REDIRECT = USE_HTTPS
@@ -140,6 +151,9 @@ else:
 
     SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key')
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+
+    if not PUBLIC_BASE_URL:
+        PUBLIC_BASE_URL = "http://localhost:8000"
 
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
@@ -221,6 +235,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'project_tabisync.context_processors.google_maps',
                 'project_tabisync.context_processors.map_display',
+                'project_tabisync.context_processors.seo',
             ],
         },
     },
