@@ -1,9 +1,17 @@
 {% extends "base.html" %}
-{% block title %}ホーム{% endblock %}
+{% block title %}ページが見つかりません | TabiSync{% endblock %}
+{% block meta_description %}お探しのページが見つかりませんでした。URLをご確認いただくか、ホームやよくある質問からお探しのページをご覧ください。{% endblock %}
+{% block robots_meta %}noindex, follow{% endblock %}
 
 {% block contents %}
 {% load static %}
-<main class="page-main">
-    <img src="{% static 'img/404.webp' %}" alt="404not-found" class="img-404">
+<main class="page-main page-404">
+    <img src="{% static 'img/404.webp' %}" alt="ページが見つかりません" class="img-404">
+    <h1 class="page-404-title">お探しのページが見つかりません</h1>
+    <p class="page-404-text">URLが変更または削除されたか、入力が間違っている可能性があります。</p>
+    <div class="page-404-links">
+        <a href="{% url 'tabisync:home' %}"><i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る</a>
+        <a href="{% url 'tabisync:qa' %}"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> よくある質問を見る</a>
+    </div>
 </main>
 {% endblock %}
