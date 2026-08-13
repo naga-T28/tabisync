@@ -184,6 +184,7 @@ pipenv run python manage.py makemigrations --check --dry-run
 `.env` の内容を表示、コミット、ログ出力しないでください。確認できる主な設定項目は以下です。
 
 - Django: `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `USE_HTTPS`
+- SEO: `PUBLIC_BASE_URL`（任意の非秘密値。例: `https://tabisync.com`。canonical・OGP・構造化データ・サイトマップ・robots.txtが参照する単一の公開オリジン。本番環境では`https://`始まりの値が必須で、未設定または不正な値だと起動時に例外になる。開発環境では未設定時`http://localhost:8000`を既定値として使う）
 - Database: `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 - Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`, `CONTACT_RECEIVER_EMAIL`
 - Google Maps: `GOOGLE_MAPS_API_KEY`

@@ -6,34 +6,7 @@
 {% block twitter_title %}TabiSync | ログインなしで使える旅行しおり共有サービス{% endblock %}
 {% block twitter_description %}登録不要で旅行のしおりを作成・共有。旅程、行きたい場所、持ち物、メモをまとめ、AIコンシェルジュに相談できます。{% endblock %}
 {% block meta_extra %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "TabiSync",
-  "applicationCategory": "TravelApplication",
-  "operatingSystem": "Web",
-  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}",
-  "description": "ログインなしで旅程、行きたい場所、持ち物、メモをURL共有できる旅行しおりサービスです。",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "JPY"
-  },
-  "featureList": [
-    "旅行しおりの作成",
-    "旅程のURL共有",
-    "行きたい場所の共有",
-    "持ち物リスト",
-    "AIコンシェルジュ"
-  ],
-  "publisher": {
-    "@type": "Organization",
-    "name": "TabiSync",
-    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'tabisync:home' %}"
-  }
-}
-</script>
+<script type="application/ld+json">{{ home_json_ld }}</script>
 {% endblock %}
 
 {% block contents %}
@@ -176,6 +149,13 @@
                 <ul class="update-list">
                     <li class="update-item">
                         <div class="update-version-date">
+                            <span class="update-version"> v2.2.1 </span>
+                            <span class="update-date">2026年08月13日</span>
+                        </div>
+                        <span class="update-content">旅程表に日付毎の地図表示機能を追加しました。</span>
+                    </li>
+                    <li class="update-item">
+                        <div class="update-version-date">
                             <span class="update-version"> v2.2.0 </span>
                             <span class="update-date">2026年06月10日</span>
                         </div>
@@ -187,13 +167,6 @@
                             <span class="update-date">2026年05月30日</span>
                         </div>
                         <span class="update-content">最近閲覧したしおりを表示する機能とその他新機能を追加しました。</span>
-                    </li>
-                    <li class="update-item">
-                        <div class="update-version-date">
-                            <span class="update-version"> v2.1.0 </span>
-                            <span class="update-date">2026年05月11日</span>
-                        </div>
-                        <span class="update-content">画像追加機能とオンボーディングツアー機能を追加しました。</span>
                     </li>
                 </ul>
             </div>

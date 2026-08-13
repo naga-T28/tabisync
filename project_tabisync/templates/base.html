@@ -7,9 +7,10 @@
         <meta name="description" content="{% block meta_description %}TabiSyncは、ログインなしで旅程・行きたい場所・持ち物をURL共有できるAIしおりです。AIコンシェルジュが、みんなの候補をもとに旅行計画の相談や調整をサポートします。{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="google-adsense-account" content="ca-pub-2974880632446425">
-        <link rel="canonical" href="{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+        <meta name="robots" content="{% block robots_meta %}index, follow{% endblock %}">
+        <link rel="canonical" href="{% block canonical_url %}{{ public_base_url }}{{ request.path }}{% endblock %}">
         <!-- Font Awesome CDN (最新版) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <!-- ファビコン -->
         <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
         <link rel="apple-touch-icon" href="{% static 'img/tabisync-ios-icon.ico'%}">
@@ -19,15 +20,19 @@
         <!-- OGP設定 -->
         <meta property="og:title" content="{% block og_title %}TabiSync{% endblock %}">
         <meta property="og:description" content="{% block og_description %}ログインなしで、友達とその場で旅行を決められるAIしおり。URLを送るだけで旅程・行きたい場所・持ち物を共有できます。{% endblock %}">
-        <meta property="og:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
-        <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+        <meta property="og:image" content="{% block og_image %}{{ public_base_url }}{% static 'img/tabisync-v2-ogp.webp' %}{% endblock %}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:alt" content="{% block og_image_alt %}TabiSyncのサービスイメージ{% endblock %}">
+        <meta property="og:url" content="{% block og_url %}{{ public_base_url }}{{ request.path }}{% endblock %}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="TabiSync">
+        <meta property="og:locale" content="ja_JP">
         <!-- Twitterカード（任意）-->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{% block twitter_title %}TabiSync{% endblock %}">
         <meta name="twitter:description" content="{% block twitter_description %}ログインなしで、友達とその場で旅行を決められるAIしおり。URLを送るだけで旅程・行きたい場所・持ち物を共有できます。{% endblock %}">
-        <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-v2-ogp.webp' %}">
+        <meta name="twitter:image" content="{% block twitter_image %}{{ public_base_url }}{% static 'img/tabisync-v2-ogp.webp' %}{% endblock %}">
         {% block meta_extra %}{% endblock %}
         <!---Googleフォント-->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
@@ -126,11 +131,11 @@
         <header class="page-header">
             <div class="header-wrapper">
                 <div class="header-logo">
-                    <h1>
+                    <p class="header-logo-text">
                         <a href="{% url 'tabisync:home' %}">
                             <img src="{% static 'img/tabisync-logo-pc.webp' %}" alt="TabiSync" class="logo-image">
                         </a>
-                    </h1>
+                    </p>
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div id="btn08" class="btn-trigger">
@@ -156,6 +161,9 @@
                         <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
                     </ul>
+                    <a class="header-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
                 </nav>
             </div>
         </header>
@@ -164,6 +172,13 @@
         {% endblock %}
 
         <footer>
+            <ul class="footer-social" aria-label="公式SNS">
+                <li>
+                    <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
             <ul>
                 <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
                 <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>

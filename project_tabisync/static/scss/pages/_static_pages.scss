@@ -8,3 +8,30 @@
   margin-top: 20px;
   margin-bottom: 10px;
 }
+
+.page-404 {
+  text-align: center;
+}
+
+.page-404-title {
+  margin-top: 20px;
+  font-size: 1.4rem;
+}
+
+.page-404-text {
+  margin-top: 10px;
+  color: variables.$black;
+}
+
+.page-404-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+
+  a {
+    color: variables.$black;
+    text-decoration: underline;
+  }
+}
