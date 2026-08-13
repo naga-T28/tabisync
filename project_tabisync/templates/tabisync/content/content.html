@@ -170,6 +170,13 @@
         {% endfor %}
       </div>
     </div>
+    <div class="box5-6 schedule-map-card" id="scheduleMapCard">
+      <h2 class="schedule-map-heading" id="scheduleMapHeading"></h2>
+      <div class="box-content">
+        <div id="scheduleMapCanvas" class="schedule-map-canvas" role="img" hidden></div>
+        <p id="scheduleMapEmpty" class="schedule-map-empty">この日の予定には地図表示できるスポットがありません。</p>
+      </div>
+    </div>
     </div>
     <aside class="schedule-side-column">
     {% if itinerary.description %}
@@ -180,13 +187,6 @@
         </div>
       </div>
     {% endif %}
-    <div class="box5-6 schedule-map-card" id="scheduleMapCard">
-      <h2 class="box-title" id="scheduleMapHeading"></h2>
-      <div class="box-content">
-        <div id="scheduleMapCanvas" class="schedule-map-canvas" role="img" hidden></div>
-        <p id="scheduleMapEmpty" class="schedule-map-empty">この日の予定には地図表示できるスポットがありません。</p>
-      </div>
-    </div>
     <div class="box5-6 schedule-share-box">
       <h2 class="box-title">ブログ用iframeを出力</h2>
       <div class="box-content">
