@@ -586,10 +586,17 @@
 }
 
 .contact-wrapper {
-  display: grid;
-  gap: var(--space-md);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-xl);
   margin-top: var(--space-md);
-  align-content: start;
+}
+
+.home-info-grid .update-section:last-child .update-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
 .contact-form-btn {
@@ -660,7 +667,6 @@
   }
 
   .home-hero-inner,
-  .home-section,
   .home-info-grid {
     width: min(1120px, 90%);
   }
