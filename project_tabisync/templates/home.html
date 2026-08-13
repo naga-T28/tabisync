@@ -149,33 +149,58 @@
                 知りたいことから、TabiSyncの使い方を確認できます。
             </p>
         </div>
-        <div class="home-feature-grid" aria-label="使い方ガイド一覧">
-            <a class="home-feature" href="{% url 'tabisync:guide_sample' %}">
-                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                <h3>旅行しおりのサンプルと作成手順</h3>
-                <p>実際のしおりのサンプルと、作成から共有までの流れを確認できます。</p>
-            </a>
-            <a class="home-feature" href="{% url 'tabisync:guide_no_signup' %}">
-                <i class="fa-solid fa-user-check" aria-hidden="true"></i>
-                <h3>登録不要で作成・共有する方法</h3>
-                <p>アカウント登録なしでしおりを作成し、URLで共有する方法を解説します。</p>
-            </a>
-            <a class="home-feature" href="{% url 'tabisync:guide_collaboration' %}">
-                <i class="fa-solid fa-people-group" aria-hidden="true"></i>
-                <h3>友達・家族との共同編集方法</h3>
-                <p>閲覧用・編集用パスワードを使って、旅行計画をみんなで編集する方法です。</p>
-            </a>
-            <a class="home-feature" href="{% url 'tabisync:guide_all_in_one' %}">
-                <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-                <h3>旅程・行きたい場所・持ち物・メモの使い方</h3>
-                <p>バラバラになりがちな旅行の情報を、ひとつのしおりにまとめる方法です。</p>
-            </a>
-            <a class="home-feature" href="{% url 'tabisync:guide_ai_concierge' %}">
-                <i class="fa-solid fa-robot" aria-hidden="true"></i>
-                <h3>AIコンシェルジュの使い方と注意点</h3>
-                <p>旅行計画をAIに相談する具体例と、利用時の注意点をまとめました。</p>
-            </a>
-        </div>
+        <ul class="home-guide-list" aria-label="使い方ガイド一覧">
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_sample' %}">
+                    <i class="fa-solid fa-book-open home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">旅行しおりのサンプルと作成手順</span>
+                        <span class="home-guide-link-desc">実際のしおりのサンプルと、作成から共有までの流れを確認できます。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_no_signup' %}">
+                    <i class="fa-solid fa-user-check home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">登録不要で作成・共有する方法</span>
+                        <span class="home-guide-link-desc">アカウント登録なしでしおりを作成し、URLで共有する方法を解説します。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_collaboration' %}">
+                    <i class="fa-solid fa-people-group home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">友達・家族との共同編集方法</span>
+                        <span class="home-guide-link-desc">閲覧用・編集用パスワードを使って、旅行計画をみんなで編集する方法です。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_all_in_one' %}">
+                    <i class="fa-solid fa-layer-group home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">旅程・行きたい場所・持ち物・メモの使い方</span>
+                        <span class="home-guide-link-desc">バラバラになりがちな旅行の情報を、ひとつのしおりにまとめる方法です。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_ai_concierge' %}">
+                    <i class="fa-solid fa-robot home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">AIコンシェルジュの使い方と注意点</span>
+                        <span class="home-guide-link-desc">旅行計画をAIに相談する具体例と、利用時の注意点をまとめました。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
     </section>
 
     <div class="section3-wrapper home-info-grid">

@@ -15,7 +15,7 @@
     {% include "docs/_guide_breadcrumb.html" %}
     <h1 class="user-agreement-title">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</h1>
     <p class="guide-lead">
-      旅行の準備は、旅程表、地図アプリ、メモ帳、チャットのやり取りなど情報が分散しがちです。TabiSyncは、旅程表・行きたい場所・持ち物リスト・メモを1つのしおりURLにまとめて管理できます。このページでは、それぞれの機能の役割とまとめて使うメリットを紹介します。
+      旅行の情報が、地図アプリ、メモ、メッセージに散らばっていませんか。TabiSyncでは、予定・行きたい場所・持ち物・メモを1つのしおりにまとめられます。全部を使う必要はありません。まず必要な機能だけ使い、あとから追加できます。
     </p>
     <div class="guide-cta-group">
       <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
@@ -26,70 +26,69 @@
       </a>
     </div>
 
-    <h2 class="user-agreement-sub-title">4つの機能の役割</h2>
+    <h2 class="user-agreement-sub-title" id="features">4つの機能の使い分け</h2>
     <ul class="guide-feature-list">
       <li>
         <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
-        <p>日程ごとに時間・タイトル・場所・メモを登録し、日ごとのタブで切り替えて確認できます。<a href="{% url 'tabisync:demo_v2_content' %}">旅程表のサンプルを見る</a></p>
+        <p><strong>日時が決まった予定</strong>を入れる場所です。集合時刻、移動、食事、宿泊などを日ごとに確認できます。<a href="{% url 'tabisync:demo_v2_content' %}">旅程表のサンプルを見る</a></p>
       </li>
       <li>
         <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
-        <p>気になる場所を優先度つきで登録し、地図上でまとめて確認できます。日程が決まっていない場所も登録でき、絞り込み・並び替えも可能です。<a href="{% url 'tabisync:demo_v2_map' %}">地図のサンプルを見る</a></p>
+        <p><strong>まだ予定に入れていない候補</strong>を集める場所です。優先度をつけ、地図で位置関係を確認してから旅程に追加できます。<a href="{% url 'tabisync:demo_v2_map' %}">地図のサンプルを見る</a></p>
       </li>
       <li>
         <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
-        <p>「持ち物」「お土産」「子ども用」のように用途ごとに複数のリストを作り、チェックしながら準備を進められます。<a href="{% url 'tabisync:demo_v2_list' %}">持ち物リストのサンプルを見る</a></p>
+        <p><strong>準備するもの</strong>をチェックする場所です。「共通の持ち物」「子ども用」など、用途ごとにリストを分けられます。<a href="{% url 'tabisync:demo_v2_list' %}">持ち物リストのサンプルを見る</a></p>
       </li>
       <li>
         <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
-        <p>見出しや箇条書きに対応したMarkdown形式で、下調べした情報や当日の注意点を自由に書き残せます。<a href="{% url 'tabisync:demo_v2_memo' %}">メモのサンプルを見る</a></p>
+        <p><strong>ほかの3機能に当てはまらない情報</strong>を残す場所です。見出しや箇条書きを使って、下調べや注意点を整理できます。<a href="{% url 'tabisync:demo_v2_memo' %}">メモのサンプルを見る</a></p>
       </li>
     </ul>
 
-    <h2 class="user-agreement-sub-title">1つにまとめるメリット</h2>
-    <ul>
-      <li>別々のアプリやメモ帳、チャットのやり取りを探し回らずに、1つの共有URLで完結します。</li>
-      <li>友達や家族に共有するときも、旅程・行きたい場所・持ち物・メモをまとめて同じURLで見てもらえます。</li>
-      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュ</a>が旅程・行きたい場所・持ち物・メモの内容を横断的に読み取って相談に答えられます。</li>
-    </ul>
-
-    <h2 class="user-agreement-sub-title">使い方の流れ</h2>
+    <h2 class="user-agreement-sub-title" id="steps">おすすめの入力順</h2>
     <ol class="guide-steps">
       <li>
-        <h3>旅程を入れる</h3>
-        <p>日ごとの予定を時間順に登録します。1日あたり最大15件まで登録できます。</p>
+        <h3>決まっている予定を旅程に入れる</h3>
+        <p>飛行機、電車、宿泊、予約済みの店など、時間を動かしにくい予定から登録します。</p>
       </li>
       <li>
-        <h3>行きたい場所を追加して地図で確認する</h3>
-        <p>気になる場所を登録し、地図上でまとめて確認します。場所ごとに「Google Mapsで開く」から経路も確認できます。</p>
+        <h3>行きたい場所を集める</h3>
+        <p>気になる場所を追加し、地図で位置関係を確認します。近い場所を同じ日にまとめると、移動しやすい旅程になります。</p>
       </li>
       <li>
-        <h3>持ち物リストを作る</h3>
-        <p>用途ごとにリストを分けて、必要なものをチェックしながら準備します。</p>
+        <h3>必要な持ち物を洗い出す</h3>
+        <p>共通の持ち物と個人の持ち物を分け、準備できたものからチェックします。</p>
       </li>
       <li>
-        <h3>メモに自由記述の情報を残す</h3>
-        <p>下調べした情報や当日の注意点をメモに残しておきます。</p>
+        <h3>補足情報をメモにまとめる</h3>
+        <p>現地で確認したいことや、営業時間などの下調べを残します。住所・電話番号などの個人情報は書かないでください。</p>
       </li>
       <li>
-        <h3>URLで共有する</h3>
-        <p>すべてまとめたしおりのURLを、友達や家族に共有します。</p>
+        <h3>URLを共有して全員で確認する</h3>
+        <p>仲間に専用URLを送り、予定の抜けや無理な移動がないか確認します。</p>
       </li>
     </ol>
 
-    <h2 class="user-agreement-sub-title">登録できる件数の目安</h2>
+    <h2 class="user-agreement-sub-title" id="example">迷ったときの使い分け例</h2>
     <ul>
-      <li>日程は最大30日間まで登録できます。</li>
-      <li>1日あたりの予定は最大15件まで登録できます。</li>
-      <li>行きたい場所は既定で最大30件まで登録できます。</li>
-      <li>持ち物リストは最大10個まで、1リストあたり最大30項目まで登録できます。</li>
-      <li>メモは最大15件まで、1件あたり1,000語まで入力できます。</li>
+      <li>「10時に水族館を予約済み」→ <strong>旅程表</strong></li>
+      <li>「水族館の近くで寄れそうなカフェ」→ <strong>行きたい場所</strong></li>
+      <li>「水着と日焼け止め」→ <strong>持ち物リスト</strong></li>
+      <li>「雨の日の候補や現地で確認すること」→ <strong>メモ</strong></li>
     </ul>
-    <p>
-      これらの上限は既定値であり、しおりごとに変更される場合があります。
-    </p>
 
-    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    <h2 class="user-agreement-sub-title" id="limits">登録できる件数</h2>
+    <dl class="guide-limits">
+      <div class="guide-limits-item"><dt>日程</dt><dd><span class="guide-limits-value">30</span>日間まで</dd></div>
+      <div class="guide-limits-item"><dt>1日あたりの予定</dt><dd><span class="guide-limits-value">15</span>件まで</dd></div>
+      <div class="guide-limits-item"><dt>行きたい場所</dt><dd>既定<span class="guide-limits-value">30</span>件まで</dd></div>
+      <div class="guide-limits-item"><dt>持ち物リスト</dt><dd><span class="guide-limits-value">10</span>個・1リスト<span class="guide-limits-value">30</span>項目まで</dd></div>
+      <div class="guide-limits-item"><dt>メモ</dt><dd><span class="guide-limits-value">15</span>件・1件<span class="guide-limits-value">1,000</span>語まで</dd></div>
+    </dl>
+    <p class="guide-limits-note">行きたい場所の上限は、しおりごとに変更される場合があります。</p>
+
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
     {% for item in faq_items %}
     <details class="qa-6">
         <summary>{{ item.question }}</summary>

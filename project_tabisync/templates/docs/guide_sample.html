@@ -16,7 +16,7 @@
     {% include "docs/_guide_breadcrumb.html" %}
     <h1 class="user-agreement-title">旅行しおりのサンプルと作成手順</h1>
     <p class="guide-lead">
-      「実際にどんなしおりができるのか先に見てみたい」という方向けに、TabiSyncのサンプルしおりと、作成から共有までの手順をまとめました。サンプルは沖縄旅行3泊4日のダミーデータで、実際の利用者のしおりではありません。
+      初めての方は、まずサンプルを開いて完成したしおりを見てみましょう。そのあと、同じ流れで自分のしおりを作れます。サンプルには沖縄旅行3泊4日の架空の情報を使っており、実際の利用者のデータは含まれていません。
     </p>
     <div class="guide-cta-group">
       <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
@@ -27,9 +27,9 @@
       </a>
     </div>
 
-    <h2 class="user-agreement-sub-title">サンプルしおり「沖縄旅行」を見る</h2>
+    <h2 class="user-agreement-sub-title" id="sample">サンプルしおり「沖縄旅行」を見る</h2>
     <p>
-      サンプルは、那覇空港到着から美ら海水族館・古宇利島・国際通り・アメリカンビレッジ・首里城公園を巡る沖縄旅行3泊4日のデモです。以下の5画面で、実際の旅程表と同じ見た目・操作感を確認できます。デモ画面は検索結果には表示されません（<code>noindex</code>設定）が、リンクから直接アクセスできます。
+      サンプルでは、那覇空港、美ら海水族館、古宇利島などを巡る3泊4日の旅行を確認できます。入力や編集を試しても保存されないため、気軽に操作してください。
     </p>
     <figure class="guide-figure">
       <img src="{% static 'img/demo-v2-cover.webp' %}" alt="デモしおり「沖縄旅行」の表紙画像" loading="lazy" width="600" height="600">
@@ -58,7 +58,7 @@
       </li>
     </ul>
 
-    <h2 class="user-agreement-sub-title">しおりの作成手順</h2>
+    <h2 class="user-agreement-sub-title" id="steps">自分のしおりを作る4ステップ</h2>
     <p>
       サンプルと同じ流れで、自分の旅行内容に置き換えて作成できます。アカウント登録は不要です。
     </p>
@@ -81,17 +81,36 @@
       </li>
     </ol>
 
-    <h2 class="user-agreement-sub-title">制限事項</h2>
-    <ul>
-      <li>日程は最大30日間まで登録できます。</li>
-      <li>1日あたりの予定は最大15件まで登録できます。</li>
-      <li>メモは最大15件まで、1件あたり1,000語まで入力できます。</li>
-      <li>持ち物リストは最大10個まで、1リストあたり最大30項目まで登録できます。</li>
-      <li>行きたい場所は既定で最大30件まで登録できます（しおりごとに変更される場合があります）。</li>
-      <li>AIコンシェルジュは既定で1日5回まで利用できます。詳しくは<a href="{% url 'tabisync:concierge_terms' %}">AIコンシェルジュ利用規約と注意事項</a>をご覧ください。</li>
-    </ul>
+    <h2 class="user-agreement-sub-title" id="limits">制限事項</h2>
+    <dl class="guide-limits">
+      <div class="guide-limits-item">
+        <dt>日程</dt>
+        <dd><span class="guide-limits-value">30</span>日間まで</dd>
+      </div>
+      <div class="guide-limits-item">
+        <dt>1日あたりの予定</dt>
+        <dd><span class="guide-limits-value">15</span>件まで</dd>
+      </div>
+      <div class="guide-limits-item">
+        <dt>メモ</dt>
+        <dd><span class="guide-limits-value">15</span>件・1件<span class="guide-limits-value">1,000</span>語まで</dd>
+      </div>
+      <div class="guide-limits-item">
+        <dt>持ち物リスト</dt>
+        <dd><span class="guide-limits-value">10</span>個・1リスト<span class="guide-limits-value">30</span>項目まで</dd>
+      </div>
+      <div class="guide-limits-item">
+        <dt>行きたい場所</dt>
+        <dd>既定<span class="guide-limits-value">30</span>件まで</dd>
+      </div>
+      <div class="guide-limits-item">
+        <dt>AIコンシェルジュ</dt>
+        <dd>既定<span class="guide-limits-value">5</span>回/日まで</dd>
+      </div>
+    </dl>
+    <p class="guide-limits-note">行きたい場所とAIコンシェルジュの上限は、しおりごとに変更される場合があります。AIコンシェルジュの利用条件について詳しくは<a href="{% url 'tabisync:concierge_terms' %}">AIコンシェルジュ利用規約と注意事項</a>をご覧ください。</p>
 
-    <h2 class="user-agreement-sub-title">よくある質問</h2>
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
     {% for item in faq_items %}
     <details class="qa-6">
         <summary>{{ item.question }}</summary>
@@ -99,7 +118,7 @@
     </details>
     {% endfor %}
 
-    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <h2 class="user-agreement-sub-title" id="related">関連ページ</h2>
     <ul class="guide-related-links">
       <li><a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a></li>
       <li><a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a></li>
