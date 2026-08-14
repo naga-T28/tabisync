@@ -8,7 +8,7 @@
         <meta name="robots" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Font Awesome CDN (最新版) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+        {% include "_font_awesome.html" %}
         <!-- ファビコン -->
         <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
         <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
@@ -28,16 +28,11 @@
         <meta name="twitter:description" content="旅のしおりをみんなで簡単共有！">
         <meta name="twitter:image" content="{{ request.build_absolute_uri|cut:request.get_full_path }}{% static 'img/tabisync-ogp.webp' %}">
         <!---Googleフォント-->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        {% include "_google_fonts.html" %}
         <!---リセットcsss-->
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
         <link rel="stylesheet" href="{% static 'css/style.css'%}">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
     <body>
         <div class="pc-body-wrapper">
@@ -46,7 +41,7 @@
                 <div class="header-logo">
                     <p class="header-logo-text">
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSync" class="logo-image">
+                            <img src="{% static 'img/logo-tabisync.png' %}" alt="TabiSync" class="logo-image" width="1500" height="300">
                         </a>
                     </p>
                 </div>

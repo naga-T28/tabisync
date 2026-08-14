@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncのしおりを友達や家族と共同編集する方法を紹介します。閲覧用・編集用パスワードの使い分け、共同編集の始め方、編集項目、複数人で編集する際の注意点を解説します。{% endblock %}
+{% block og_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block og_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
+{% block twitter_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
+{% block twitter_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-collaboration.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-collaboration.webp' %}{% endblock %}
+{% block og_image_alt %}友達や家族が一つの旅行計画を共同編集する様子のイラスト{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">友達・家族と旅行計画を共同編集する方法</h1>
+    <p class="guide-lead">
+      1つのしおりを友達や家族と共有し、みんなで旅行の予定を作れます。ここでは、誰にどのパスワードを渡すか、共同編集を始める手順、編集が重ならないためのコツを説明します。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> サンプルを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title" id="permissions">まず、見る人と編集する人を分ける</h2>
+    <p>
+      しおりには、閲覧用と編集用の2種類のパスワードを設定できます。予定を見るだけの人には閲覧用、内容を追加・変更する人には編集用を伝えます。全員に編集用パスワードを渡す必要はありません。
+    </p>
+
+    <h2 class="user-agreement-sub-title" id="steps">共同編集を始める3ステップ</h2>
+    <ol class="guide-steps">
+      <li>
+        <h3>しおりを作り、パスワードを設定する</h3>
+        <p><a href="{% url 'tabisync:create' %}">しおり作成ページ</a>で、閲覧用と編集用のパスワードを必要に応じて設定します。</p>
+      </li>
+      <li>
+        <h3>役割に合うパスワードを共有する</h3>
+        <p>しおりの専用URLと、相手の役割に合うパスワードを共有します。URLとパスワードは、不特定多数が見られる場所へ載せないでください。</p>
+      </li>
+      <li>
+        <h3>担当を決めて入力する</h3>
+        <p>各自のスマートフォンやパソコンでURLを開きます。「旅程はAさん、持ち物はBさん」のように担当を決めると、同時編集による上書きを防ぎやすくなります。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title" id="roles">おすすめの役割分担</h2>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
+        <p>移動時間や予約時刻を確認する人が、日ごとの予定を追加・並び替えます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
+        <p>全員が候補を追加し、優先度をつけます。予定に入れる場所は、地図で位置関係を確認して決めます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
+        <p>共通の持ち物と個人の持ち物を分けて作り、準備できた項目をチェックします。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
+        <p>予約番号を除く下調べ情報や、あとで相談したいことをまとめます。個人情報は書かないでください。</p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title" id="tips">編集が重ならないためのコツ</h2>
+    <ul>
+      <li>編集を始める前に画面を再読み込みし、最新の内容を確認します。</li>
+      <li>同じ項目を同時に編集しないよう、担当や時間を決めます。</li>
+      <li>同じ項目を編集した場合は、あとから保存した内容が反映されます。保存後に内容を見直してください。</li>
+      <li>現在は編集履歴が表示されません。大きな変更はメッセージアプリなどで仲間に知らせると安心です。</li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}

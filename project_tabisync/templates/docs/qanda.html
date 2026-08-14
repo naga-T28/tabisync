@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}よくある質問 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncのよくある質問です。登録なしで使えるか、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティについて確認できます。{% endblock %}
 {% block og_title %}よくある質問 | TabiSync{% endblock %}
 {% block og_description %}TabiSyncの使い方、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティに関するFAQです。{% endblock %}
 {% block twitter_title %}よくある質問 | TabiSync{% endblock %}
 {% block twitter_description %}TabiSyncの使い方、旅行しおりの作成・編集、AIコンシェルジュ、共有URLやセキュリティに関するFAQです。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-faq.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-faq.webp' %}{% endblock %}
+{% block og_image_alt %}旅行しおりの作成・共有・安全性に関する質問を表すイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ faq_json_ld }}</script>
 {% endblock %}
@@ -12,6 +16,7 @@
 {% block contents %}
 <main class="page-main">
   <article class="privacy-policy">
+    {% include "docs/_guide_breadcrumb.html" %}
     <h1 class="user-agreement-title">よくある質問</h1>
     <div class="toc-002">
         <div>

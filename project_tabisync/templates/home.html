@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="home-hero-product" aria-label="TabiSyncの利用イメージ">
-                    <img src="{% static 'img/home-hero-product.webp' %}" alt="TabiSyncの画面イメージ" class="home-hero-product-image">
+                    <img src="{% static 'img/home-hero-product.webp' %}" alt="TabiSyncの画面イメージ" class="home-hero-product-image" fetchpriority="high">
                 </div>
             </div>
         </div>
@@ -140,6 +140,67 @@
                 <p>作成したしおりのURLを送るだけで、友達や家族と同じ内容を確認できます。</p>
             </article>
         </div>
+    </section>
+
+    <section class="home-section home-guide-section">
+        <div class="home-section-heading">
+            <h2>目的別の使い方ガイド</h2>
+            <p>
+                知りたいことから、TabiSyncの使い方を確認できます。
+            </p>
+        </div>
+        <ul class="home-guide-list" aria-label="使い方ガイド一覧">
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_sample' %}">
+                    <i class="fa-solid fa-book-open home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">旅行しおりのサンプルと作成手順</span>
+                        <span class="home-guide-link-desc">実際のしおりのサンプルと、作成から共有までの流れを確認できます。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_no_signup' %}">
+                    <i class="fa-solid fa-user-check home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">登録不要で作成・共有する方法</span>
+                        <span class="home-guide-link-desc">アカウント登録なしでしおりを作成し、URLで共有する方法を解説します。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_collaboration' %}">
+                    <i class="fa-solid fa-people-group home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">友達・家族との共同編集方法</span>
+                        <span class="home-guide-link-desc">閲覧用・編集用パスワードを使って、旅行計画をみんなで編集する方法です。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_all_in_one' %}">
+                    <i class="fa-solid fa-layer-group home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">旅程・行きたい場所・持ち物・メモの使い方</span>
+                        <span class="home-guide-link-desc">バラバラになりがちな旅行の情報を、ひとつのしおりにまとめる方法です。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+            <li>
+                <a class="home-guide-link" href="{% url 'tabisync:guide_ai_concierge' %}">
+                    <i class="fa-solid fa-robot home-guide-link-icon" aria-hidden="true"></i>
+                    <span class="home-guide-link-copy">
+                        <span class="home-guide-link-title">AIコンシェルジュの使い方と注意点</span>
+                        <span class="home-guide-link-desc">旅行計画をAIに相談する具体例と、利用時の注意点をまとめました。</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-right home-guide-link-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
     </section>
 
     <div class="section3-wrapper home-info-grid">

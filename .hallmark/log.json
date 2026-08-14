@@ -1,0 +1,18 @@
+[
+  {
+    "date": "2026-08-13",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "design.md (TabiSync locked system)",
+    "enrichment": "none",
+    "brief": "hallmark redesign ./templates/ — home.html / home/_lp.scss / home/_header.scss をdesign.mdトークンへ全面移行。box-shadow・グラスモーフィズムCTA・font-weight:950等の未トークン化スタイルを除去し、ヘアラインボーダーSurfaceとウェイト対比タイポグラフィへ統一。共有フッター(_site_footer.html)をbase.html/base_home.htmlに実配線。"
+  },
+  {
+    "date": "2026-08-13",
+    "scope": "app",
+    "macrostructure": "Long Document",
+    "theme": "design.md (TabiSync locked system)",
+    "enrichment": "none",
+    "brief": "hallmark redesign ./templates/ Phase 1 — base.html継承の9ページ（qanda, update, profile, user_agreement, privacy_policy, concierge_terms, contact/contact_form, contact/thanks, create, 404）をdesign.mdのトークンへ移行"
+  }
+]

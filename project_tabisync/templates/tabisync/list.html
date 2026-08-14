@@ -8,7 +8,7 @@
         <meta name="robots" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Font Awesome CDN (最新版) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+        {% include "_font_awesome.html" %}
         <!-- ファビコン -->
         <link rel="icon" href="{% static 'img/icon-tabisync.webp'%}">
         <link rel="apple-touch-icon" href="{% static 'img/icon-tabisync.webp'%}">
@@ -16,10 +16,7 @@
         <meta name="apple-mobile-web-app-title" content="TabiSync">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <!---Googleフォント-->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        {% include "_google_fonts.html" %}
         <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
         <!-- OGP設定 -->
         <meta property="og:title" content="{{ itinerary.title }} | TabiSync">
@@ -37,8 +34,6 @@
         <link rel="stylesheet" href="{% static 'css/reset.css'%}">
         <!--オリジナルCSS-->
         <link rel="stylesheet" href="{% static 'css/style2.css'%}">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
     <body id="content-body">
         <header class="page-header">
