@@ -184,11 +184,11 @@ pipenv run python manage.py makemigrations --check --dry-run
 `.env` の内容を表示、コミット、ログ出力しないでください。確認できる主な設定項目は以下です。
 
 - Django: `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `USE_HTTPS`
-- SEO: `PUBLIC_BASE_URL`（任意の非秘密値。例: `https://tabisync.com`。canonical・OGP・構造化データ・サイトマップ・robots.txtが参照する単一の公開オリジン。本番環境では`https://`始まりの値が必須で、未設定または不正な値だと起動時に例外になる。開発環境では未設定時`http://localhost:8000`を既定値として使う）
+- SEO: `PUBLIC_BASE_URL`（任意の非秘密値。例: `https://tabisync.com`。canonical・OGP・構造化データ・サイトマップ・robots.txtが参照する単一の公開オリジン。本番環境では`https://`始まりの値が必須で、未設定または不正な値だと起動時に例外になる。開発環境では未設定時`http://localhost:8000`を既定値として使う）、`ENVIRONMENT`（任意だが公開本番では`production`を必ず明示する。未設定・`staging`・`development`など`production`以外では全レスポンスに`X-Robots-Tag: noindex, nofollow`を付与する）
 - Database: `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 - Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`, `CONTACT_RECEIVER_EMAIL`
 - Google Maps: `GOOGLE_MAPS_API_KEY`
-- Turnstile: `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `CLOUDFLARE_TURNSTILE_SECRET_KEY`
+- Turnstile: `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `CLOUDFLARE_TURNSTILE_SECRET_KEY`, `TURNSTILE_TIMEOUT_SECONDS`（任意。検証APIのHTTPタイムアウト秒数。既定`5`）
 - OpenAI: `OPENAI_API_KEY`, `OPENAI_LIGHT_MODEL`, `OPENAI_ANSWER_MODEL`、各プロンプト・タイムアウト設定
 - AIコンシェルジュAgent経路（`concierge_agent`。任意、未設定時は全て安全側の既定値でlegacy経路のまま動作）:
   - `CONCIERGE_AGENT_ENABLED`（既定`false`）: Agent経路のグローバル有効化フラグ
@@ -198,7 +198,7 @@ pipenv run python manage.py makemigrations --check --dry-run
   - `CONCIERGE_AGENT_MAX_OPENAI_CALLS_PER_RUN`（既定`6`）: 1 run（1リクエスト）あたりのOpenAI呼び出し回数上限
   - `CONCIERGE_AGENT_MAX_TOOL_CALLS_PER_RUN`（既定`6`）: 1 runあたりのTool呼び出し回数上限（Skill Markdownの`max_tool_calls`との小さい方が実際に適用される）
   - `CONCIERGE_AGENT_MAX_RUN_SECONDS`（既定`25`）: 1 run全体の経過時間上限
-- Upload: `MAX_COVER_IMAGE_UPLOAD_BYTES`, `MAX_REQUEST_BODY_BYTES`
+- Upload/Input: `MAX_COVER_IMAGE_UPLOAD_BYTES`, `MAX_REQUEST_BODY_BYTES`, `MAX_JSON_BODY_BYTES`（いずれも任意。`MAX_JSON_BODY_BYTES`はJSON API本文の上限で、既定256KiB）
 - Gunicorn: `GUNICORN_TIMEOUT`, `GUNICORN_GRACEFUL_TIMEOUT`
 - Proxy: `TRUSTED_PROXY_CIDRS`（任意。カンマ区切りのCIDR一覧、例: `10.0.0.0/8,192.0.2.10/32`。レート制限等のクライアントIP判定で `CF-Connecting-IP`/`X-Forwarded-For` を信頼してよい直前ホップの範囲を指定する。未設定時は転送ヘッダーを一切信頼せず `REMOTE_ADDR` のみを使用する安全側の既定値になる。外側Nginx等のリバースプロキシが到達するアドレス範囲を設定すること）
 

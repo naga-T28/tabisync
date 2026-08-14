@@ -1,11 +1,12 @@
 @use "base/variables";
+@use "base/tokens";
 @use "base/reset";
 @use "base/layout";
 @use "base/utilities";
 
 @use "layout/header";
 @use "layout/hamburger";
-@use "layout/footer";
+@use "layout/site-footer";
 
 @use "components/buttons";
 @use "components/forms";
@@ -18,5 +19,6 @@
 @use "pages/contact";
 @use "pages/profile";
 @use "pages/static_pages";
+@use "pages/docs";
 
 @use "responsive/desktop";

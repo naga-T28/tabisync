@@ -6,6 +6,12 @@
 
 ---
 
+## 環境別のSEO設定
+
+デプロイ先の `.env` では環境を明示してください。公開本番は `ENVIRONMENT=production`、ステージングは `ENVIRONMENT=staging` とし、`PUBLIC_BASE_URL` には各環境自身の公開URLを設定します。`ENVIRONMENT` が未設定または `production` 以外の場合、Djangoは全レスポンスへ `X-Robots-Tag: noindex, nofollow` を付与します。
+
+---
+
 ## 制作背景
 
 TabiSyncは、友人との旅行計画や旅行当日の行動をスムーズにすることを目的に開発した、旅行しおり共有Webアプリです。

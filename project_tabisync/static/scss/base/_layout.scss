@@ -14,13 +14,13 @@ body {
   background: variables.$white;
 }
 ::selection {
-  background-color: #6B2AC0;
-  color: #fff;
+  background-color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 
 ::-moz-selection {
-  background-color: #6B2AC0;
-  color: #fff;
+  background-color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 article.user-agreement,
 article.privacy-policy,
@@ -30,9 +30,6 @@ article.privacy-policy,
   padding-top: 20px;
 }
 
-.updates-article {
-  margin-bottom: 600px;
-}
 
 .header-nav-pc-wrapper {
   display: none;

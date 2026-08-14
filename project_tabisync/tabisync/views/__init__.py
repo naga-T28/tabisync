@@ -59,6 +59,11 @@ from .itinerary_helpers import (
 )
 from .static_pages import (
     ConciergeTermsView,
+    GuideAiConciergeView,
+    GuideAllInOneView,
+    GuideCollaborationView,
+    GuideNoSignupView,
+    GuideSampleView,
     HomeView,
     PrivacyPolicyView,
     ProfileView,
@@ -157,6 +162,11 @@ __all__ = [
     "parse_optional_int",
     "reorder_schedules_for_day",
     "ConciergeTermsView",
+    "GuideAiConciergeView",
+    "GuideAllInOneView",
+    "GuideCollaborationView",
+    "GuideNoSignupView",
+    "GuideSampleView",
     "HomeView",
     "PrivacyPolicyView",
     "ProfileView",

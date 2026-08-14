@@ -23,3 +23,42 @@ def dumps_json_ld(data):
     """
     json_str = json.dumps(data, cls=DjangoJSONEncoder, ensure_ascii=False)
     return mark_safe(json_str.translate(_JSON_LD_ESCAPES))
+
+
+def build_breadcrumb_list(items):
+    """画面表示のパンくずと同じ(名称, URL)の並びからBreadcrumbListのdictを作る。
+
+    itemsは[("ホーム", "https://.../"), ("ページ名", "https://.../guide/...")]のような
+    タプルのリスト。テンプレート側のパンくず表示と同じデータを渡すことで、画面と
+    構造化データがずれない。
+    """
+    return {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": position,
+                "name": name,
+                "item": url,
+            }
+            for position, (name, url) in enumerate(items, start=1)
+        ],
+    }
+
+
+def build_faq_page(items):
+    """[{"question": ..., "answer": ...}, ...]の形式のFAQデータからFAQPageのdictを作る。"""
+    return {
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": item["question"],
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": item["answer"],
+                },
+            }
+            for item in items
+        ],
+    }

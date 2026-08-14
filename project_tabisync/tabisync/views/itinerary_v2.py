@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from PIL import Image, UnidentifiedImageError
 
+from django.conf import settings
 from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,6 +16,7 @@ from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
 from ..models import Itinerary, ScheduleV2
+from ..seo import build_breadcrumb_list, dumps_json_ld
 from .access_control import (
     EditPasswordRequiredMixin,
     ViewPasswordRequiredMixin,
@@ -86,8 +88,26 @@ def itinerary_cover_image_view(request, pk, token):
 class CreateView(View):
     template_name = "tabisync/create.html"
 
+    def _build_page_context(self, extra=None):
+        # パンくず表示とBreadcrumbList JSON-LDを同じデータから生成する。
+        # GET/エラー時のPOSTいずれでも同じフォーム画面を返すため、共通化している。
+        home_url = f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:home')}"
+        page_url = f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:create')}"
+        breadcrumb_items = [("ホーム", home_url), ("しおりの作成", page_url)]
+        context = {
+            "breadcrumb_items": breadcrumb_items,
+            "max_itinerary_days": MAX_ITINERARY_DAYS,
+            "create_json_ld": dumps_json_ld({
+                "@context": "https://schema.org",
+                "@graph": [build_breadcrumb_list(breadcrumb_items)],
+            }),
+        }
+        if extra:
+            context.update(extra)
+        return context
+
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+        return render(request, self.template_name, self._build_page_context())
 
     def post(self, request, *args, **kwargs):
 
@@ -104,27 +124,27 @@ class CreateView(View):
         design_number = request.POST.get('design_number', 1)
 
         if not start_date or not end_date:
-            return render(request, self.template_name, {
+            return render(request, self.template_name, self._build_page_context({
                 "error": "開始日と終了日を入力してください。",
-            }, status=400)
+            }), status=400)
 
         try:
             start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
         except ValueError:
-            return render(request, self.template_name, {
+            return render(request, self.template_name, self._build_page_context({
                 "error": "日付の形式が正しくありません。",
-            }, status=400)
+            }), status=400)
 
         if end_date_obj < start_date_obj:
-            return render(request, self.template_name, {
+            return render(request, self.template_name, self._build_page_context({
                 "error": "終了日は開始日以降を指定してください。",
-            }, status=400)
+            }), status=400)
 
         if get_inclusive_day_count(start_date_obj, end_date_obj) > MAX_ITINERARY_DAYS:
-            return render(request, self.template_name, {
+            return render(request, self.template_name, self._build_page_context({
                 "error": f"日程は最大{MAX_ITINERARY_DAYS}日間まで登録できます。",
-            }, status=400)
+            }), status=400)
 
         # =====================
         # しおり作成
