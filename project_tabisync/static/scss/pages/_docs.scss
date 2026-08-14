@@ -1,0 +1,373 @@
+@use "../base/variables" as variables;
+
+// ガイドページ（templates/docs/guide_*.html, guide_sample.html）専用コンポーネント。
+// 元々スタイル定義がなかったクラス群に、Long Documentトーンの見た目を与える。
+
+.guide-breadcrumb {
+  margin-bottom: var(--space-md);
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-ink-3);
+  }
+
+  li:not(:last-child)::after {
+    content: "/";
+    margin-left: 0.4em;
+    color: var(--color-rule);
+  }
+
+  a {
+    color: var(--color-ink-2);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  [aria-current="page"] {
+    color: var(--color-ink);
+  }
+}
+
+.guide-lead {
+  margin-top: var(--space-sm);
+  max-width: 62ch;
+  color: var(--color-ink-2);
+  font-size: var(--text-md);
+  line-height: 1.85;
+}
+
+.guide-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+}
+
+.guide-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 46px;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-ink);
+  color: var(--color-ink);
+  background: transparent;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: transform 0.18s var(--ease-out), background 0.18s var(--ease-out), color 0.18s var(--ease-out);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+.guide-cta-btn-primary {
+  color: var(--color-accent-ink);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+
+  &:hover {
+    background: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
+  }
+}
+
+.guide-cta-btn-secondary:hover {
+  background: var(--color-paper-2);
+}
+
+/* Hallmark · component: guide-sample-link · genre: editorial · theme: TabiSync locked system
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (40–41)
+ * pre-emit critique: P5 H5 E4 S5 R4 V4
+ */
+.guide-sample-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 72px;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  &:active .guide-sample-link-arrow {
+    transform: translateX(1px);
+  }
+
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &[aria-busy="true"] {
+    cursor: progress;
+    opacity: 0.65;
+
+    .guide-sample-link-hint::before {
+      content: "読み込み中 — ";
+    }
+  }
+
+  &[data-state="error"] {
+    border-color: var(--color-error);
+
+    .guide-sample-link-hint::before {
+      content: "エラー — ";
+    }
+  }
+
+  &[data-state="success"] {
+    border-color: var(--color-success);
+
+    .guide-sample-link-hint::before {
+      content: "移動完了 — ";
+    }
+  }
+}
+
+.guide-sample-link-copy {
+  display: grid;
+  gap: var(--space-3xs);
+  min-width: 0;
+}
+
+.guide-sample-link-label,
+.guide-sample-link-hint {
+  white-space: nowrap;
+}
+
+.guide-sample-link-label {
+  font-weight: 700;
+}
+
+.guide-sample-link-hint {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+
+.guide-sample-link-arrow {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .guide-sample-link:hover .guide-sample-link-arrow {
+    transform: translateX(var(--space-3xs));
+  }
+}
+
+.guide-figure {
+  margin: var(--space-lg) 0;
+
+  img {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-md);
+  }
+
+  figcaption {
+    margin-top: var(--space-2xs);
+    text-align: center;
+    color: var(--color-ink-3);
+    font-size: var(--text-xs);
+  }
+}
+
+.guide-feature-list {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: var(--space-sm);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-md);
+  }
+
+  li + li {
+    margin-top: 0;
+  }
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-md);
+    color: var(--color-ink);
+  }
+
+  h3 i {
+    color: var(--color-accent);
+    font-size: 0.85em;
+  }
+
+  p {
+    margin-top: var(--space-2xs);
+  }
+}
+
+.guide-steps {
+  counter-reset: guide-step;
+  margin-top: var(--space-md);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-sm);
+
+  li {
+    position: relative;
+    padding: var(--space-sm) var(--space-sm) var(--space-sm) 3rem;
+    border-left: 2px solid var(--color-rule);
+  }
+
+  li + li {
+    margin-top: 0;
+  }
+
+  li::before {
+    counter-increment: guide-step;
+    content: counter(guide-step, decimal-leading-zero);
+    position: absolute;
+    left: -0.85em;
+    top: 0;
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-sm);
+    background: var(--color-paper);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-md);
+  }
+
+  p {
+    margin-top: var(--space-2xs);
+  }
+}
+
+.guide-related-links {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-top: var(--space-md);
+  padding: 0;
+  list-style: none;
+
+  li + li {
+    margin-top: 0;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--color-accent);
+    text-decoration: none;
+
+    &::after {
+      content: "→";
+      transition: transform 0.18s var(--ease-out);
+    }
+
+    &:hover {
+      color: var(--color-accent);
+
+      &::after {
+        transform: translateX(3px);
+      }
+    }
+  }
+}
+
+.guide-limits {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: var(--space-md) 0 0;
+}
+
+.guide-limits-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-rule);
+
+  dt {
+    color: var(--color-ink-2);
+    font-size: var(--text-sm);
+  }
+
+  dd {
+    margin: 0;
+    flex: 0 0 auto;
+    max-width: 60%;
+    color: var(--color-ink);
+    font-size: var(--text-sm);
+    text-align: right;
+  }
+}
+
+.guide-limits-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.guide-limits-note {
+  margin-top: var(--space-sm);
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+}
+
+@media screen and (min-width: 640px) {
+  .guide-limits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-lg);
+  }
+}

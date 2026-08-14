@@ -10,7 +10,7 @@
         <meta name="robots" content="{% block robots_meta %}index, follow{% endblock %}">
         <link rel="canonical" href="{% block canonical_url %}{{ public_base_url }}{{ request.path }}{% endblock %}">
         <!-- Font Awesome CDN (最新版) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+        {% include "_font_awesome.html" %}
         <!-- ファビコン -->
         <link rel="icon" href="{% static 'img/icon-pc.webp'%}">
         <link rel="apple-touch-icon" href="{% static 'img/tabisync-ios-icon.ico'%}">
@@ -35,10 +35,7 @@
         <meta name="twitter:image" content="{% block twitter_image %}{{ public_base_url }}{% static 'img/tabisync-v2-ogp.webp' %}{% endblock %}">
         {% block meta_extra %}{% endblock %}
         <!---Googleフォント-->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        {% include "_google_fonts.html" %}
         <!---リセットcsss-->
         <style>
             /* Box sizing rules */
@@ -112,8 +109,6 @@
         <noscript>
             <link rel="stylesheet" href="{% static 'css/style.css' %}">
         </noscript>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">    
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-RPQJMFHLNC"></script>
         <script>
@@ -133,7 +128,7 @@
                 <div class="header-logo">
                     <p class="header-logo-text">
                         <a href="{% url 'tabisync:home' %}">
-                            <img src="{% static 'img/tabisync-logo-pc.webp' %}" alt="TabiSync" class="logo-image">
+                            <img src="{% static 'img/tabisync-logo-pc.webp' %}" alt="TabiSync" class="logo-image" width="500" height="112">
                         </a>
                     </p>
                 </div>
@@ -171,21 +166,7 @@
         {% block contents %}
         {% endblock %}
 
-        <footer>
-            <ul class="footer-social" aria-label="公式SNS">
-                <li>
-                    <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
-                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
-                    </a>
-                </li>
-            </ul>
-            <ul>
-                <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
-                <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
-                <li><a class="footer-content" href="{% url 'tabisync:profile' %}">運営者プロフィール</a></li>
-            </ul>
-            <small>Copyright &copy; 2026 TabiSync All Rights Reserved.</small>
-        </footer>
+        {% include "_site_footer.html" %}
     </div>
         <script src="{% static 'js/menu.js' %}?v=20260115" defer></script>
     </body>

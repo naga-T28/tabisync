@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}運営者プロフィール | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncの運営者プロフィールです。旅行しおり共有サービスを開発しているnagaTの紹介と、旅行ブログへのリンクを掲載しています。{% endblock %}
 {% block og_title %}運営者プロフィール | TabiSync{% endblock %}
 {% block og_description %}TabiSyncの運営・開発者nagaTのプロフィールです。旅行しおり共有サービスへの想いとブログを紹介しています。{% endblock %}
 {% block twitter_title %}運営者プロフィール | TabiSync{% endblock %}
 {% block twitter_description %}TabiSyncの運営・開発者nagaTのプロフィールです。旅行しおり共有サービスへの想いとブログを紹介しています。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-profile.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-profile.webp' %}{% endblock %}
+{% block og_image_alt %}旅の記録をもとに旅行しおりサービスを開発する運営者のイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">
 {
@@ -29,7 +33,7 @@
 <main class="page-main">
     <article class="privacy-policy">
             <h1 class="profile-title">運営者プロフィール</h1>
-            <img src="{% static 'img/nagat-icon.png' %}" alt="運営者プロフィール画像" class="profile-image">
+            <img src="{% static 'img/nagat-icon.png' %}" alt="TabiSync運営者nagaTの写真" class="profile-image">
             <h2 class="profile-subtitle">nagaT</h2>
             <p>
                 TabiSyncの運営・開発をしているnagaTです。<br> 

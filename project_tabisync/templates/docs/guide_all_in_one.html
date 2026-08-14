@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncで旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方を紹介します。各機能の役割、まとめて使うメリット、登録できる件数の目安を解説します。{% endblock %}
+{% block og_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block og_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
+{% block twitter_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
+{% block twitter_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-all-in-one.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-all-in-one.webp' %}{% endblock %}
+{% block og_image_alt %}旅程・地図・持ち物・メモを一つの旅行しおりにまとめたイラスト{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</h1>
+    <p class="guide-lead">
+      旅行の情報が、地図アプリ、メモ、メッセージに散らばっていませんか。TabiSyncでは、予定・行きたい場所・持ち物・メモを1つのしおりにまとめられます。全部を使う必要はありません。まず必要な機能だけ使い、あとから追加できます。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_content' %}">
+        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> サンプルを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title" id="features">4つの機能の使い分け</h2>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表</h3>
+        <p><strong>日時が決まった予定</strong>を入れる場所です。集合時刻、移動、食事、宿泊などを日ごとに確認できます。<a href="{% url 'tabisync:demo_v2_content' %}">旅程表のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 行きたい場所</h3>
+        <p><strong>まだ予定に入れていない候補</strong>を集める場所です。優先度をつけ、地図で位置関係を確認してから旅程に追加できます。<a href="{% url 'tabisync:demo_v2_map' %}">地図のサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物リスト</h3>
+        <p><strong>準備するもの</strong>をチェックする場所です。「共通の持ち物」「子ども用」など、用途ごとにリストを分けられます。<a href="{% url 'tabisync:demo_v2_list' %}">持ち物リストのサンプルを見る</a></p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-clipboard" aria-hidden="true"></i> メモ</h3>
+        <p><strong>ほかの3機能に当てはまらない情報</strong>を残す場所です。見出しや箇条書きを使って、下調べや注意点を整理できます。<a href="{% url 'tabisync:demo_v2_memo' %}">メモのサンプルを見る</a></p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title" id="steps">おすすめの入力順</h2>
+    <ol class="guide-steps">
+      <li>
+        <h3>決まっている予定を旅程に入れる</h3>
+        <p>飛行機、電車、宿泊、予約済みの店など、時間を動かしにくい予定から登録します。</p>
+      </li>
+      <li>
+        <h3>行きたい場所を集める</h3>
+        <p>気になる場所を追加し、地図で位置関係を確認します。近い場所を同じ日にまとめると、移動しやすい旅程になります。</p>
+      </li>
+      <li>
+        <h3>必要な持ち物を洗い出す</h3>
+        <p>共通の持ち物と個人の持ち物を分け、準備できたものからチェックします。</p>
+      </li>
+      <li>
+        <h3>補足情報をメモにまとめる</h3>
+        <p>現地で確認したいことや、営業時間などの下調べを残します。住所・電話番号などの個人情報は書かないでください。</p>
+      </li>
+      <li>
+        <h3>URLを共有して全員で確認する</h3>
+        <p>仲間に専用URLを送り、予定の抜けや無理な移動がないか確認します。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title" id="example">迷ったときの使い分け例</h2>
+    <ul>
+      <li>「10時に水族館を予約済み」→ <strong>旅程表</strong></li>
+      <li>「水族館の近くで寄れそうなカフェ」→ <strong>行きたい場所</strong></li>
+      <li>「水着と日焼け止め」→ <strong>持ち物リスト</strong></li>
+      <li>「雨の日の候補や現地で確認すること」→ <strong>メモ</strong></li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title" id="limits">登録できる件数</h2>
+    <dl class="guide-limits">
+      <div class="guide-limits-item"><dt>日程</dt><dd><span class="guide-limits-value">30</span>日間まで</dd></div>
+      <div class="guide-limits-item"><dt>1日あたりの予定</dt><dd><span class="guide-limits-value">15</span>件まで</dd></div>
+      <div class="guide-limits-item"><dt>行きたい場所</dt><dd>既定<span class="guide-limits-value">30</span>件まで</dd></div>
+      <div class="guide-limits-item"><dt>持ち物リスト</dt><dd><span class="guide-limits-value">10</span>個・1リスト<span class="guide-limits-value">30</span>項目まで</dd></div>
+      <div class="guide-limits-item"><dt>メモ</dt><dd><span class="guide-limits-value">15</span>件・1件<span class="guide-limits-value">1,000</span>語まで</dd></div>
+    </dl>
+    <p class="guide-limits-note">行きたい場所の上限は、しおりごとに変更される場合があります。</p>
+
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_sample' %}">旅行しおりのサンプルと作成手順</a></li>
+      <li><a href="{% url 'tabisync:guide_collaboration' %}">友達・家族と旅行計画を共同編集する方法</a></li>
+      <li><a href="{% url 'tabisync:guide_ai_concierge' %}">AIコンシェルジュを使った旅行計画の例と注意点</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}

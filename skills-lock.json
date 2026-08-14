@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "hallmark": {
+      "source": "nutlope/hallmark",
+      "sourceType": "github",
+      "skillPath": "skills/hallmark/SKILL.md",
+      "computedHash": "579f86b27cdd7eb972107f7aecedd537f472891c5fd7c7c821bea15f64e0fe86"
+    },
+    "seo-mastery-jp": {
+      "source": "kpab/seo-mastery-agent-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/seo-mastery-jp/SKILL.md",
+      "computedHash": "18a985c3d5b12479f3323d09ce17a06b23e35c4f3c0047b576f9662f05fa313c"
+    }
+  }
+}

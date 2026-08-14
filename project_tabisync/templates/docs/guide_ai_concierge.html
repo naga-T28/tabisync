@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
+{% block meta_description %}TabiSyncのAIコンシェルジュに旅程や持ち物を相談する具体例と、変更提案の適用方法、利用回数の目安、利用時の注意点を紹介します。{% endblock %}
+{% block og_title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
+{% block og_description %}AIコンシェルジュへの相談例、変更提案の適用方法、利用回数の目安と注意点をまとめました。{% endblock %}
+{% block twitter_title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
+{% block twitter_description %}AIコンシェルジュへの相談例、変更提案の適用方法、利用回数の目安と注意点をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-ai-concierge.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-ai-concierge.webp' %}{% endblock %}
+{% block og_image_alt %}AIコンシェルジュが旅行計画の改善を提案する様子のイラスト{% endblock %}
+{% block meta_extra %}
+<script type="application/ld+json">{{ guide_json_ld }}</script>
+{% endblock %}
+
+{% block contents %}
+<main class="page-main">
+  <article class="privacy-policy guide-article">
+    {% include "docs/_guide_breadcrumb.html" %}
+    <h1 class="user-agreement-title">AIコンシェルジュを使った旅行計画の例と注意点</h1>
+    <p class="guide-lead">
+      AIコンシェルジュは、しおりの内容をもとに旅行計画を一緒に考える機能です。「何を聞けばよいか分からない」という方のために、質問の作り方から、提案をしおりへ反映するまでを順番に説明します。
+    </p>
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:demo_v2_concierge' %}">
+        <i class="fa-solid fa-robot" aria-hidden="true"></i> AIコンシェルジュのサンプルを見る
+      </a>
+    </div>
+
+    <h2 class="user-agreement-sub-title" id="before">相談する前の準備</h2>
+    <p>
+      AIは、しおりに登録されている情報を使って回答します。先に旅程や行きたい場所を少し入力しておくと、旅行に合った答えを得やすくなります。情報が少ない場合は、「子ども連れ」「雨の日」のような条件を質問に含めてください。
+    </p>
+
+    <h2 class="user-agreement-sub-title" id="examples">そのまま使える質問の例</h2>
+    <ul class="guide-feature-list">
+      <li>
+        <h3><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> 予定を確認する</h3>
+        <p>「Day2の予定を時間順に教えて」のように、日付や知りたい内容を具体的に伝えます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> 予定案を考える</h3>
+        <p>「Day3に、行きたい場所から2か所を入れた予定を考えて」のように、日と条件を指定します。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-circle-question" aria-hidden="true"></i> 無理がないか確認する</h3>
+        <p>「移動が多すぎる日はある？」のように、気になる点を1つに絞って聞きます。</p>
+      </li>
+      <li>
+        <h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> 持ち物を考える</h3>
+        <p>「沖縄3泊4日で、雨の日に必要な持ち物を考えて」のように、場所・日数・条件を入れます。</p>
+      </li>
+    </ul>
+
+    <h2 class="user-agreement-sub-title" id="steps">相談から反映までの4ステップ</h2>
+    <ol class="guide-steps">
+      <li>
+        <h3>しおりに分かっている情報を入れる</h3>
+        <p>決まっている旅程や候補地などを登録します。すべて埋める必要はありません。</p>
+      </li>
+      <li>
+        <h3>AIコンシェルジュ画面を開く</h3>
+        <p>しおりのメニューからAIコンシェルジュ画面を開きます。</p>
+      </li>
+      <li>
+        <h3>60文字以内で1つのことを聞く</h3>
+        <p>日付や条件を含め、知りたいことを1つに絞ると回答が分かりやすくなります。</p>
+      </li>
+      <li>
+        <h3>回答と変更案を確認する</h3>
+        <p>変更案は自動でしおりに保存されません。内容に問題がない場合だけ、編集権限のある状態で適用します。</p>
+      </li>
+    </ol>
+
+    <h2 class="user-agreement-sub-title" id="important">利用前に知っておくこと</h2>
+    <ul>
+      <li><strong>回答は必ず確認する：</strong>交通機関の時刻、料金、営業時間、予約状況などは、予約や移動の前に公式情報を確認してください。</li>
+      <li><strong>変更案は自動保存されない：</strong>内容を確認し、「適用」の操作をした場合だけしおりへ反映されます。適用には編集権限が必要です。</li>
+      <li><strong>個人情報を入力しない：</strong>住所や電話番号などは、しおりにも質問にも書かないでください。回答生成のため、内容が外部AIサービスへ送信される場合があります。</li>
+      <li><strong>利用上限がある：</strong>既定では1日5回まで、1回のメッセージは60文字以内です。1日の上限はしおりごとに変更される場合があります。</li>
+    </ul>
+    <p>詳しい条件は<a href="{% url 'tabisync:concierge_terms' %}">AIコンシェルジュ利用規約と注意事項</a>をご確認ください。</p>
+
+    <h2 class="user-agreement-sub-title" id="faq">よくある質問</h2>
+    {% for item in faq_items %}
+    <details class="qa-6">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer }}</p>
+    </details>
+    {% endfor %}
+
+    <h2 class="user-agreement-sub-title">関連ページ</h2>
+    <ul class="guide-related-links">
+      <li><a href="{% url 'tabisync:guide_sample' %}">旅行しおりのサンプルと作成手順</a></li>
+      <li><a href="{% url 'tabisync:guide_all_in_one' %}">旅程・行きたい場所・持ち物・メモを一つにまとめる使い方</a></li>
+      <li><a href="{% url 'tabisync:concierge_terms' %}">AIコンシェルジュ利用規約と注意事項</a></li>
+      <li><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
+    </ul>
+
+    <div class="guide-cta-group">
+      <a class="guide-cta-btn guide-cta-btn-primary" href="{% url 'tabisync:create' %}">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> しおりを作成する
+      </a>
+      <a class="guide-cta-btn guide-cta-btn-secondary" href="{% url 'tabisync:home' %}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> ホームに戻る
+      </a>
+    </div>
+  </article>
+</main>
+{% endblock %}
