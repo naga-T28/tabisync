@@ -113,20 +113,18 @@ class QAView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        home_url = f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:home')}"
+        page_url = f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:qa')}"
+        breadcrumb_items = [("ホーム", home_url), ("よくある質問", page_url)]
+        faq_items = list(iter_faq_questions())
+
         context["faq_sections"] = FAQ_SECTIONS
+        context["breadcrumb_items"] = breadcrumb_items
         context["faq_json_ld"] = dumps_json_ld({
             "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-                {
-                    "@type": "Question",
-                    "name": item["question"],
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": item["answer"],
-                    },
-                }
-                for item in iter_faq_questions()
+            "@graph": [
+                build_breadcrumb_list(breadcrumb_items),
+                build_faq_page(faq_items),
             ],
         })
         return context
@@ -232,4 +230,3 @@ class GuideAiConciergeView(TemplateView):
             "tabisync:guide_ai_concierge", "AIコンシェルジュを使った旅行計画の例と注意点", GUIDE_AI_CONCIERGE_FAQ,
         ))
         return context
-

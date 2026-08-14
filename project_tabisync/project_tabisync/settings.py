@@ -17,6 +17,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # DEBUG設定
 DEBUG = env_bool('DEBUG', False)
 
+# SEO上の本番環境判定。未設定や未知の値は安全側に倒し、全レスポンスを
+# noindexにする。公開本番だけENVIRONMENT=productionを明示すること。
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "").strip().lower()
+IS_PRODUCTION = ENVIRONMENT == "production"
+
 # manage.py test 実行時はdjango-ratelimitを無効化する。
 # レート制限はプロセス全体で共有されるキャッシュ(デフォルトのLocMemCache)を使うため、
 # テストスイート全体で同一IP(テストクライアントは127.0.0.1固定)への大量リクエストが
@@ -211,6 +216,7 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'tabisync.middleware.NonProductionNoIndexMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

@@ -94,6 +94,103 @@
   background: var(--color-paper-2);
 }
 
+/* Hallmark · component: guide-sample-link · genre: editorial · theme: TabiSync locked system
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (40–41)
+ * pre-emit critique: P5 H5 E4 S5 R4 V4
+ */
+.guide-sample-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 72px;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  &:active .guide-sample-link-arrow {
+    transform: translateX(1px);
+  }
+
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &[aria-busy="true"] {
+    cursor: progress;
+    opacity: 0.65;
+
+    .guide-sample-link-hint::before {
+      content: "読み込み中 — ";
+    }
+  }
+
+  &[data-state="error"] {
+    border-color: var(--color-error);
+
+    .guide-sample-link-hint::before {
+      content: "エラー — ";
+    }
+  }
+
+  &[data-state="success"] {
+    border-color: var(--color-success);
+
+    .guide-sample-link-hint::before {
+      content: "移動完了 — ";
+    }
+  }
+}
+
+.guide-sample-link-copy {
+  display: grid;
+  gap: var(--space-3xs);
+  min-width: 0;
+}
+
+.guide-sample-link-label,
+.guide-sample-link-hint {
+  white-space: nowrap;
+}
+
+.guide-sample-link-label {
+  font-weight: 700;
+}
+
+.guide-sample-link-hint {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+
+.guide-sample-link-arrow {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .guide-sample-link:hover .guide-sample-link-arrow {
+    transform: translateX(var(--space-3xs));
+  }
+}
+
 .guide-figure {
   margin: var(--space-lg) 0;
 

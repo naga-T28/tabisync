@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncのしおりを友達や家族と共同編集する方法を紹介します。閲覧用・編集用パスワードの使い分け、共同編集の始め方、編集項目、複数人で編集する際の注意点を解説します。{% endblock %}
 {% block og_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
 {% block og_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
 {% block twitter_title %}友達・家族と旅行計画を共同編集する方法 | TabiSync{% endblock %}
 {% block twitter_description %}閲覧用・編集用パスワードを使い分けて、旅行計画を友達や家族と共同編集する方法をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-collaboration.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-collaboration.webp' %}{% endblock %}
+{% block og_image_alt %}友達や家族が一つの旅行計画を共同編集する様子のイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ guide_json_ld }}</script>
 {% endblock %}

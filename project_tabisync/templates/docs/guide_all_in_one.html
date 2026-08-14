@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncで旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方を紹介します。各機能の役割、まとめて使うメリット、登録できる件数の目安を解説します。{% endblock %}
 {% block og_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
 {% block og_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
 {% block twitter_title %}旅程・行きたい場所・持ち物・メモを一つにまとめる使い方 | TabiSync{% endblock %}
 {% block twitter_description %}旅程表・行きたい場所・持ち物リスト・メモを1つのしおりにまとめる使い方をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-all-in-one.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-all-in-one.webp' %}{% endblock %}
+{% block og_image_alt %}旅程・地図・持ち物・メモを一つの旅行しおりにまとめたイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ guide_json_ld }}</script>
 {% endblock %}

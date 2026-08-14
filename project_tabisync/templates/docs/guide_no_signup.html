@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}登録不要で旅行しおりを作成・共有する方法 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncはアカウント登録なしで旅行しおりを作成・共有できます。登録が不要な仕組み、作成から共有までの3ステップ、安全に使うための注意点を解説します。{% endblock %}
 {% block og_title %}登録不要で旅行しおりを作成・共有する方法 | TabiSync{% endblock %}
 {% block og_description %}アカウント登録なしで旅行しおりを作成・共有する方法と、安全に使うための注意点をまとめました。{% endblock %}
 {% block twitter_title %}登録不要で旅行しおりを作成・共有する方法 | TabiSync{% endblock %}
 {% block twitter_description %}アカウント登録なしで旅行しおりを作成・共有する方法と、安全に使うための注意点をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-no-signup.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-no-signup.webp' %}{% endblock %}
+{% block og_image_alt %}登録不要で旅行しおりを安全に共有する流れを表すイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ guide_json_ld }}</script>
 {% endblock %}

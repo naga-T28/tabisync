@@ -1,8 +1,17 @@
 import json
+from datetime import date
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.staticfiles.views import serve as serve_static
 from django.test import TestCase, override_settings
+from django.test.client import RequestFactory
 from django.urls import reverse
+from PIL import Image
 
 from ..content_data import (
     FAQ_SECTIONS,
@@ -13,6 +22,7 @@ from ..content_data import (
     GUIDE_SAMPLE_FAQ,
 )
 from ..models import Itinerary
+from ..sitemaps import SITEMAP_TEMPLATE_PATHS, SITEMAP_URL_NAMES, StaticViewSitemap
 
 
 PUBLIC_URL_NAMES = [
@@ -81,6 +91,47 @@ class StaticPageTests(TestCase):
         offline_response = self.client.get(reverse("tabisync:offline"))
         self.assertIn('<meta name="robots" content="noindex, follow">', offline_response.content.decode())
 
+    def test_profile_image_alt_identifies_the_person(self):
+        content = self.client.get(reverse("tabisync:profile")).content.decode()
+
+        self.assertIn('alt="TabiSync運営者nagaTの写真"', content)
+        self.assertNotIn('alt="運営者プロフィール画像"', content)
+
+    def test_guide_sample_has_clear_link_to_okinawa_demo(self):
+        content = self.client.get(reverse("tabisync:guide_sample")).content.decode()
+
+        self.assertIn(
+            f'class="guide-sample-link" href="{reverse("tabisync:demo_v2_content")}"',
+            content,
+        )
+        self.assertIn("サンプルしおりを開く", content)
+        self.assertIn("沖縄旅行のデモ画面へ移動", content)
+
+    def test_create_page_has_concise_pre_creation_notes(self):
+        content = self.client.get(reverse("tabisync:create")).content.decode()
+
+        self.assertIn("作成前の確認", content)
+        self.assertIn("開始日と終了日は必須です。最大30日間まで設定できます。", content)
+        self.assertIn("閲覧用・編集用パスワードは任意です。", content)
+        self.assertIn("作成後の専用URLまたはQRコードで共有できます。", content)
+        self.assertNotIn("作成前に確認しておきたいこと", content)
+
+    def test_updates_are_grouped_by_year_in_newest_first_heading_order(self):
+        content = self.client.get(reverse("tabisync:updates")).content.decode()
+        heading_2026 = '<h2 id="updates-2026" class="user-agreement-sub-title">2026年</h2>'
+        heading_2025 = '<h2 id="updates-2025" class="user-agreement-sub-title">2025年</h2>'
+
+        self.assertEqual(content.count("<h1"), 1)
+        self.assertEqual(content.count("<h2"), 2)
+        self.assertLess(content.index(heading_2026), content.index(heading_2025))
+
+        section_2026 = content.split(heading_2026, 1)[1].split("</section>", 1)[0]
+        section_2025 = content.split(heading_2025, 1)[1].split("</section>", 1)[0]
+        self.assertIn("2026年08月13日", section_2026)
+        self.assertNotIn("2025年", section_2026)
+        self.assertIn("2025年06月24日", section_2025)
+        self.assertNotIn("2026年", section_2025)
+
     @override_settings(DEBUG=False)
     def test_404_returns_404_status_with_noindex_and_links_home(self):
         response = self.client.get("/this-path-does-not-exist/")
@@ -139,11 +190,99 @@ class SitemapTests(TestCase):
                 self.assertEqual(page_response.status_code, 200)
                 self.assertIn(f'<link rel="canonical" href="{loc}">', page_response.content.decode())
 
-    def test_updates_page_has_lastmod(self):
+    def test_all_sitemap_pages_have_valid_non_future_lastmod(self):
         body = self.client.get(reverse("django-sitemap")).content.decode()
-        updates_loc = f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:updates')}"
-        entry = body.split(f"<loc>{updates_loc}</loc>")[1].split("</url>")[0]
-        self.assertIn("<lastmod>", entry)
+        self.assertEqual(set(SITEMAP_TEMPLATE_PATHS), set(SITEMAP_URL_NAMES))
+
+        for url_name in SITEMAP_URL_NAMES:
+            with self.subTest(url_name=url_name):
+                loc = f"{settings.PUBLIC_BASE_URL}{reverse(url_name)}"
+                entry = body.split(f"<loc>{loc}</loc>")[1].split("</url>")[0]
+                lastmod = entry.split("<lastmod>")[1].split("</lastmod>")[0]
+                parsed_lastmod = date.fromisoformat(lastmod)
+                self.assertLessEqual(parsed_lastmod, date.today())
+
+    def test_lastmod_returns_none_when_template_is_missing_or_inaccessible(self):
+        sitemap = StaticViewSitemap()
+
+        with TemporaryDirectory() as empty_base_dir:
+            with override_settings(BASE_DIR=Path(empty_base_dir)):
+                self.assertIsNone(sitemap.lastmod("tabisync:home"))
+
+        with patch("tabisync.sitemaps.Path.stat", side_effect=OSError):
+            self.assertIsNone(sitemap.lastmod("tabisync:home"))
+
+        self.assertIsNone(sitemap.lastmod("tabisync:not-mapped"))
+
+
+class OgpImageTests(TestCase):
+    PAGE_IMAGES = [
+        (
+            "tabisync:guide_sample",
+            "img/ogp-guide-sample.webp",
+            "沖縄旅行のサンプルしおりと作成手順を表すイラスト",
+        ),
+        (
+            "tabisync:guide_no_signup",
+            "img/ogp-guide-no-signup.webp",
+            "登録不要で旅行しおりを安全に共有する流れを表すイラスト",
+        ),
+        (
+            "tabisync:guide_collaboration",
+            "img/ogp-guide-collaboration.webp",
+            "友達や家族が一つの旅行計画を共同編集する様子のイラスト",
+        ),
+        (
+            "tabisync:guide_all_in_one",
+            "img/ogp-guide-all-in-one.webp",
+            "旅程・地図・持ち物・メモを一つの旅行しおりにまとめたイラスト",
+        ),
+        (
+            "tabisync:guide_ai_concierge",
+            "img/ogp-guide-ai-concierge.webp",
+            "AIコンシェルジュが旅行計画の改善を提案する様子のイラスト",
+        ),
+        (
+            "tabisync:qa",
+            "img/ogp-faq.webp",
+            "旅行しおりの作成・共有・安全性に関する質問を表すイラスト",
+        ),
+        (
+            "tabisync:profile",
+            "img/ogp-profile.webp",
+            "旅の記録をもとに旅行しおりサービスを開発する運営者のイラスト",
+        ),
+    ]
+
+    def test_pages_use_matching_absolute_og_and_twitter_images(self):
+        for url_name, static_path, alt_text in self.PAGE_IMAGES:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                content = response.content.decode()
+                image_url = f"{settings.PUBLIC_BASE_URL}{staticfiles_storage.url(static_path)}"
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(f'<meta property="og:image" content="{image_url}">', content)
+                self.assertIn(f'<meta name="twitter:image" content="{image_url}">', content)
+                self.assertIn(f'<meta property="og:image:alt" content="{alt_text}">', content)
+
+    def test_ogp_images_are_servable_webp_files_with_expected_dimensions(self):
+        request_factory = RequestFactory()
+
+        for _, static_path, _ in self.PAGE_IMAGES:
+            with self.subTest(static_path=static_path):
+                response = serve_static(
+                    request_factory.get(f"{settings.STATIC_URL}{static_path}"),
+                    static_path,
+                    insecure=True,
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response["Content-Type"], "image/webp")
+
+                file_path = finders.find(static_path)
+                self.assertIsNotNone(file_path)
+                with Image.open(file_path) as image:
+                    self.assertEqual(image.size, (1200, 630))
 
 
 def _extract_locs(sitemap_xml):
@@ -163,7 +302,14 @@ class FaqStructuredDataTests(TestCase):
         )[1].split("</script>")[0]
         data = json.loads(json_ld_raw)
 
-        self.assertEqual(data["@type"], "FAQPage")
+        self.assertEqual(data["@context"], "https://schema.org")
+        graph_types = {node["@type"] for node in data["@graph"]}
+        self.assertEqual(graph_types, {"BreadcrumbList", "FAQPage"})
+
+        faq_node = next(node for node in data["@graph"] if node["@type"] == "FAQPage")
+        breadcrumb_node = next(
+            node for node in data["@graph"] if node["@type"] == "BreadcrumbList"
+        )
 
         expected_pairs = [
             (item["question"], item["answer"])
@@ -172,9 +318,24 @@ class FaqStructuredDataTests(TestCase):
         ]
         actual_pairs = [
             (entry["name"], entry["acceptedAnswer"]["text"])
-            for entry in data["mainEntity"]
+            for entry in faq_node["mainEntity"]
         ]
         self.assertEqual(actual_pairs, expected_pairs)
+
+        self.assertEqual(
+            [item["name"] for item in breadcrumb_node["itemListElement"]],
+            ["ホーム", "よくある質問"],
+        )
+        self.assertEqual(
+            breadcrumb_node["itemListElement"][0]["item"],
+            f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:home')}",
+        )
+        self.assertEqual(
+            breadcrumb_node["itemListElement"][1]["item"],
+            f"{settings.PUBLIC_BASE_URL}{reverse('tabisync:qa')}",
+        )
+        self.assertIn('aria-label="パンくずリスト"', content)
+        self.assertIn('aria-current="page">よくある質問</span>', content)
 
         for question, answer in expected_pairs:
             self.assertIn(question, content)
@@ -269,7 +430,7 @@ class GuidePageContentTests(TestCase):
         data = json.loads(json_ld_raw)
         self.assertEqual(data["@graph"][0]["@type"], "BreadcrumbList")
         self.assertIn('aria-current="page"', content)
-        self.assertIn("日程は開始日と終了日の入力が必須で", content)
+        self.assertIn("開始日と終了日は必須です。最大30日間まで設定できます。", content)
 
 
 class XRobotsTagAuditTests(TestCase):
