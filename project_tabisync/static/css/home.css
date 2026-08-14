@@ -142,7 +142,7 @@ a {
 }
 
 .logo-image {
-  width: auto;
+  width: 178.57px;
   height: 40px;
 }
 
@@ -274,6 +274,7 @@ a {
     min-height: 74px;
   }
   .logo-image {
+    width: 232.14px;
     height: 52px;
   }
   .btn-trigger,

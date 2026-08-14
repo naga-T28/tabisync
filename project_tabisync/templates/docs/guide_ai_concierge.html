@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncのAIコンシェルジュに旅程や持ち物を相談する具体例と、変更提案の適用方法、利用回数の目安、利用時の注意点を紹介します。{% endblock %}
 {% block og_title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
 {% block og_description %}AIコンシェルジュへの相談例、変更提案の適用方法、利用回数の目安と注意点をまとめました。{% endblock %}
 {% block twitter_title %}AIコンシェルジュを使った旅行計画の例と注意点 | TabiSync{% endblock %}
 {% block twitter_description %}AIコンシェルジュへの相談例、変更提案の適用方法、利用回数の目安と注意点をまとめました。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-ai-concierge.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-ai-concierge.webp' %}{% endblock %}
+{% block og_image_alt %}AIコンシェルジュが旅行計画の改善を提案する様子のイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ guide_json_ld }}</script>
 {% endblock %}

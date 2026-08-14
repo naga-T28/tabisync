@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
 {% block meta_description %}TabiSyncの旅行しおりサンプル（沖縄旅行3泊4日のデモ）と、しおりを作成するまでの手順を紹介します。旅程表・メモ・持ち物リスト・地図・AIコンシェルジュの画面を確認してから作成できます。{% endblock %}
 {% block og_title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
 {% block og_description %}TabiSyncの旅行しおりサンプルと作成手順をまとめました。沖縄旅行3泊4日のデモしおりで画面イメージを確認できます。{% endblock %}
 {% block twitter_title %}旅行しおりのサンプルと作成手順 | TabiSync{% endblock %}
 {% block twitter_description %}TabiSyncの旅行しおりサンプルと作成手順をまとめました。沖縄旅行3泊4日のデモしおりで画面イメージを確認できます。{% endblock %}
+{% block og_image %}{{ public_base_url }}{% static 'img/ogp-guide-sample.webp' %}{% endblock %}
+{% block twitter_image %}{{ public_base_url }}{% static 'img/ogp-guide-sample.webp' %}{% endblock %}
+{% block og_image_alt %}沖縄旅行のサンプルしおりと作成手順を表すイラスト{% endblock %}
 {% block meta_extra %}
 <script type="application/ld+json">{{ guide_json_ld }}</script>
 {% endblock %}
@@ -31,10 +35,15 @@
     <p>
       サンプルでは、那覇空港、美ら海水族館、古宇利島などを巡る3泊4日の旅行を確認できます。入力や編集を試しても保存されないため、気軽に操作してください。
     </p>
-    <figure class="guide-figure">
-      <img src="{% static 'img/demo-v2-cover.webp' %}" alt="デモしおり「沖縄旅行」の表紙画像" loading="lazy" width="600" height="600">
-      <figcaption>サンプルしおり「沖縄旅行」の表紙画像（デモ用のダミーデータです）</figcaption>
-    </figure>
+    <a class="guide-sample-link" href="{% url 'tabisync:demo_v2_content' %}" aria-label="サンプルしおり「沖縄旅行」のデモ画面を開く">
+      <span class="guide-sample-link-copy">
+        <span class="guide-sample-link-label">サンプルしおりを開く</span>
+        <span class="guide-sample-link-hint">沖縄旅行のデモ画面へ移動</span>
+      </span>
+      <span class="guide-sample-link-arrow" aria-hidden="true">
+        <i class="fa-solid fa-arrow-right"></i>
+      </span>
+    </a>
     <ul class="guide-feature-list">
       <li>
         <h3><i class="fa-solid fa-route" aria-hidden="true"></i> 旅程表のサンプル</h3>
