@@ -116,6 +116,27 @@ class StaticPageTests(TestCase):
         self.assertIn("作成後の専用URLまたはQRコードで共有できます。", content)
         self.assertNotIn("作成前に確認しておきたいこと", content)
 
+    def test_common_pages_link_to_official_instagram(self):
+        instagram_url = "https://www.instagram.com/tabisync_com/"
+
+        for url_name in ["tabisync:home", "tabisync:create"]:
+            with self.subTest(url_name=url_name):
+                content = self.client.get(reverse(url_name)).content.decode()
+                self.assertGreaterEqual(content.count(f'href="{instagram_url}"'), 2)
+                self.assertIn('aria-label="TabiSync公式Instagram"', content)
+                self.assertIn('class="fa-brands fa-instagram"', content)
+                self.assertIn('<nav class="site-footer-social" aria-label="公式SNS">', content)
+                self.assertNotIn('<ul class="site-footer-social"', content)
+
+    def test_common_pages_link_to_note_blog(self):
+        note_url = "https://note.com/tabisync_com"
+
+        for url_name in ["tabisync:home", "tabisync:create"]:
+            with self.subTest(url_name=url_name):
+                content = self.client.get(reverse(url_name)).content.decode()
+                self.assertEqual(content.count(f'href="{note_url}"'), 2)
+                self.assertNotIn("https://blog.tabisync.com", content)
+
     def test_updates_are_grouped_by_year_in_newest_first_heading_order(self):
         content = self.client.get(reverse("tabisync:updates")).content.decode()
         heading_2026 = '<h2 id="updates-2026" class="user-agreement-sub-title">2026年</h2>'
@@ -363,7 +384,11 @@ class HomeStructuredDataTests(TestCase):
         )
         self.assertEqual(
             set(organization["sameAs"]),
-            {"https://blog.tabisync.com", "https://x.com/tabisync_com"},
+            {
+                "https://www.instagram.com/tabisync_com/",
+                "https://note.com/tabisync_com",
+                "https://x.com/tabisync_com",
+            },
         )
 
 

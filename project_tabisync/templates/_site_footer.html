@@ -1,13 +1,19 @@
 {% comment %}
 共通フッター。base.html / base_home.html の両方から include する。
-ワードマーク＋一言＋公式Xリンク＋規約系リンク＋コピーライト。
+ワードマーク＋一言＋公式SNSリンク＋規約系リンク＋コピーライト。
 {% endcomment %}
 <footer class="site-footer">
   <div class="site-footer-inner">
-    <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
-      <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
-      <span class="footer-social-handle">@tabisync_com</span>
-    </a>
+    <nav class="site-footer-social" aria-label="公式SNS">
+      <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+        <span class="footer-social-handle">@tabisync_com</span>
+      </a>
+      <a class="footer-social-link" href="https://www.instagram.com/tabisync_com/" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式Instagram">
+        <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+        <span class="footer-social-handle">@tabisync_com</span>
+      </a>
+    </nav>
     <ul class="site-footer-links">
       <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
       <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
