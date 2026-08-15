@@ -340,7 +340,7 @@ partners-re.co.jpのカルーセルインジケーターが線形に回転する
 
 - フッターは `templates/_site_footer.html` として共通化し、base.html /
   base_home.html の両方から `{% include %}` で読み込み済み（ワードマーク＋一行
-  ステートメント＋規約リンク＋公式Xリンク）。`layout/_site-footer.scss` を
+  ステートメント＋規約リンク＋公式SNSリンク）。`layout/_site-footer.scss` を
   `style.scss` / `home.scss` の双方にimportし、V1/V2アプリ本体専用の
   `layout/_footer.scss`（黒背景の別実装、`style_v2_1.scss`のみが参照）とは
   完全に分離した。

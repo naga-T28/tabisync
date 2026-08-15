@@ -17,7 +17,8 @@ from ..seo import build_breadcrumb_list, build_faq_page, dumps_json_ld
 
 # 実在する公式アカウント・サイトのみを列挙する。SNSアカウントを増減する際はここを更新する。
 OFFICIAL_SAME_AS = [
-    "https://blog.tabisync.com",
+    "https://note.com/tabisync_com",
+    "https://www.instagram.com/tabisync_com/",
     "https://x.com/tabisync_com",
 ]
 

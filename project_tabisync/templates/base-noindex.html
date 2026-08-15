@@ -54,7 +54,7 @@
                 <nav class="header-nav-wrapper" id="nav-menu">
                     <ul class="header-nav">
                         <li class="header-nav-item"><a href="{% url 'tabisync:home' %}">ホーム</a></li>
-                        <li class="header-nav-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">ブログ</a></li>
+                        <li class="header-nav-item"><a href="https://note.com/tabisync_com" target="_blank" rel="noopener noreferrer">ブログ</a></li>
                         <li class="header-nav-item"><a href="{% url 'tabisync:create' %}">しおり作成</a></li>
                         <li class="header-nav-item"><a href="{% url 'tabisync:demo_v2_content' %}">しおりサンプル</a></li>
                         <li class="header-nav-item"><a href="{% url 'tabisync:qa' %}">よくある質問</a></li>
@@ -66,11 +66,14 @@
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:home' %}">HOME</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:demo_v2_content' %}">DEMO</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:qa' %}"> FAQ</a></li>
-                        <li class="header-nav-pc-item"><a href="https://blog.tabisync.com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
+                        <li class="header-nav-pc-item"><a href="https://note.com/tabisync_com" target="_blank" rel="noopener noreferrer">BLOG</a></li>
                         <li class="header-nav-pc-item"><a href="{% url 'tabisync:contact' %}">CONTACT</a></li>
                     </ul>
                     <a class="header-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
                         <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    </a>
+                    <a class="header-social-link" href="https://www.instagram.com/tabisync_com/" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式Instagram">
+                        <i class="fa-brands fa-instagram" aria-hidden="true"></i>
                     </a>
                 </nav>
             </div>
@@ -80,13 +83,14 @@
         {% endblock %}
 
         <footer>
-            <ul class="footer-social" aria-label="公式SNS">
-                <li>
-                    <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
-                        <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
-                    </a>
-                </li>
-            </ul>
+            <nav class="footer-social" aria-label="公式SNS">
+                <a class="footer-social-link" href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式X（旧Twitter）">
+                    <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                </a>
+                <a class="footer-social-link" href="https://www.instagram.com/tabisync_com/" target="_blank" rel="noopener noreferrer" aria-label="TabiSync公式Instagram">
+                    <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                </a>
+            </nav>
             <ul>
                 <li><a class="footer-content" href="{% url 'tabisync:user_agreement' %}">利用規約</a></li>
                 <li><a class="footer-content" href="{% url 'tabisync:privacy_policy' %}">プライバシーポリシー</a></li>
