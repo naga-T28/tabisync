@@ -1,0 +1,14 @@
+{% comment %}
+お知らせバナー。base_home.html / tabisync/content/base.html から include する。
+表示要否・対象ページの絞り込みは announcement context processor（active_announcement）が行う。
+{% endcomment %}
+{% if active_announcement %}
+<div class="announcement-banner announcement-banner--{{ active_announcement.level }}" data-announcement-id="{{ active_announcement.id }}" role="status">
+    <div class="announcement-banner-inner">
+        <p class="announcement-banner-message">{{ active_announcement.message|linebreaksbr }}</p>
+        <button type="button" class="announcement-banner-close" aria-label="お知らせを閉じる">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
+{% endif %}

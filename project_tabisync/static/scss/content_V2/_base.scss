@@ -181,6 +181,12 @@ article.privacy-policy,
       display: none;
     }
 }
+// SPヘッダー(.page-header --only-sp)は高さautoの固定ヘッダーのため、
+// お知らせバナーがその下に隠れないよう、layout/_announcement-bannerの
+// 既定値(64px、home/base.html想定)をこの画面の実測に近い値へ上書きする。
+.announcement-banner {
+  margin-top: 60px;
+}
 .header-logo a{
     text-decoration: none;
     color: #000000;
@@ -511,6 +517,14 @@ article.privacy-policy,
     padding-left: 0;
     transition: width .24s ease, margin-left .24s ease;
   }
+  // PCではSPヘッダーの代わりに左サイドナブが表示され、上部を覆う固定要素がなくなるため
+  // margin-topは不要になる。代わりにサイドナブ幅ぶんをmargin-leftで確保する（.content-mainと同じ考え方）。
+  body#content-body .announcement-banner {
+    margin-top: 0;
+    width: calc(100% - 240px);
+    margin-left: 240px;
+    transition: width .24s ease, margin-left .24s ease;
+  }
   body.is-side-nav-collapsed .content-side-nav {
     width: 72px;
   }
@@ -559,6 +573,10 @@ article.privacy-policy,
   body#content-body.is-side-nav-collapsed .content-main,
   body#concierge-body.is-side-nav-collapsed .content-main-concierge,
   body#content-body.is-side-nav-collapsed .content-main-map {
+    width: calc(100% - 72px);
+    margin-left: 72px;
+  }
+  body#content-body.is-side-nav-collapsed .announcement-banner {
     width: calc(100% - 72px);
     margin-left: 72px;
   }

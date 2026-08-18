@@ -15,24 +15,6 @@
    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <article class="privacy-policy guide-article">
         {% include "docs/_guide_breadcrumb.html" %}
-        <h1 class="user-agreement-title">旅行しおりを作成</h1>
-        <p class="guide-lead">
-            アカウント登録なしで、旅行しおりを作成できます。タイトルと日程を入力するだけで作成でき、あとから旅程・行きたい場所・持ち物・メモを追加できます。登録が不要な仕組みは<a href="{% url 'tabisync:guide_no_signup' %}">登録不要で旅行しおりを作成・共有する方法</a>で、サンプルは<a href="{% url 'tabisync:guide_sample' %}">旅行しおりのサンプルと作成手順</a>で確認できます。
-        </p>
-
-        <h2 class="user-agreement-sub-title">作成前の確認</h2>
-        <h3>日程</h3>
-        <p>
-            開始日と終了日は必須です。最大{{ max_itinerary_days }}日間まで設定できます。
-        </p>
-        <h3>パスワード</h3>
-        <p>
-            閲覧用・編集用パスワードは任意です。未設定の場合、URLを知る人は誰でも閲覧・編集できます。再設定にはメールアドレスの登録が必要です。
-        </p>
-        <h3>共有</h3>
-        <p>
-            作成後の専用URLまたはQRコードで共有できます。URLは再発行できません。
-        </p>
 
         <form class="create-form" method="post">
         {% csrf_token %}
