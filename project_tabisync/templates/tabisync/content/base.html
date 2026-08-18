@@ -125,6 +125,7 @@
                 </div>
             </div>
         </header>
+        {% include "_announcement_banner.html" %}
         {% block contents %}
 
         {% endblock %}
@@ -229,5 +230,6 @@
                 }
             });
         </script>
+        <script src="{% static 'js/announcement_banner.js' %}" defer></script>
     </body>
 </html>

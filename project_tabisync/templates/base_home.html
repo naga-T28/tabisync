@@ -82,20 +82,39 @@
             {% block contents %}{% endblock %}
 
             {% include "_site_footer.html" %}
+
+            <button type="button" id="back-to-top" class="back-to-top" aria-label="ページのトップに戻る">
+                <i class="fa-solid fa-angles-up" aria-hidden="true"></i>
+            </button>
         </div>
         <script>
         (function () {
             const header = document.querySelector(".page-header");
             const btn = document.getElementById("btn08");
             const nav = document.getElementById("nav-menu");
+            const backToTop = document.getElementById("back-to-top");
+            const BACK_TO_TOP_THRESHOLD = 400;
 
             function syncHeaderBackground() {
                 if (!header) return;
                 header.classList.toggle("is-scrolled", window.scrollY >= 80);
             }
 
+            function syncBackToTopVisibility() {
+                if (!backToTop) return;
+                backToTop.classList.toggle("is-visible", window.scrollY >= BACK_TO_TOP_THRESHOLD);
+            }
+
             syncHeaderBackground();
+            syncBackToTopVisibility();
             window.addEventListener("scroll", syncHeaderBackground, { passive: true });
+            window.addEventListener("scroll", syncBackToTopVisibility, { passive: true });
+
+            if (backToTop) {
+                backToTop.addEventListener("click", function () {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                });
+            }
 
             if (!btn || !nav) return;
 
@@ -113,5 +132,6 @@
             });
         })();
         </script>
+        <script src="{% static 'js/announcement_banner.js' %}" defer></script>
     </body>
 </html>

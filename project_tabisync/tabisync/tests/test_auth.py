@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.core import mail, signing
+from django.core import signing
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -36,26 +36,14 @@ class ItineraryPasswordViewTests(TestCase):
         self.assertFalse(self.client.session.get(build_view_session_key(self.itinerary)))
 
 
-@override_settings(
-    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    DEFAULT_FROM_EMAIL="noreply@example.com",
-    CONTACT_RECEIVER_EMAIL="receiver@example.com",
-)
 class ContactFormViewTests(TestCase):
-    def test_get_returns_200(self):
+    def test_get_returns_200_and_embeds_google_form(self):
         response = self.client.get(reverse("tabisync:contact"))
         self.assertEqual(response.status_code, 200)
-
-    @patch("tabisync.views.auth.verify_turnstile", return_value=True)
-    def test_post_valid_form_sends_two_emails(self, _mock_turnstile):
-        response = self.client.post(reverse("tabisync:contact"), {
-            "email": "user@example.com",
-            "name": "テスト太郎",
-            "subject": "お問い合わせ",
-            "message": "テストメッセージです。",
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertContains(
+            response,
+            "https://docs.google.com/forms/d/e/1FAIpQLSdoFAPY2a_-2VKtP-WPwNXT9lvoduqfAyd3nXvZ8o2Y_ctKvQ/viewform?embedded=true",
+        )
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")

@@ -1,4 +1,17 @@
 @use "variables";
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .mt-4 {
   margin-top: 100px;
   text-align: right;
@@ -6,10 +19,6 @@
 
 .mt-4-1 {
   text-align: right;
-}
-
-.contact-blank {
-  margin-bottom: 20px;
 }
 
 .textarea-required-title {

@@ -187,6 +187,10 @@ article.privacy-policy,
   display: none;
 }
 
+.announcement-banner {
+  margin-top: 60px;
+}
+
 .header-logo a {
   text-decoration: none;
   color: #000000;
@@ -524,6 +528,12 @@ article.privacy-policy,
     padding-left: 0;
     transition: width 0.24s ease, margin-left 0.24s ease;
   }
+  body#content-body .announcement-banner {
+    margin-top: 0;
+    width: calc(100% - 240px);
+    margin-left: 240px;
+    transition: width 0.24s ease, margin-left 0.24s ease;
+  }
   body.is-side-nav-collapsed .content-side-nav {
     width: 72px;
   }
@@ -572,6 +582,10 @@ article.privacy-policy,
   body#content-body.is-side-nav-collapsed .content-main,
   body#concierge-body.is-side-nav-collapsed .content-main-concierge,
   body#content-body.is-side-nav-collapsed .content-main-map {
+    width: calc(100% - 72px);
+    margin-left: 72px;
+  }
+  body#content-body.is-side-nav-collapsed .announcement-banner {
     width: calc(100% - 72px);
     margin-left: 72px;
   }
@@ -4619,6 +4633,63 @@ footer small {
   display: block;
   margin-top: 8px;
   color: #cccccc;
+}
+
+.announcement-banner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  margin-top: 64px;
+}
+.announcement-banner-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.announcement-banner-message {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+  white-space: pre-line;
+}
+.announcement-banner-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.announcement-banner-close:hover, .announcement-banner-close:focus-visible {
+  opacity: 1;
+}
+.announcement-banner--info {
+  background: #f9fafb;
+  color: rgb(95, 96, 97);
+  border-bottom: 1px solid #ccc;
+}
+.announcement-banner--warning {
+  background: rgba(175, 41, 187, 0.08);
+  color: rgb(175, 41, 187);
+  border-bottom: 1px solid rgba(175, 41, 187, 0.24);
+}
+.announcement-banner--critical {
+  background: rgb(208, 0, 0);
+  color: #ffffff;
+  border-bottom: 1px solid rgb(208, 0, 0);
 }
 
 /*# sourceMappingURL=style_v2_1.css.map */

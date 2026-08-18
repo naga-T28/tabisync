@@ -242,6 +242,7 @@ TEMPLATES = [
                 'project_tabisync.context_processors.google_maps',
                 'project_tabisync.context_processors.map_display',
                 'project_tabisync.context_processors.seo',
+                'project_tabisync.context_processors.announcement',
             ],
         },
     },
