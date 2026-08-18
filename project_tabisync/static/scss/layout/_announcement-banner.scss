@@ -1,0 +1,72 @@
+@use "../base/variables" as variables;
+
+// ホーム(style.scss)・しおりページ(style_v2_1.scss)の両バンドルから@useされる共通パーシャル。
+// style_v2_1.scssはbase/tokens(design.mdのOKLCHトークン)を読み込んでいないため、
+// 両バンドルで確実に使えるbase/variablesの値だけを使用する。
+// 固定ヘッダーの直下に表示するためのmargin-top既定値は、layout/_header.scss側の
+// .header-wrapper(min-height: 64px)に合わせている。content_V2側の見え方は
+// content_V2/_base.scssで上書きする。
+.announcement-banner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  margin-top: 64px;
+
+  &-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  &-message {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+    white-space: pre-line;
+  }
+
+  &-close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    opacity: 0.7;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  &--info {
+    background: variables.$gray-bg;
+    color: variables.$text-main;
+    border-bottom: 1px solid variables.$gray-border;
+  }
+
+  &--warning {
+    background: rgba(175, 41, 187, 0.08);
+    color: variables.$accent-purple;
+    border-bottom: 1px solid rgba(175, 41, 187, 0.24);
+  }
+
+  &--critical {
+    background: variables.$danger;
+    color: variables.$white;
+    border-bottom: 1px solid variables.$danger;
+  }
+}

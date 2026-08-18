@@ -8,33 +8,10 @@
 {% block robots_meta %}noindex, follow{% endblock %}
 
 {% block contents %}
-{% load static %}
 <main class="page-main">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <div class="contact-form-wrapper">
-        <h1>お問い合わせフォーム</h1>
-        <p class="contact-blank">返信は通常3日以内に行うよう努めておりますが、個人で運営しているため、お時間をいただく場合がございます。何卒ご理解のほどよろしくお願いいたします。</p>
-        <form class="contact-foem" method="post">
-            {% csrf_token %}
-            <div class="contact-form-content">
-                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-                {{ form.email }}
-            </div>
-            <div class="contact-form-content">
-                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-                {{ form.name }}
-            </div>
-            <div class="contact-form-content">
-                <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
-                {{ form.subject }}
-            </div>
-            <div class="contact-form-content">
-                <label for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
-                {{ form.message }}
-            </div>
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAABg8TmGAOQbU-N_J"></div>
-            <button class="contact-btn" type="submit">送信</button>
-        </form>
+        <h1 class="sr-only">お問い合わせフォーム</h1>
+        <iframe class="contact-form-embed" src="https://docs.google.com/forms/d/e/1FAIpQLSdoFAPY2a_-2VKtP-WPwNXT9lvoduqfAyd3nXvZ8o2Y_ctKvQ/viewform?embedded=true" width="640" height="1400" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
     </div>
 </main>
 

@@ -1,0 +1,26 @@
+{% comment %}
+ホームページ専用のお知らせエリア。home.htmlのMV(.home-hero)直下から include する。
+表示要否は announcement context processor（active_announcement）が判定する。
+しおりページ側の帯状バナー（_announcement_banner.html）とは見た目を分けているが、
+announcement_banner.js の閉じる処理は .announcement-banner / data-announcement-id を
+共通のフックにしているため、クラス名はそのまま流用している。
+ホーム側は閉じるボタンを設けず常に表示する（announcement_banner.js は閉じるボタンが
+存在しない場合dismiss処理自体をスキップする）。
+{% endcomment %}
+{% if active_announcement %}
+<section class="home-section home-announcement-section">
+    <div class="announcement-banner home-announcement-card announcement-banner--{{ active_announcement.level }}" data-announcement-id="{{ active_announcement.id }}" role="status">
+        <div class="home-announcement-body">
+            <p class="announcement-banner-message home-announcement-message">{{ active_announcement.message|linebreaksbr }}</p>
+            <p class="home-announcement-note">
+                メンテナンスなどの最新情報は
+                <a href="https://x.com/tabisync_com" target="_blank" rel="noopener noreferrer" class="home-announcement-x-link">
+                    <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                    公式X（@tabisync_com）
+                </a>
+                でご確認ください。
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
