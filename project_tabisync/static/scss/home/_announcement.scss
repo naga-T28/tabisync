@@ -1,0 +1,67 @@
+// ホームMV直下のお知らせエリア。home.scssはdesign.mdのトークン(base/tokens)を
+// 読み込んでいるため、content_V2側と違いbase/variablesではなく--color-*等の
+// CSSカスタムプロパティをそのまま使う。
+.home-announcement-section {
+  padding-top: var(--space-lg);
+  padding-bottom: 0;
+}
+
+.home-announcement-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-2);
+}
+
+.home-announcement-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-announcement-message {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  line-height: 1.75;
+}
+
+.home-announcement-note {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.home-announcement-x-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+// 重要度ごとの色分け。tokens.scssの--color-warning/--color-errorと同じ色相を
+// 薄いトーンで使い、単色の背景塗りに留める(design.mdのグラデーション禁止に合わせる)。
+.announcement-banner--warning.home-announcement-card {
+  background: oklch(96% 0.03 85);
+  border-color: oklch(78% 0.13 85 / 0.45);
+}
+
+.announcement-banner--critical.home-announcement-card {
+  background: oklch(96% 0.03 27);
+  border-color: oklch(55% 0.18 27 / 0.4);
+}

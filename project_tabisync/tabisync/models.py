@@ -287,3 +287,52 @@ class ConciergeToolCallLog(models.Model):
 
     def __str__(self):
         return f"Tool call {self.tool_id} #{self.sequence_index} (run={self.run_id})"
+
+
+class SiteAnnouncement(models.Model):
+    """管理画面から配信するお知らせバナー(ホーム/しおりページのヘッダー直下に表示)。"""
+
+    LEVEL_INFO = "info"
+    LEVEL_WARNING = "warning"
+    LEVEL_CRITICAL = "critical"
+
+    LEVEL_CHOICES = [
+        (LEVEL_INFO, "情報"),
+        (LEVEL_WARNING, "注意"),
+        (LEVEL_CRITICAL, "重要（メンテナンス等）"),
+    ]
+
+    title = models.CharField(
+        "管理用タイトル", max_length=100,
+        help_text="管理画面の一覧にのみ表示。サイトには表示されない。",
+    )
+    message = models.TextField("表示メッセージ", max_length=500)
+    level = models.CharField("重要度", max_length=10, choices=LEVEL_CHOICES, default=LEVEL_INFO)
+
+    is_active = models.BooleanField("有効にする", default=False)
+    show_on_home = models.BooleanField("ホームページに表示", default=False)
+    show_on_all_itineraries = models.BooleanField("すべてのしおりページに表示", default=False)
+    itineraries = models.ManyToManyField(
+        Itinerary,
+        verbose_name="対象のしおり（個別指定）",
+        blank=True,
+        related_name="announcements",
+        help_text="「すべてのしおりページに表示」がオフのとき、ここで指定したしおりにのみ表示します。",
+    )
+
+    starts_at = models.DateTimeField("表示開始日時", null=True, blank=True)
+    ends_at = models.DateTimeField("表示終了日時", null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_within_schedule(self, now=None) -> bool:
+        now = now or timezone.now()
+        if self.starts_at and now < self.starts_at:
+            return False
+        if self.ends_at and now > self.ends_at:
+            return False
+        return True
+
+    def __str__(self):
+        return self.title
