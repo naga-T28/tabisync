@@ -10,9 +10,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.generic import TemplateView
 from django_ratelimit.decorators import ratelimit
 
-from ..forms import ContactForm
 from ..models import Itinerary
 from .access_control import add_noindex_header, grant_view_access
 from .itinerary_helpers import build_public_absolute_uri
@@ -56,64 +56,9 @@ class ItineraryPasswordView(View):
 
 
 
-# 問い合わせフォーム
-@method_decorator(ratelimit(key=ratelimit_client_ip, rate='20/m', block=True), name='dispatch')
-class ContactFormView(View):
+# 問い合わせフォーム（Googleフォームを埋め込んで表示するだけの静的ページ）
+class ContactFormView(TemplateView):
     template_name = "contact/contact_form.html"
-    success_template_name = "contact/thanks.html"
-
-    def get(self, request):
-        form = ContactForm()
-        return render(request, self.template_name, {"form": form})
-
-    def post(self, request):
-        if not verify_turnstile(request):
-            return render(request, self.template_name, {'error': 'セキュリティチェックに失敗しました。もう一度お試しください。'})
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data["email"]
-            name = form.cleaned_data["name"]
-            subject = form.cleaned_data["subject"]
-            message = form.cleaned_data["message"]
-
-            # 管理者向けメール内容
-            full_message = f"送信者: {name} <{email}>\n\n{message}"
-
-            # 1. 管理者宛にメール送信
-            send_mail(
-                subject=subject,
-                message=full_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.CONTACT_RECEIVER_EMAIL],
-            )
-
-            # 2. 自動返信メール送信
-            auto_reply_subject = "【自動返信】お問い合わせありがとうございます"
-            auto_reply_message = (
-                f"{name} 様\n\n"
-                "この度はお問い合わせいただきありがとうございます。\n"
-                "以下の内容でお問い合わせを受け付けました。\n\n"
-                "------\n"
-                f"件名: {subject}\n"
-                f"内容:\n{message}\n"
-                "------\n\n"
-                "折り返しご連絡いたしますので、今しばらくお待ちください。\n\n"
-                "※本メールは自動返信です。返信いただいても対応できません。\n"
-                "--------------------------------------------------\n"
-                f"{getattr(settings, 'TabiSync', '旅シンク')} サポート"
-            )
-
-            send_mail(
-                subject=auto_reply_subject,
-                message=auto_reply_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-            )
-
-            return render(request, self.success_template_name)
-
-        # バリデーションエラー時
-        return render(request, self.template_name, {"form": form})
 
 
 

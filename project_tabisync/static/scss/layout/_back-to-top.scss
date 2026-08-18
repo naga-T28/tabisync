@@ -1,0 +1,69 @@
+@use "../base/variables" as variables;
+
+// ページ共通の「トップに戻る」ボタン。style.scss（base.html/base-noindex.html系）と
+// home.scssの双方が@useする。どちらもbase/tokensを読み込んでいるためdesign.mdの
+// CSSカスタムプロパティ（--color-*, --space-*, --radius-pill等）を直接使える。
+// V2しおりページ（style_v2_1.scss）はbase/tokens未導入のため対象外。
+// 一定量スクロールした後にJS側で.is-visibleを付与して表示する
+// （非表示中はopacity/visibilityに加えpointer-eventsも切り、
+// キーボード操作時に隠れたボタンへフォーカスが移らないようにする）。
+.back-to-top {
+  position: fixed;
+  right: var(--space-sm);
+  bottom: var(--space-sm);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: var(--text-md);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity var(--dur-short) var(--ease-out),
+    transform var(--dur-short) var(--ease-out),
+    background var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@media screen and (min-width: variables.$breakpoint-md) {
+  .back-to-top {
+    right: var(--space-lg);
+    bottom: var(--space-lg);
+    width: 52px;
+    height: 52px;
+    font-size: var(--text-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: none;
+  }
+}
