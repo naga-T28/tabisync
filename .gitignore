@@ -7,22 +7,46 @@ __pycache__/
 
 # Environment
 .env
+.env.*
+!.env.example
 .venv/
 venv/
 ENV/
 env/
 *.env
 
+# Secrets and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+.secrets/
+credentials.json
+service-account*.json
+
 # Node.js
 node_modules
 
 # Django specific
+*.sqlite
 *.sqlite3
+*.db
 db.sqlite3
 /media
 /staticfiles
+project_tabisync/media/
+project_tabisync/logs/
 project_tabisync/staticfiles
 *.log
+
+# Local backups and database exports
+backup/
+backups/
+*.bak
+*.dump
+*.sql
 
 # PyCharm / VSCode
 .idea/
