@@ -48,11 +48,12 @@ class AgentModeFlagTests(SimpleTestCase):
             self.assertFalse(is_agent_mode_enabled(itinerary))
 
 
-def _mock_trace(selected_skill_ids=None, openai_call_count=1, tool_call_records=None):
+def _mock_trace(selected_skill_ids=None, openai_call_count=1, tool_call_records=None, web_search_call_count=0):
     trace = Mock()
     trace.selected_skill_ids = selected_skill_ids or []
     trace.openai_call_count = openai_call_count
     trace.tool_call_records = tool_call_records or []
+    trace.web_search_call_count = web_search_call_count
     trace.persist_tool_calls = Mock()
     return trace
 

@@ -35,6 +35,15 @@ ALLOWED_EDIT_ACTIONS = {
 }
 
 
+def _normalize_optional_float(value):
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def normalize_edit_actions(raw_actions, max_items=12):
     """モデル/クライアント由来のedit_actions配列を、既知のaction・上限件数・
     文字列化済みフィールドへ正規化する(views.concierge._normalize_edit_actions_for_responseと同一ロジック)。
@@ -61,6 +70,10 @@ def normalize_edit_actions(raw_actions, max_items=12):
             "icon": str(raw_action.get("icon") or "").strip(),
             "place_name": str(raw_action.get("place_name") or "").strip(),
             "address": str(raw_action.get("address") or "").strip(),
+            "place_id": str(raw_action.get("place_id") or "").strip(),
+            "lat": _normalize_optional_float(raw_action.get("lat")),
+            "lng": _normalize_optional_float(raw_action.get("lng")),
+            "rating": _normalize_optional_float(raw_action.get("rating")),
             "memo": str(raw_action.get("memo") or "").strip(),
             "priority": raw_action.get("priority"),
             "content": str(raw_action.get("content") or "").strip(),
@@ -218,6 +231,14 @@ def _build_want_to_go_data_from_action(raw_action):
         data["name"] = name
     if raw_action.get("address") is not None:
         data["address"] = raw_action.get("address")
+    if raw_action.get("place_id") is not None:
+        data["place_id"] = raw_action.get("place_id")
+    if raw_action.get("lat") is not None:
+        data["lat"] = raw_action.get("lat")
+    if raw_action.get("lng") is not None:
+        data["lng"] = raw_action.get("lng")
+    if raw_action.get("rating") is not None:
+        data["rating"] = raw_action.get("rating")
     memo = raw_action.get("memo") or raw_action.get("description")
     if memo is not None:
         data["memo"] = memo

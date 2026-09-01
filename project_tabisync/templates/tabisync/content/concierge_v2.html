@@ -115,6 +115,9 @@
                   <a class="footer-nav-a" id="back-home" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
                           <i class="fa-solid fa-house"></i>
                   </a>
+                  <button id="conciergeHistoryToggle" class="content-tour-button" type="button" aria-label="チャット履歴を開く" aria-expanded="false">
+                          <i class="fa-solid fa-clock-rotate-left"></i>
+                  </button>
                 </div>
                 <div class="header-logo">
                     <h1>
@@ -133,6 +136,19 @@
         <div class="concierge-main">
           <div class="concierge-page">
             <section class="concierge-layout">
+              <div id="conciergeSideBackdrop" class="concierge-side-backdrop"></div>
+              <aside id="conciergeSidePanel" class="concierge-side-panel" aria-label="チャット履歴">
+                <div class="concierge-side-panel-header">
+                  <p class="concierge-side-panel-title">チャット履歴</p>
+                  <button type="button" id="conciergeSideClose" class="concierge-side-panel-close" aria-label="チャット履歴を閉じる">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <button type="button" id="conciergeNewChatBtn" class="concierge-new-chat-btn">
+                  <i class="fa-solid fa-plus"></i><span>新しいチャット</span>
+                </button>
+                <ul id="conciergeConversationList" class="concierge-conversation-list"></ul>
+              </aside>
               <section class="concierge-chat-panel">
                 <div class="concierge-chat-shell">
                   <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
@@ -181,13 +197,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const usageCountEl = document.getElementById("conciergeUsageCount");
   const usageUsedEl = document.getElementById("conciergeUsageUsed");
   const usageLimitEl = document.getElementById("conciergeUsageLimit");
+  const sidePanelEl = document.getElementById("conciergeSidePanel");
+  const sideBackdropEl = document.getElementById("conciergeSideBackdrop");
+  const sideToggleEl = document.getElementById("conciergeHistoryToggle");
+  const sideCloseEl = document.getElementById("conciergeSideClose");
+  const newChatBtnEl = document.getElementById("conciergeNewChatBtn");
+  const conversationListEl = document.getElementById("conciergeConversationList");
   const itineraryStorageId = "{{ itinerary.pk }}";
+  // 複数会話を1つのJSONへまとめて保持する(ChatGPT風サイドバー用、task-012)。
+  const conversationsStoreKey = `tabisync_concierge_conversations_${itineraryStorageId}`;
   const storageKey = `tabisync_concierge_conversation_${itineraryStorageId}`;
   const historyKey = `tabisync_concierge_history_${itineraryStorageId}`;
   const legacyStorageKey = "tabisync_concierge_conversation_{{ itinerary.pk }}_{{ itinerary.token }}";
   const legacyHistoryKey = "tabisync_concierge_history_{{ itinerary.pk }}_{{ itinerary.token }}";
   const conciergeMessageMaxLength = 60;
-  let conversationId = window.localStorage.getItem(storageKey) || (window.crypto?.randomUUID ? window.crypto.randomUUID() : String(Date.now()));
+  const conciergeConversationTitleMaxLength = 24;
+  function generateId() {
+    return window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+  let conversations = {};
+  let conversationId = generateId();
   let chatHistory = [];
   const pendingChangeSets = new Map();
 
@@ -220,6 +249,27 @@ document.addEventListener("DOMContentLoaded", function () {
       .replace(/'/g, "&#39;");
   }
 
+  // URLとして許容する文字だけを列挙する(除外リスト方式だと日本語の句読点や
+  // 通常の文字がURLに巻き込まれてしまうため、許可リスト方式にしている)。
+  const BARE_URL_PATTERN_SOURCE = "https?:\\/\\/[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'*+,;=%]+";
+
+  function trimTrailingPunctuation(url) {
+    return url.replace(/[.,;:!?]+$/, "");
+  }
+
+  function linkifyBareUrls(html) {
+    // 既存の<a>...</a>(Markdownリンク由来)は素通しし、それ以外の部分にある
+    // 生URL(https?://から始まる文字列)だけをリンク化する。
+    const pattern = new RegExp(`(<a\\b[^>]*>[\\s\\S]*?<\\/a>)|(${BARE_URL_PATTERN_SOURCE})`, "g");
+    return html.replace(pattern, (match, anchorTag, bareUrl) => {
+      if (anchorTag) return anchorTag;
+      if (!bareUrl) return match;
+      const trimmed = trimTrailingPunctuation(bareUrl);
+      const trailing = bareUrl.slice(trimmed.length);
+      return `<a href="${trimmed}" target="_blank" rel="noopener noreferrer">${trimmed}</a>${trailing}`;
+    });
+  }
+
   function renderInlineMarkdown(text) {
     let html = escapeHtml(text);
     html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -228,7 +278,30 @@ document.addEventListener("DOMContentLoaded", function () {
     // 絶対URL(https?://)または"/"始まりの同一オリジン相対パスのみ許可する。
     // javascript:等の危険なスキームや相対パス以外の記法にはマッチしない。
     html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    html = linkifyBareUrls(html);
     return html;
+  }
+
+  function isTableRow(line) {
+    return /^\|.*\|$/.test(line.trim());
+  }
+
+  function isTableSeparatorRow(line) {
+    return /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(line.trim());
+  }
+
+  function splitTableRow(line) {
+    const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    return trimmed.split("|").map((cell) => cell.trim());
+  }
+
+  function renderTable(rows) {
+    if (rows.length < 2 || !isTableSeparatorRow(rows[1])) return "";
+    const headerCells = splitTableRow(rows[0]);
+    const bodyRows = rows.slice(2).map(splitTableRow);
+    const theadHtml = `<thead><tr>${headerCells.map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join("")}</tr></thead>`;
+    const tbodyHtml = `<tbody>${bodyRows.map((cells) => `<tr>${cells.map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+    return `<div class="concierge-message-bubble-table-wrap"><table>${theadHtml}${tbodyHtml}</table></div>`;
   }
 
   function renderMarkdown(text) {
@@ -237,6 +310,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let listType = null;
     let listItems = [];
     let paragraphLines = [];
+    let quoteLines = [];
+    let tableRows = [];
 
     function flushParagraph() {
       if (!paragraphLines.length) return;
@@ -251,28 +326,70 @@ document.addEventListener("DOMContentLoaded", function () {
       listItems = [];
     }
 
+    function flushQuote() {
+      if (!quoteLines.length) return;
+      blocks.push(`<blockquote>${quoteLines.map((line) => renderInlineMarkdown(line)).join("<br>")}</blockquote>`);
+      quoteLines = [];
+    }
+
+    function flushTable() {
+      if (!tableRows.length) return;
+      const tableHtml = renderTable(tableRows);
+      if (tableHtml) {
+        blocks.push(tableHtml);
+      } else {
+        // 区切り行が無い等、表として不正な場合は通常テキストとして扱う。
+        tableRows.forEach((row) => blocks.push(`<p>${renderInlineMarkdown(row)}</p>`));
+      }
+      tableRows = [];
+    }
+
+    function flushAllExcept(keep) {
+      if (keep !== "paragraph") flushParagraph();
+      if (keep !== "list") flushList();
+      if (keep !== "quote") flushQuote();
+      if (keep !== "table") flushTable();
+    }
+
     for (const rawLine of lines) {
       const line = rawLine.trimEnd();
       const trimmed = line.trim();
 
       if (!trimmed) {
-        flushParagraph();
-        flushList();
+        flushAllExcept(null);
+        continue;
+      }
+
+      if (isTableRow(trimmed)) {
+        flushAllExcept("table");
+        tableRows.push(trimmed);
         continue;
       }
 
       const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
       if (headingMatch) {
-        flushParagraph();
-        flushList();
+        flushAllExcept(null);
         const level = headingMatch[1].length;
         blocks.push(`<h${level + 2}>${renderInlineMarkdown(headingMatch[2])}</h${level + 2}>`);
         continue;
       }
 
+      if (/^(---|\*\*\*|___)$/.test(trimmed)) {
+        flushAllExcept(null);
+        blocks.push("<hr>");
+        continue;
+      }
+
+      const quoteMatch = trimmed.match(/^>\s?(.*)$/);
+      if (quoteMatch) {
+        flushAllExcept("quote");
+        quoteLines.push(quoteMatch[1]);
+        continue;
+      }
+
       const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
       if (unorderedMatch) {
-        flushParagraph();
+        flushAllExcept("list");
         if (listType && listType !== "ul") flushList();
         listType = "ul";
         listItems.push(unorderedMatch[1]);
@@ -281,19 +398,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
       if (orderedMatch) {
-        flushParagraph();
+        flushAllExcept("list");
         if (listType && listType !== "ol") flushList();
         listType = "ol";
         listItems.push(orderedMatch[1]);
         continue;
       }
 
-      if (listType) flushList();
+      flushAllExcept("paragraph");
       paragraphLines.push(trimmed);
     }
 
-    flushParagraph();
-    flushList();
+    flushAllExcept(null);
 
     return blocks.join("");
   }
@@ -378,18 +494,217 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function migrateLegacyHistory() {
-    const legacyConversationId = window.sessionStorage.getItem(legacyStorageKey);
-    const legacyHistory = window.sessionStorage.getItem(legacyHistoryKey);
+  const MAX_LINK_CHIPS = 6;
+  // OGP取得結果はURLをキーにセッション中だけ使い回す(同じ会話履歴を再描画する際の再取得を避ける)。
+  const linkPreviewCache = new Map();
 
-    if (!window.localStorage.getItem(storageKey) && legacyConversationId) {
-      window.localStorage.setItem(storageKey, legacyConversationId);
-      conversationId = legacyConversationId;
+  function extractUrlsFromText(text) {
+    if (!text) return [];
+    const matches = String(text).match(new RegExp(BARE_URL_PATTERN_SOURCE, "g")) || [];
+    return matches.map(trimTrailingPunctuation);
+  }
+
+  function collectLinkChipSources(text, citations) {
+    const seen = new Set();
+    const sources = [];
+    (Array.isArray(citations) ? citations : []).forEach((citation) => {
+      if (!citation || !citation.url || seen.has(citation.url)) return;
+      seen.add(citation.url);
+      sources.push({ url: citation.url, title: citation.title || "" });
+    });
+    extractUrlsFromText(text).forEach((url) => {
+      if (seen.has(url)) return;
+      seen.add(url);
+      sources.push({ url, title: "" });
+    });
+    return sources.slice(0, MAX_LINK_CHIPS);
+  }
+
+  function hostnameOf(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (error) {
+      return url;
+    }
+  }
+
+  function buildLinkChip(source, preview) {
+    const li = document.createElement("li");
+    li.className = "concierge-link-chip";
+
+    const link = document.createElement("a");
+    link.href = source.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "concierge-link-chip-link";
+
+    const domain = hostnameOf(source.url);
+    const imageUrl = preview && preview.image;
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.className = "concierge-link-chip-image";
+      img.src = imageUrl;
+      img.alt = "";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", () => img.remove());
+      link.appendChild(img);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "concierge-link-chip-image concierge-link-chip-image-placeholder";
+      placeholder.innerHTML = '<i class="fa-solid fa-link"></i>';
+      link.appendChild(placeholder);
     }
 
-    if (!window.localStorage.getItem(historyKey) && legacyHistory) {
-      window.localStorage.setItem(historyKey, legacyHistory);
+    const body = document.createElement("div");
+    body.className = "concierge-link-chip-body";
+
+    const title = document.createElement("p");
+    title.className = "concierge-link-chip-title";
+    title.textContent = (preview && preview.title) || source.title || domain;
+
+    const site = document.createElement("p");
+    site.className = "concierge-link-chip-site";
+    site.textContent = (preview && preview.site_name) || domain;
+
+    body.appendChild(title);
+    body.appendChild(site);
+    link.appendChild(body);
+    li.appendChild(link);
+    return li;
+  }
+
+  async function fetchLinkPreviews(urls) {
+    const uncached = urls.filter((url) => !linkPreviewCache.has(url));
+    if (uncached.length) {
+      try {
+        const response = await fetch("{% url 'tabisync:V2_concierge_link_previews' pk=itinerary.pk token=itinerary.token %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ urls: uncached }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data.previews)) {
+            data.previews.forEach((preview) => {
+              if (preview && preview.url) linkPreviewCache.set(preview.url, preview);
+            });
+          }
+        }
+      } catch (error) {
+        // OGP取得に失敗してもドメイン名のみのチップ表示にフォールバックする。
+      }
     }
+    return urls.map((url) => linkPreviewCache.get(url) || null);
+  }
+
+  function renderLinkChips(container, text, citations) {
+    const sources = collectLinkChipSources(text, citations);
+    if (!sources.length) return;
+
+    const box = document.createElement("div");
+    box.className = "concierge-citations";
+
+    const title = document.createElement("p");
+    title.className = "concierge-citations-title";
+    title.textContent = "参照リンク";
+    box.appendChild(title);
+
+    const list = document.createElement("ul");
+    list.className = "concierge-citations-list";
+    box.appendChild(list);
+
+    const chipsByUrl = new Map();
+    sources.forEach((source) => {
+      const chip = buildLinkChip(source, linkPreviewCache.get(source.url));
+      chipsByUrl.set(source.url, chip);
+      list.appendChild(chip);
+    });
+    container.appendChild(box);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    fetchLinkPreviews(sources.map((source) => source.url)).then((previews) => {
+      sources.forEach((source, index) => {
+        const preview = previews[index];
+        if (!preview) return;
+        const oldChip = chipsByUrl.get(source.url);
+        if (!oldChip || oldChip.parentNode !== list) return;
+        const newChip = buildLinkChip(source, preview);
+        list.replaceChild(newChip, oldChip);
+        chipsByUrl.set(source.url, newChip);
+      });
+    });
+  }
+
+  // 疑似タイプライター表示: 完成済みHTMLをDOMへ組み立てた上で、文字単位のspanを
+  // 順番にopacity: 1へ切り替える。マークダウンの再パースは行わないため、
+  // アニメーション中に壊れたHTMLが一瞬表示されることはない(task-012)。
+  function typewriterReveal(bubble, html, onDone) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const fragment = template.content;
+    const spans = [];
+
+    function wrapTextNode(node) {
+      const text = node.textContent;
+      if (!text) return;
+      const parent = node.parentNode;
+      const replacement = document.createDocumentFragment();
+      for (const ch of text) {
+        if (/\s/.test(ch)) {
+          replacement.appendChild(document.createTextNode(ch));
+        } else {
+          const span = document.createElement("span");
+          span.className = "cg-reveal";
+          span.textContent = ch;
+          replacement.appendChild(span);
+          spans.push(span);
+        }
+      }
+      parent.replaceChild(replacement, node);
+    }
+
+    function walk(node) {
+      Array.from(node.childNodes).forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          wrapTextNode(child);
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          walk(child);
+        }
+      });
+    }
+    walk(fragment);
+
+    bubble.innerHTML = "";
+    bubble.appendChild(fragment);
+
+    if (!spans.length) {
+      if (onDone) onDone();
+      return;
+    }
+
+    const total = spans.length;
+    const duration = Math.min(1800, Math.max(300, total * 12));
+    const tickMs = 25;
+    const numTicks = Math.max(1, Math.round(duration / tickMs));
+    const perTick = Math.max(1, Math.ceil(total / numTicks));
+
+    let index = 0;
+    const timer = setInterval(() => {
+      const end = Math.min(total, index + perTick);
+      for (; index < end; index += 1) {
+        spans[index].classList.add("is-visible");
+      }
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      if (index >= total) {
+        clearInterval(timer);
+        if (onDone) onDone();
+      }
+    }, tickMs);
   }
 
   function addMessage(role, text, options = {}) {
@@ -402,72 +717,246 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const bubble = document.createElement("div");
     bubble.className = "concierge-message-bubble";
-    if (options.markdown) {
-      bubble.innerHTML = renderMarkdown(text);
-    } else {
-      bubble.textContent = text;
-    }
 
     article.appendChild(label);
     article.appendChild(bubble);
-
-    if (role === "assistant" && Array.isArray(options.uiComponents) && options.uiComponents.length) {
-      renderUiComponents(article, options.uiComponents);
-    }
-
-    if (role === "assistant" && Array.isArray(options.editActions) && options.editActions.length) {
-      const changeSetId = options.changeSetId || `changes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      pendingChangeSets.set(changeSetId, options.editActions);
-
-      const applyBox = document.createElement("div");
-      applyBox.className = "concierge-apply-box";
-      applyBox.dataset.changeSetId = changeSetId;
-
-      const summary = document.createElement("p");
-      summary.className = "concierge-apply-summary";
-      summary.textContent = `${options.editActions.length}件の変更候補があります。`;
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "concierge-apply-btn";
-      button.dataset.changeSetId = changeSetId;
-      button.innerHTML = '<i class="fa-solid fa-check"></i><span>変更を適用</span>';
-
-      const status = document.createElement("p");
-      status.className = "concierge-apply-status";
-      status.setAttribute("aria-live", "polite");
-
-      applyBox.appendChild(summary);
-      applyBox.appendChild(button);
-      applyBox.appendChild(status);
-      article.appendChild(applyBox);
-    }
-
     messagesEl.appendChild(article);
     messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    function appendExtras() {
+      if (role === "assistant" && Array.isArray(options.uiComponents) && options.uiComponents.length) {
+        renderUiComponents(article, options.uiComponents);
+      }
+
+      if (role === "assistant") {
+        renderLinkChips(article, text, options.citations);
+      }
+
+      if (role === "assistant" && Array.isArray(options.editActions) && options.editActions.length) {
+        const changeSetId = options.changeSetId || `changes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        pendingChangeSets.set(changeSetId, options.editActions);
+
+        const applyBox = document.createElement("div");
+        applyBox.className = "concierge-apply-box";
+        applyBox.dataset.changeSetId = changeSetId;
+
+        const summary = document.createElement("p");
+        summary.className = "concierge-apply-summary";
+        summary.textContent = `${options.editActions.length}件の変更候補があります。`;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "concierge-apply-btn";
+        button.dataset.changeSetId = changeSetId;
+        button.innerHTML = '<i class="fa-solid fa-check"></i><span>変更を適用</span>';
+
+        const status = document.createElement("p");
+        status.className = "concierge-apply-status";
+        status.setAttribute("aria-live", "polite");
+
+        applyBox.appendChild(summary);
+        applyBox.appendChild(button);
+        applyBox.appendChild(status);
+        article.appendChild(applyBox);
+      }
+
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    if (!options.markdown) {
+      bubble.textContent = text;
+      appendExtras();
+      return;
+    }
+
+    const html = renderMarkdown(text);
+    if (options.animate) {
+      typewriterReveal(bubble, html, appendExtras);
+    } else {
+      bubble.innerHTML = html;
+      appendExtras();
+    }
+  }
+
+  function conversationTitleFromHistory(history) {
+    const firstUserMessage = (history || []).find((item) => item && item.role === "user" && item.content);
+    if (!firstUserMessage) return "新しいチャット";
+    const content = firstUserMessage.content.trim();
+    return content.length > conciergeConversationTitleMaxLength
+      ? `${content.slice(0, conciergeConversationTitleMaxLength)}…`
+      : content;
+  }
+
+  function loadConversationsStore() {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(conversationsStoreKey) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveConversationsStore() {
+    window.localStorage.setItem(conversationsStoreKey, JSON.stringify(conversations));
+    window.localStorage.setItem(storageKey, conversationId);
+  }
+
+  function migrateLegacyHistory() {
+    conversations = loadConversationsStore();
+    if (Object.keys(conversations).length) return;
+
+    const legacyConversationId = window.sessionStorage.getItem(legacyStorageKey);
+    const legacyHistoryRaw = window.sessionStorage.getItem(legacyHistoryKey)
+      || window.localStorage.getItem(historyKey);
+    const existingConversationId = window.localStorage.getItem(storageKey) || legacyConversationId;
+
+    if (!legacyHistoryRaw) return;
+    try {
+      const parsedHistory = JSON.parse(legacyHistoryRaw);
+      if (!Array.isArray(parsedHistory) || !parsedHistory.length) return;
+      const migratedId = existingConversationId || generateId();
+      conversations[migratedId] = {
+        title: conversationTitleFromHistory(parsedHistory),
+        updatedAt: Date.now(),
+        messages: parsedHistory,
+      };
+    } catch (error) {
+      // 旧履歴が壊れている場合は移行をスキップし、空の会話一覧から始める。
+    }
   }
 
   function persistHistory() {
-    window.localStorage.setItem(storageKey, conversationId);
-    window.localStorage.setItem(historyKey, JSON.stringify(chatHistory));
+    conversations[conversationId] = {
+      title: conversationTitleFromHistory(chatHistory),
+      updatedAt: Date.now(),
+      messages: chatHistory,
+    };
+    saveConversationsStore();
+    renderConversationList();
   }
 
-  function restoreHistory() {
-    try {
-      const rawHistory = window.localStorage.getItem(historyKey);
-      const parsed = JSON.parse(rawHistory || "[]");
-      if (!Array.isArray(parsed) || !parsed.length) return false;
-      chatHistory = parsed.filter((item) => item && (item.role === "user" || item.role === "assistant") && item.content);
-      chatHistory.forEach((item) => addMessage(item.role, item.content, {
-        markdown: item.role === "assistant",
-        editActions: item.edit_actions || [],
-        uiComponents: item.ui_components || [],
-        changeSetId: item.change_set_id || "",
-      }));
-      return chatHistory.length > 0;
-    } catch (error) {
-      return false;
+  function formatConversationTimestamp(timestamp) {
+    const date = new Date(Number(timestamp) || Date.now());
+    return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function renderConversationList() {
+    if (!conversationListEl) return;
+    conversationListEl.innerHTML = "";
+
+    const entries = Object.entries(conversations).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+    if (!entries.length) {
+      const empty = document.createElement("li");
+      empty.className = "concierge-conversation-empty";
+      empty.textContent = "会話履歴はまだありません。";
+      conversationListEl.appendChild(empty);
+      return;
     }
+
+    entries.forEach(([id, conversation]) => {
+      const li = document.createElement("li");
+      li.className = "concierge-conversation-item";
+
+      const row = document.createElement("div");
+      row.className = `concierge-conversation-row${id === conversationId ? " is-active" : ""}`;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "concierge-conversation-btn";
+      button.dataset.conversationId = id;
+
+      const title = document.createElement("span");
+      title.className = "concierge-conversation-title";
+      title.textContent = conversation.title || "新しいチャット";
+
+      const meta = document.createElement("span");
+      meta.className = "concierge-conversation-meta";
+      meta.textContent = formatConversationTimestamp(conversation.updatedAt);
+
+      button.appendChild(title);
+      button.appendChild(meta);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "concierge-conversation-delete";
+      deleteBtn.dataset.conversationId = id;
+      deleteBtn.setAttribute("aria-label", "この会話を削除");
+      deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+
+      row.appendChild(button);
+      row.appendChild(deleteBtn);
+      li.appendChild(row);
+      conversationListEl.appendChild(li);
+    });
+  }
+
+  function renderActiveConversationMessages() {
+    messagesEl.innerHTML = "";
+    chatHistory.forEach((item) => addMessage(item.role, item.content, {
+      markdown: item.role === "assistant",
+      editActions: item.edit_actions || [],
+      uiComponents: item.ui_components || [],
+      citations: item.citations || [],
+      changeSetId: item.change_set_id || "",
+    }));
+  }
+
+  function showWelcomeMessage() {
+    const termsUrl = "{% url 'tabisync:concierge_terms' %}";
+    const welcomeMessage = `旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。[利用規約と注意事項](${termsUrl})を必ずお読みの上、ご利用ください。\n質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」`;
+    addMessage("assistant", welcomeMessage, { markdown: true });
+    chatHistory.push({ role: "assistant", content: welcomeMessage });
+  }
+
+  function switchConversation(id) {
+    if (!conversations[id] || id === conversationId) return;
+    conversationId = id;
+    chatHistory = Array.isArray(conversations[id].messages) ? conversations[id].messages.slice() : [];
+    renderActiveConversationMessages();
+    window.localStorage.setItem(storageKey, conversationId);
+    renderConversationList();
+    closeSidePanel();
+  }
+
+  function startNewChat() {
+    conversationId = generateId();
+    chatHistory = [];
+    messagesEl.innerHTML = "";
+    showWelcomeMessage();
+    window.localStorage.setItem(storageKey, conversationId);
+    renderConversationList();
+    closeSidePanel();
+  }
+
+  function deleteConversation(id) {
+    if (!conversations[id]) return;
+    delete conversations[id];
+    saveConversationsStore();
+    if (id === conversationId) {
+      const remaining = Object.entries(conversations).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+      if (remaining.length) {
+        switchConversation(remaining[0][0]);
+      } else {
+        startNewChat();
+      }
+    } else {
+      renderConversationList();
+    }
+  }
+
+  function openSidePanel() {
+    if (!sidePanelEl) return;
+    sidePanelEl.classList.add("is-open");
+    if (sideBackdropEl) sideBackdropEl.classList.add("is-open");
+    if (sideToggleEl) sideToggleEl.setAttribute("aria-expanded", "true");
+  }
+
+  function closeSidePanel() {
+    if (!sidePanelEl) return;
+    if (window.matchMedia("(min-width: 960px)").matches) return;
+    sidePanelEl.classList.remove("is-open");
+    if (sideBackdropEl) sideBackdropEl.classList.remove("is-open");
+    if (sideToggleEl) sideToggleEl.setAttribute("aria-expanded", "false");
   }
 
   function setSending(isSending) {
@@ -535,11 +1024,14 @@ document.addEventListener("DOMContentLoaded", function () {
       const assistantReply = data.reply || "返答を生成できませんでした。";
       const editActions = Array.isArray(data.edit_actions) ? data.edit_actions : [];
       const uiComponents = Array.isArray(data.ui_components) ? data.ui_components : [];
+      const citations = Array.isArray(data.citations) ? data.citations : [];
       const changeSetId = editActions.length ? `changes-${Date.now()}-${Math.random().toString(16).slice(2)}` : "";
       addMessage("assistant", assistantReply, {
         markdown: true,
+        animate: true,
         editActions,
         uiComponents,
+        citations,
         changeSetId,
       });
       chatHistory.push({
@@ -547,6 +1039,7 @@ document.addEventListener("DOMContentLoaded", function () {
         content: assistantReply,
         edit_actions: editActions,
         ui_components: uiComponents,
+        citations,
         change_set_id: changeSetId,
       });
       persistHistory();
@@ -626,18 +1119,50 @@ document.addEventListener("DOMContentLoaded", function () {
     return submitPrompt("__ping__");
   };
 
+  if (sideToggleEl) {
+    sideToggleEl.addEventListener("click", function () {
+      if (sidePanelEl && sidePanelEl.classList.contains("is-open")) {
+        closeSidePanel();
+      } else {
+        openSidePanel();
+      }
+    });
+  }
+  if (sideCloseEl) sideCloseEl.addEventListener("click", closeSidePanel);
+  if (sideBackdropEl) sideBackdropEl.addEventListener("click", closeSidePanel);
+  if (newChatBtnEl) newChatBtnEl.addEventListener("click", startNewChat);
+
+  if (conversationListEl) {
+    conversationListEl.addEventListener("click", function (event) {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+
+      const deleteBtn = target.closest(".concierge-conversation-delete");
+      if (deleteBtn) {
+        deleteConversation(deleteBtn.dataset.conversationId);
+        return;
+      }
+
+      const convoBtn = target.closest(".concierge-conversation-btn");
+      if (convoBtn) {
+        switchConversation(convoBtn.dataset.conversationId);
+      }
+    });
+  }
+
   migrateLegacyHistory();
 
-  if (!restoreHistory()) {
-    const termsUrl = "{% url 'tabisync:concierge_terms' %}";
-    const welcomeMessage = `旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。[利用規約と注意事項](${termsUrl})を必ずお読みの上、ご利用ください。\n質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」`;
-    addMessage("assistant", welcomeMessage, { markdown: true });
-    chatHistory.push({
-      role: "assistant",
-      content: welcomeMessage,
-    });
+  const entries = Object.entries(conversations).sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
+  if (entries.length) {
+    conversationId = entries[0][0];
+    chatHistory = Array.isArray(entries[0][1].messages) ? entries[0][1].messages.slice() : [];
+    renderActiveConversationMessages();
+    window.localStorage.setItem(storageKey, conversationId);
+  } else {
+    showWelcomeMessage();
     persistHistory();
   }
+  renderConversationList();
 });
 </script>
 <script>
