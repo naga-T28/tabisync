@@ -51,6 +51,7 @@ urlpatterns = [
     path('content/v2/<int:pk>/<uuid:token>/qr.png', views.itinerary_qr_code_view, name='content_v2_qr_code'),
     path('content/v2/<int:pk>/<uuid:token>/cover-image/', views.itinerary_cover_image_view, name='content_v2_cover_image'),
     path('content/v2/<int:pk>/<uuid:token>/concierge/apply/', views.concierge_v2_apply_changes, name='V2_concierge_apply'),
+    path('content/v2/<int:pk>/<uuid:token>/concierge/link-previews/', views.concierge_v2_link_previews, name='V2_concierge_link_previews'),
     path('content/v2/<int:pk>/<uuid:token>/edit/list/', views.ChecklistV2EditView.as_view(), name='V2_list_edit'),
     path("content/v2/<int:pk>/<uuid:token>/schedule/row-save/",views.schedule_v2_row_save,name="schedule_v2_row_save"),
     path("content/v2/<int:pk>/<uuid:token>/schedule/row-delete/",views.schedule_v2_row_delete,name="schedule_v2_row_delete"),

@@ -259,6 +259,7 @@ class ConciergeChatLog(models.Model):
     ui_component_types = models.JSONField(default=list, blank=True)
     edit_action_count = models.PositiveIntegerField(default=0)
     run_status = models.CharField(max_length=32, blank=True)
+    web_search_call_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["conversation_id", "turn_index", "id"]

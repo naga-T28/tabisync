@@ -1163,24 +1163,3 @@ body#content-body:has(.content-main-map) > footer > small {
 }
 }
 
-/* =========================
-   9) Map marker (MapLibre adapter)
-   ========================= */
-.tabisync-map-marker {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  padding: 0;
-  cursor: pointer;
-}
-
-.tabisync-map-marker:focus-visible {
-  outline: 2px solid #2f3747;
-  outline-offset: 2px;
-}
-
-.maplibregl-ctrl-attrib {
-  font-size: 11px;
-}

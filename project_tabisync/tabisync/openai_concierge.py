@@ -6,8 +6,8 @@ import urllib.request
 
 
 OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
-OPENAI_LIGHT_MODEL = os.getenv("OPENAI_LIGHT_MODEL", "gpt-5-nano")
-OPENAI_ANSWER_MODEL = os.getenv("OPENAI_ANSWER_MODEL", "gpt-5-mini")
+OPENAI_LIGHT_MODEL = os.getenv("OPENAI_LIGHT_MODEL", "gpt-5-mini")
+OPENAI_ANSWER_MODEL = os.getenv("OPENAI_ANSWER_MODEL", "gpt-5.6-luna")
 OPENAI_API_TIMEOUT_SECONDS = float(os.getenv("OPENAI_API_TIMEOUT_SECONDS", "8"))
 OPENAI_SELECTION_TIMEOUT_SECONDS = float(
     os.getenv("OPENAI_SELECTION_TIMEOUT_SECONDS", str(max(OPENAI_API_TIMEOUT_SECONDS, 12)))
@@ -73,8 +73,19 @@ def _structured_text_item(text):
     }
 
 
-def _json_schema_payload(model, prompt_text, schema, max_output_tokens=400):
-    return {
+def build_prompt_cache_key(conversation_id):
+    """会話単位でOpenAI側のprompt cachingを効かせるためのキーを組み立てる。
+    同一キーのリクエストは同じキャッシュへルーティングされやすくなり、
+    instructions等の固定プレフィックス部分のヒット率が上がる。"""
+    if not conversation_id:
+        return None
+    return f"tabisync-concierge-{conversation_id}"
+
+
+def _json_schema_payload(
+    model, prompt_text, schema, max_output_tokens=400, reasoning_effort="minimal", prompt_cache_key=None
+):
+    payload = {
         "model": model,
         "input": [_structured_text_item(prompt_text)],
         "text": {
@@ -85,19 +96,25 @@ def _json_schema_payload(model, prompt_text, schema, max_output_tokens=400):
                 "strict": True,
             }
         },
-        "reasoning": {"effort": "minimal"},
+        "reasoning": {"effort": reasoning_effort},
         "max_output_tokens": max_output_tokens,
     }
+    if prompt_cache_key:
+        payload["prompt_cache_key"] = prompt_cache_key
+    return payload
 
 
-def _text_payload(model, prompt_text, max_output_tokens=1200):
-    return {
+def _text_payload(model, prompt_text, max_output_tokens=1200, prompt_cache_key=None):
+    payload = {
         "model": model,
         "input": [_structured_text_item(prompt_text)],
         "text": {"format": {"type": "text"}, "verbosity": "medium"},
         "reasoning": {"effort": "low"},
         "max_output_tokens": max_output_tokens,
     }
+    if prompt_cache_key:
+        payload["prompt_cache_key"] = prompt_cache_key
+    return payload
 
 
 def _extract_response_text(parsed):
@@ -169,18 +186,20 @@ def call_openai_responses_api(
     model=None,
     max_output_tokens=800,
     timeout_seconds=None,
+    reasoning_effort="minimal",
+    prompt_cache_key=None,
 ):
     target_model = model or OPENAI_LIGHT_MODEL
     payload = (
-        _json_schema_payload(target_model, prompt_text, schema, max_output_tokens)
+        _json_schema_payload(target_model, prompt_text, schema, max_output_tokens, reasoning_effort, prompt_cache_key)
         if schema
-        else _text_payload(target_model, prompt_text, max_output_tokens)
+        else _text_payload(target_model, prompt_text, max_output_tokens, prompt_cache_key)
     )
     parsed = post_responses_api_raw(payload, timeout_seconds=timeout_seconds)
     return _extract_response_text(parsed), payload
 
 
-def run_moderation(user_message, history=None):
+def run_moderation(user_message, history=None, conversation_id=None):
     normalized_history = history if isinstance(history, list) else []
     prompt = (
         os.getenv("OPENAI_MODERATION_PROMPT", DEFAULT_MODERATION_PROMPT).strip()
@@ -207,11 +226,12 @@ def run_moderation(user_message, history=None):
         schema=schema,
         model=OPENAI_LIGHT_MODEL,
         max_output_tokens=200,
+        prompt_cache_key=build_prompt_cache_key(conversation_id),
     )
     return prompt, payload, json.loads(text)
 
 
-def run_data_selection(user_message, history=None):
+def run_data_selection(user_message, history=None, conversation_id=None):
     normalized_history = history if isinstance(history, list) else []
     prompt = (
         os.getenv("OPENAI_DATA_SELECTION_PROMPT", DEFAULT_DATA_SELECTION_PROMPT).strip()
@@ -244,6 +264,7 @@ def run_data_selection(user_message, history=None):
         schema=schema,
         model=OPENAI_LIGHT_MODEL,
         max_output_tokens=250,
+        prompt_cache_key=build_prompt_cache_key(conversation_id),
         timeout_seconds=OPENAI_SELECTION_TIMEOUT_SECONDS,
     )
     result = json.loads(text)
@@ -255,7 +276,7 @@ def run_data_selection(user_message, history=None):
     return prompt, payload, result
 
 
-def run_answer(history, user_message, selected_context):
+def run_answer(history, user_message, selected_context, conversation_id=None):
     prompt = (
         os.getenv("OPENAI_ANSWER_PROMPT", DEFAULT_ANSWER_PROMPT).strip()
         + "\n\n会話履歴(JSON):\n"
@@ -336,6 +357,8 @@ def run_answer(history, user_message, selected_context):
         model=OPENAI_ANSWER_MODEL,
         max_output_tokens=1400,
         timeout_seconds=OPENAI_ANSWER_TIMEOUT_SECONDS,
+        reasoning_effort="low",
+        prompt_cache_key=build_prompt_cache_key(conversation_id),
     )
     try:
         parsed = json.loads(text)

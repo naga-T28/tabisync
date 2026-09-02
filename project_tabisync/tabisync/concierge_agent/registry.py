@@ -23,7 +23,7 @@ def _build_tool_handler_allowlist():
     # モジュールトップレベルでimportすると tabisync.views パッケージのロードを巻き込み、
     # views.concierge -> concierge_agent.registry との循環importになる。
     # そのためこの構築自体を初回呼び出し時まで遅延させる。
-    from ..concierge_tools import proposal_tools, read_tools, ui_tools
+    from ..concierge_tools import place_search_tools, proposal_tools, read_tools, ui_tools
 
     return {
         "concierge_tools.read_tools.get_itinerary": read_tools.get_itinerary,
@@ -33,6 +33,7 @@ def _build_tool_handler_allowlist():
         "concierge_tools.read_tools.get_checklist": read_tools.get_checklist,
         "concierge_tools.proposal_tools.propose_changes": proposal_tools.propose_changes,
         "concierge_tools.ui_tools.show_map": ui_tools.show_map,
+        "concierge_tools.place_search_tools.search_places": place_search_tools.search_places,
     }
 
 

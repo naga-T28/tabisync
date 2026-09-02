@@ -96,7 +96,7 @@ from .schedule_v2 import ScheduleV2EditView, schedule_v2_row_delete, schedule_v2
 from .want_to_go import WantToGoMapView, WantToGoV2View
 from .memo_v2 import MemoV2EditView, MemoV2View
 from .checklist_v2 import ChecklistV2EditView, ChecklistV2View
-from .concierge import ConciergeV2View, concierge_v2_apply_changes
+from .concierge import ConciergeV2View, concierge_v2_apply_changes, concierge_v2_link_previews
 from .auth import ContactFormView, ItineraryPasswordView, ResetPasswordView, SendResetLinkView
 from .legacy_v1 import (
     EditView,
@@ -201,6 +201,7 @@ __all__ = [
     "ChecklistV2View",
     "ConciergeV2View",
     "concierge_v2_apply_changes",
+    "concierge_v2_link_previews",
     "ContactFormView",
     "ItineraryPasswordView",
     "ResetPasswordView",

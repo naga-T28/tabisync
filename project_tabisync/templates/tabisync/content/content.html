@@ -3,17 +3,6 @@
 
 {% block contents %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places" async defer></script>
-{{ schedule_map_data|json_script:"schedule-map-data" }}
-{{ map_display_config|json_script:"tabisync-map-config" }}
-<link rel="stylesheet" href="{% static 'css/vendor/maplibre-gl/maplibre-gl.css' %}">
-<script src="{% static 'js/map_renderer.js' %}"></script>
-<script>
-  window.TABISYNC_MAP_CONFIG = Object.assign(
-    JSON.parse(document.getElementById("tabisync-map-config").textContent),
-    { workerUrl: "{% static 'js/vendor/maplibre-gl/maplibre-gl-worker.mjs' %}" }
-  );
-</script>
 
 <div class="content-main">
   <div class="schedule-view-page">
@@ -170,13 +159,6 @@
         {% endfor %}
       </div>
     </div>
-    <div class="box5-6 schedule-map-card" id="scheduleMapCard">
-      <h2 class="schedule-map-heading" id="scheduleMapHeading"></h2>
-      <div class="box-content">
-        <div id="scheduleMapCanvas" class="schedule-map-canvas" role="img" hidden></div>
-        <p id="scheduleMapEmpty" class="schedule-map-empty">この日の予定には地図表示できるスポットがありません。</p>
-      </div>
-    </div>
     </div>
     <aside class="schedule-side-column">
     {% if itinerary.description %}
@@ -187,6 +169,9 @@
         </div>
       </div>
     {% endif %}
+    
+    {% comment %}
+    ブログ用iframe出力機能は一旦コメントアウト。
     <div class="box5-6 schedule-share-box">
       <h2 class="box-title">ブログ用iframeを出力</h2>
       <div class="box-content">
@@ -208,6 +193,7 @@
         <p id="blogHtmlCopyStatus" class="blog-html-copy-status" aria-live="polite"></p>
       </div>
     </div>
+    {% endcomment %}
     <div class="box5-6 schedule-share-box">
       <h2 class="box-title">しおりを共有</h2>
       <div class="box-content">
@@ -445,64 +431,6 @@ function toggleDayMenu() {
   moreButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
-const SCHEDULE_MAP_DATA = JSON.parse(document.getElementById("schedule-map-data").textContent);
-let scheduleMapRenderer = null;
-let scheduleMapInitPromise = null;
-let activeMapDayNum = null;
-
-function getSchedulePlacesForDay(dayNum) {
-  return SCHEDULE_MAP_DATA[String(dayNum)] || [];
-}
-
-// Task 003: 選択日の訪問スポット地図。setActivePanelByIndex()を唯一の同期ポイントとし、
-// 見出し・空状態・マーカー・boundsを常に選択日へ揃える。Mapインスタンスは初回のみ生成し、
-// 以降はcreateMapRenderer()が返すsetPlaces()でマーカー集合だけを入れ替える。
-function updateScheduleMap(dayNum) {
-  activeMapDayNum = dayNum;
-  const places = getSchedulePlacesForDay(dayNum);
-
-  const heading = document.getElementById("scheduleMapHeading");
-  if (heading) heading.textContent = `${dayNum}日目の訪問スポット`;
-
-  const canvas = document.getElementById("scheduleMapCanvas");
-  const empty = document.getElementById("scheduleMapEmpty");
-  if (canvas) {
-    canvas.hidden = !places.length;
-    canvas.setAttribute("aria-label", `${dayNum}日目の訪問スポット地図`);
-  }
-  if (empty) empty.hidden = !!places.length;
-
-  if (scheduleMapRenderer) {
-    scheduleMapRenderer.setPlaces(places);
-    return;
-  }
-  if (!places.length || !canvas || !window.createMapRenderer) return;
-
-  if (!scheduleMapInitPromise) {
-    scheduleMapInitPromise = window.createMapRenderer(canvas, {
-      places,
-      onMarkerClick: (place) => openPlaceModal(place),
-      fallback: () => {
-        if (canvas) canvas.hidden = true;
-        if (empty) {
-          empty.hidden = false;
-          empty.textContent = "地図を表示できませんでした。";
-        }
-      },
-    }).then((renderer) => {
-      scheduleMapRenderer = renderer;
-      // 初期化中に選択日が切り替わっていた場合は、最新の選択日を反映する。
-      const latest = getSchedulePlacesForDay(activeMapDayNum);
-      renderer.setPlaces(latest);
-      if (canvas) canvas.hidden = !latest.length;
-      if (empty) empty.hidden = !!latest.length;
-      return renderer;
-    }).catch(() => {
-      scheduleMapRenderer = null;
-    });
-  }
-}
-
 function setActivePanelByIndex(index) {
   const panels = getPanels();
   if (!panels.length) return;
@@ -523,8 +451,6 @@ function setActivePanelByIndex(index) {
   document.querySelectorAll('.day-tab-menu-item').forEach((item, itemIndex) => {
     item.classList.toggle('is-active', itemIndex === index);
   });
-
-  updateScheduleMap(panels[index].dataset.dayNum);
 
   closeDayMenu();
 }
@@ -649,6 +575,7 @@ function addRouteButtonsBetweenPlaces() {
   });
 }
 
+/* ブログ用iframe出力機能は一旦コメントアウト。
 const blogFontAwesomeTag = `<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>`;
 const blogScheduleStyle = `<style>
@@ -964,6 +891,7 @@ async function copyBlogScheduleHtml() {
     if (button) button.classList.remove("is-copied");
   }, 1800);
 }
+*/
 
 function openPlaceModal(place) {
   document.getElementById("modalTitle").textContent = place.name || "";

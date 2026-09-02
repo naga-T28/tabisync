@@ -26,6 +26,7 @@ class RunTrace:
         self.selection_reason = ""
         self.tool_call_records = []
         self.openai_call_count = 0
+        self.web_search_call_count = 0
 
     def record_skill_selection(self, skill_ids, reason):
         self.selected_skill_ids = list(skill_ids)
@@ -33,6 +34,10 @@ class RunTrace:
 
     def record_openai_call(self):
         self.openai_call_count += 1
+
+    def record_web_search_calls(self, count):
+        if count:
+            self.web_search_call_count += count
 
     def record_tool_call(self, sequence_index, tool_id, tool_version, status,
                           duration_ms, error_type="", args_summary=None):
