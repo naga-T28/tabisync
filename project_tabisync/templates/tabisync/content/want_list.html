@@ -3,15 +3,11 @@
 
 {% block contents %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initPlaceSearch" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places&callback=initPlaceSearch&loading=async" async defer></script>
 {{ map_display_config|json_script:"tabisync-map-config" }}
-<link rel="stylesheet" href="{% static 'css/vendor/maplibre-gl/maplibre-gl.css' %}">
 <script src="{% static 'js/map_renderer.js' %}"></script>
 <script>
-  window.TABISYNC_MAP_CONFIG = Object.assign(
-    JSON.parse(document.getElementById("tabisync-map-config").textContent),
-    { workerUrl: "{% static 'js/vendor/maplibre-gl/maplibre-gl-worker.mjs' %}" }
-  );
+  window.TABISYNC_MAP_CONFIG = JSON.parse(document.getElementById("tabisync-map-config").textContent);
 </script>
 
 <div class="content-main-map">

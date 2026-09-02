@@ -195,42 +195,18 @@
   margin-bottom: 40px;
 }
 
-// 地図(schedule-map-card)はschedule-main-column内、旅程表の直下に配置されるため
-// content-layoutのflex orderには参加しない。table-boxと隣接する通常のブロック要素になり
-// margin collapseするため、明示的にmargin-topで間隔を確保する。
-.schedule-map-card {
-  width: 100%;
-  margin-top: 24px;
-}
-
-// 日程表の.day-headingに合わせたラベルデザイン(中央揃え・太字)。box5-6のテープ風box-titleは使わない。
-.schedule-map-heading {
-  margin: 0 0 12px;
-  padding: 20px 20px 0;
-  text-align: center;
-  font-size: 1.2em;
-  font-weight: 700;
-  color: variables.$text-main;
-}
-
-.schedule-map-card .box-content {
-  padding-top: 0;
-}
-
 .schedule-share-box {
   order: 3;
   width: 100%;
 }
 
 .schedule-overview-box,
-.schedule-map-card,
 .schedule-share-box {
   box-sizing: border-box;
   max-width: 100%;
 }
 
 .schedule-overview-box .box-content,
-.schedule-map-card .box-content,
 .schedule-share-box .box-content {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -688,27 +664,6 @@
   text-align: center;
 }
 
-// Task 003: 選択日の訪問スポット地図。高さを固定してレイアウトシフトを防ぐ。
-.schedule-map-canvas {
-  width: 100%;
-  height: 240px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #eef1f5;
-}
-
-@media screen and (min-width: variables.$breakpoint-md) {
-  .schedule-map-canvas {
-    height: 280px;
-  }
-}
-
-.schedule-map-empty {
-  color: #666;
-  padding: 20px 0;
-  text-align: center;
-}
-
 .modal {
   display: none;
   position: fixed;
@@ -945,7 +900,6 @@
 
   // PCではschedule-side-columnが実体を持つ箱に戻る(display:contentsを上書き)ため、
   // その中だけで完結するorderに切り替える(概要 -> ブログ用iframe -> 共有)。
-  // 地図(schedule-map-card)はschedule-main-column側にあり、旅程表の直下に表示される。
   .schedule-overview-box {
     order: 1;
   }
@@ -955,8 +909,7 @@
   }
 
   .schedule-side-column .box5-6,
-  .schedule-table-box,
-  .schedule-map-card {
+  .schedule-table-box {
     width: 100%;
     margin-bottom: 0;
   }

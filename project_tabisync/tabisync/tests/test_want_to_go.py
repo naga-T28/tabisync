@@ -232,15 +232,14 @@ class WantToGoMapDisplayConfigTests(TestCase):
             kwargs={"pk": self.itinerary.pk, "token": self.itinerary.token},
         )
 
-    def test_default_provider_is_openfreemap(self):
+    def test_default_provider_is_google(self):
         response = self.client.get(self.url)
         content = response.content.decode("utf-8")
 
         self.assertIn('id="tabisync-map-config"', content)
-        self.assertIn('"provider": "openfreemap"', content)
-        self.assertIn("tiles.openfreemap.org", content)
+        self.assertIn('"provider": "google"', content)
 
-    @override_settings(MAP_DISPLAY_PROVIDER="mock", MAP_STYLE_URL="")
+    @override_settings(MAP_DISPLAY_PROVIDER="mock")
     def test_provider_override_does_not_affect_search_related_markup(self):
         response = self.client.get(self.url)
         content = response.content.decode("utf-8")

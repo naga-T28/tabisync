@@ -31,7 +31,6 @@ from .itinerary_helpers import (
     build_google_maps_search_url,
     build_itinerary_qr_code_url,
     build_itinerary_share_url,
-    build_schedule_map_data,
     ensure_itinerary_qr_code,
     get_itinerary_cover_url,
     get_schedule_day_index,
@@ -198,8 +197,6 @@ class ItineraryDetailV2View(ViewPasswordRequiredMixin, TemplateView):
                 "schedules": day_schedules,
             })
 
-        schedule_map_data = build_schedule_map_data(itinerary, grouped_days)
-
         first_date_str = None
         last_date_str = None
         if itinerary.start_date and itinerary.end_date:
@@ -215,7 +212,6 @@ class ItineraryDetailV2View(ViewPasswordRequiredMixin, TemplateView):
             "itinerary": itinerary,
             "grouped_days": grouped_days,
             "day_choices": day_choices,
-            "schedule_map_data": schedule_map_data,
             "first_date_str": first_date_str,
             "last_date_str": last_date_str,
             "share_url": share_url,

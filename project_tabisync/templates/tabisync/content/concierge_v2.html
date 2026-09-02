@@ -36,14 +36,11 @@
         <link rel="stylesheet" href="{% static 'css/style_v2_1.css'%}?v=20260503">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
         <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&loading=async" async defer></script>
         {{ map_display_config|json_script:"tabisync-map-config" }}
-        <link rel="stylesheet" href="{% static 'css/vendor/maplibre-gl/maplibre-gl.css' %}">
         <script src="{% static 'js/map_renderer.js' %}"></script>
         <script>
-          window.TABISYNC_MAP_CONFIG = Object.assign(
-            JSON.parse(document.getElementById("tabisync-map-config").textContent),
-            { workerUrl: "{% static 'js/vendor/maplibre-gl/maplibre-gl-worker.mjs' %}" }
-          );
+          window.TABISYNC_MAP_CONFIG = JSON.parse(document.getElementById("tabisync-map-config").textContent);
         </script>
     </head>
     <body id="concierge-body">
@@ -150,6 +147,9 @@
                 <ul id="conciergeConversationList" class="concierge-conversation-list"></ul>
               </aside>
               <section class="concierge-chat-panel">
+                <button type="button" id="conciergeSideExpand" class="concierge-side-expand-btn" aria-label="チャット履歴を開く" aria-expanded="true">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
                 <div class="concierge-chat-shell">
                   <div id="conciergeMessages" class="concierge-messages" aria-live="polite"></div>
                 </div>
@@ -201,6 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const sideBackdropEl = document.getElementById("conciergeSideBackdrop");
   const sideToggleEl = document.getElementById("conciergeHistoryToggle");
   const sideCloseEl = document.getElementById("conciergeSideClose");
+  const sideExpandEl = document.getElementById("conciergeSideExpand");
   const newChatBtnEl = document.getElementById("conciergeNewChatBtn");
   const conversationListEl = document.getElementById("conciergeConversationList");
   const itineraryStorageId = "{{ itinerary.pk }}";
@@ -840,6 +841,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
 
+  // Open WebUI風に「今日 / 昨日 / 7日前まで / それ以前」で見出しを分ける。
+  function conversationDateGroupLabel(timestamp) {
+    const startOfDay = (ms) => {
+      const d = new Date(ms);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    };
+    const diffDays = Math.round((startOfDay(Date.now()) - startOfDay(Number(timestamp) || Date.now())) / 86400000);
+    if (diffDays <= 0) return "今日";
+    if (diffDays === 1) return "昨日";
+    if (diffDays <= 7) return "7日前まで";
+    return "それ以前";
+  }
+
+  function closeAllConversationMenus() {
+    if (!conversationListEl) return;
+    conversationListEl.querySelectorAll(".concierge-conversation-menu-wrap.is-open").forEach((wrap) => {
+      wrap.classList.remove("is-open");
+      const btn = wrap.querySelector(".concierge-conversation-menu-btn");
+      if (btn) btn.setAttribute("aria-expanded", "false");
+    });
+  }
+
   function renderConversationList() {
     if (!conversationListEl) return;
     conversationListEl.innerHTML = "";
@@ -853,7 +877,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    let lastGroupLabel = null;
     entries.forEach(([id, conversation]) => {
+      const groupLabel = conversationDateGroupLabel(conversation.updatedAt);
+      if (groupLabel !== lastGroupLabel) {
+        const groupLi = document.createElement("li");
+        groupLi.className = "concierge-conversation-group-label";
+        groupLi.textContent = groupLabel;
+        conversationListEl.appendChild(groupLi);
+        lastGroupLabel = groupLabel;
+      }
+
       const li = document.createElement("li");
       li.className = "concierge-conversation-item";
 
@@ -864,27 +898,42 @@ document.addEventListener("DOMContentLoaded", function () {
       button.type = "button";
       button.className = "concierge-conversation-btn";
       button.dataset.conversationId = id;
+      button.title = `${conversation.title || "新しいチャット"} (${formatConversationTimestamp(conversation.updatedAt)})`;
 
       const title = document.createElement("span");
       title.className = "concierge-conversation-title";
       title.textContent = conversation.title || "新しいチャット";
-
-      const meta = document.createElement("span");
-      meta.className = "concierge-conversation-meta";
-      meta.textContent = formatConversationTimestamp(conversation.updatedAt);
-
       button.appendChild(title);
-      button.appendChild(meta);
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "concierge-conversation-delete";
-      deleteBtn.dataset.conversationId = id;
-      deleteBtn.setAttribute("aria-label", "この会話を削除");
-      deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+      const menuWrap = document.createElement("div");
+      menuWrap.className = "concierge-conversation-menu-wrap";
+
+      const menuBtn = document.createElement("button");
+      menuBtn.type = "button";
+      menuBtn.className = "concierge-conversation-menu-btn";
+      menuBtn.dataset.conversationId = id;
+      menuBtn.setAttribute("aria-label", "会話メニューを開く");
+      menuBtn.setAttribute("aria-haspopup", "true");
+      menuBtn.setAttribute("aria-expanded", "false");
+      menuBtn.innerHTML = '<i class="fa-solid fa-ellipsis"></i>';
+
+      const menu = document.createElement("div");
+      menu.className = "concierge-conversation-menu";
+      menu.setAttribute("role", "menu");
+
+      const deleteItem = document.createElement("button");
+      deleteItem.type = "button";
+      deleteItem.className = "concierge-conversation-menu-delete";
+      deleteItem.dataset.conversationId = id;
+      deleteItem.setAttribute("role", "menuitem");
+      deleteItem.innerHTML = '<i class="fa-solid fa-trash"></i><span>削除</span>';
+
+      menu.appendChild(deleteItem);
+      menuWrap.appendChild(menuBtn);
+      menuWrap.appendChild(menu);
 
       row.appendChild(button);
-      row.appendChild(deleteBtn);
+      row.appendChild(menuWrap);
       li.appendChild(row);
       conversationListEl.appendChild(li);
     });
@@ -958,6 +1007,31 @@ document.addEventListener("DOMContentLoaded", function () {
     if (sideBackdropEl) sideBackdropEl.classList.remove("is-open");
     if (sideToggleEl) sideToggleEl.setAttribute("aria-expanded", "false");
   }
+
+  // PC専用: 履歴パネルの折りたたみ状態(task-012右寄せ対応)。
+  const historyCollapseStorageKey = `tabisync_concierge_history_collapsed_${itineraryStorageId}`;
+
+  function isDesktopViewport() {
+    return window.matchMedia("(min-width: 960px)").matches;
+  }
+
+  function applyHistoryCollapsedState(isCollapsed) {
+    document.body.classList.toggle("is-concierge-history-collapsed", isCollapsed);
+    if (sideCloseEl) sideCloseEl.setAttribute("aria-label", isCollapsed ? "チャット履歴を開く" : "チャット履歴を折りたたむ");
+    if (sideExpandEl) sideExpandEl.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+  }
+
+  function collapseHistoryPanel() {
+    window.localStorage.setItem(historyCollapseStorageKey, "true");
+    applyHistoryCollapsedState(true);
+  }
+
+  function expandHistoryPanel() {
+    window.localStorage.setItem(historyCollapseStorageKey, "false");
+    applyHistoryCollapsedState(false);
+  }
+
+  applyHistoryCollapsedState(window.localStorage.getItem(historyCollapseStorageKey) === "true");
 
   function setSending(isSending) {
     sendButtonEl.disabled = isSending;
@@ -1128,7 +1202,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-  if (sideCloseEl) sideCloseEl.addEventListener("click", closeSidePanel);
+  if (sideCloseEl) {
+    sideCloseEl.addEventListener("click", function () {
+      if (isDesktopViewport()) {
+        collapseHistoryPanel();
+      } else {
+        closeSidePanel();
+      }
+    });
+  }
+  if (sideExpandEl) sideExpandEl.addEventListener("click", expandHistoryPanel);
   if (sideBackdropEl) sideBackdropEl.addEventListener("click", closeSidePanel);
   if (newChatBtnEl) newChatBtnEl.addEventListener("click", startNewChat);
 
@@ -1137,9 +1220,21 @@ document.addEventListener("DOMContentLoaded", function () {
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
 
-      const deleteBtn = target.closest(".concierge-conversation-delete");
-      if (deleteBtn) {
-        deleteConversation(deleteBtn.dataset.conversationId);
+      const deleteItem = target.closest(".concierge-conversation-menu-delete");
+      if (deleteItem) {
+        deleteConversation(deleteItem.dataset.conversationId);
+        return;
+      }
+
+      const menuBtn = target.closest(".concierge-conversation-menu-btn");
+      if (menuBtn) {
+        const wrap = menuBtn.closest(".concierge-conversation-menu-wrap");
+        const wasOpen = wrap ? wrap.classList.contains("is-open") : false;
+        closeAllConversationMenus();
+        if (wrap && !wasOpen) {
+          wrap.classList.add("is-open");
+          menuBtn.setAttribute("aria-expanded", "true");
+        }
         return;
       }
 
@@ -1149,6 +1244,13 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+
+  // メニュー外をクリックしたら開いている「…」メニューを閉じる。
+  document.addEventListener("click", function (event) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (target && target.closest(".concierge-conversation-menu-wrap")) return;
+    closeAllConversationMenus();
+  });
 
   migrateLegacyHistory();
 

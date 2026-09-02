@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views import View
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
@@ -52,6 +53,9 @@ logger = logging.getLogger(__name__)
 class ConciergeV2View(ViewPasswordRequiredMixin, View):
     template_name = "tabisync/content/concierge_v2.html"
 
+    # サイト全体はX_FRAME_OPTIONS=DENYだが、この画面はPC版のフローティング
+    # ウィジェットから同一オリジンのiframeとして開くため、ここだけ許可する。
+    @method_decorator(xframe_options_sameorigin)
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         first_date_str = None

@@ -10,8 +10,9 @@
 }
 .content-main-concierge{
     width: 100%;
-    min-height: 100vh;
+    height: 100svh;
     margin: 0; /* 外側の余白（上下と中央配置） */
+    overflow: hidden; /* 100vhと100svhのズレでbody側に余分なスクロールが出るのを防ぐ */
 }
 
 .header-wrapper {
@@ -22,7 +23,12 @@
 }
 
 body#concierge-body {
-  min-height: 100svh;
+  height: 100svh;
+  /* 共通スタイルのbody{min-height:100vh}と組み合わさると実測で
+     ページ全体の高さがビューポートより60px前後大きくなり、
+     二重スクロールの原因になるため明示的に打ち消す。 */
+  min-height: 0;
+  overflow: hidden;
   background: #fff;
 }
 
@@ -173,34 +179,66 @@ body#concierge-body {
   height: 100%;
 }
 
+/* 履歴パネルを折りたたんだ時にだけ表示する再展開ボタン(PC専用)。 */
+.concierge-side-expand-btn {
+  all: unset;
+  display: none;
+  box-sizing: border-box;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e9edf2;
+  border-radius: 50%;
+  background: #fff;
+  color: #6f7783;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(28, 36, 51, 0.1);
+}
+
+.concierge-side-expand-btn:hover {
+  background: #f6f7f9;
+}
+
 /* チャット履歴サイドバー(ChatGPT風の会話一覧)。
    モバイルはオーバーレイ式drawer、PC(960px~)は常設カラムとして表示する。 */
 .concierge-side-panel {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
-  z-index: 210;
+  /* SP用ヘッダー(.page-header.--only-sp, z-index:1000)より手前に出す。
+     以前はz-index:210で埋もれており、閉じるボタン等がヘッダーの裏で
+     クリック不能になっていた。 */
+  z-index: 1010;
   display: flex;
   flex-direction: column;
   width: min(84vw, 320px);
   padding: 18px 14px;
-  background: #fff;
-  box-shadow: 8px 0 28px rgba(28, 36, 51, 0.16);
-  transform: translateX(-100%);
-  transition: transform 0.22s ease;
+  /* Open WebUIのサイドバーに寄せた、地の色よりわずかに暗いフラットな下地。 */
+  background: #f9f9f9;
+  /* 閉じている間(画面外)はbox-shadowを付けない。付けたままだと
+     translateXで隠れた状態でも影だけが画面右端から左側ににじみ出て見えるため。 */
+  box-shadow: none;
+  transform: translateX(100%);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .concierge-side-panel.is-open {
   transform: translateX(0);
+  box-shadow: -8px 0 28px rgba(28, 36, 51, 0.16);
 }
 
 .concierge-side-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 205;
+  z-index: 1005;
   background: rgba(20, 24, 33, 0.42);
   opacity: 0;
   pointer-events: none;
@@ -217,46 +255,61 @@ body#concierge-body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .concierge-side-panel-title {
   margin: 0;
-  color: #2f3747;
-  font-size: 0.92rem;
+  color: #6f7783;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .concierge-side-panel-close {
   all: unset;
-  display: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 8px;
   color: #6f7783;
   cursor: pointer;
 }
 
+.concierge-side-panel-close:hover {
+  background: #ececec;
+}
+
+/* Open WebUIのナビ行(アイコン+ラベル、地の塗りなし)に寄せたスタイル。 */
 .concierge-new-chat-btn {
   all: unset;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  min-height: 42px;
-  margin-bottom: 12px;
-  padding: 0 14px;
-  border: 1px solid rgba(47, 55, 71, 0.14);
-  border-radius: 999px;
-  background: #2f3747;
-  color: #fff;
-  font-size: 0.86rem;
-  font-weight: 700;
+  min-height: 38px;
+  margin-bottom: 10px;
+  padding: 0 8px;
+  border-radius: 8px;
+  color: #2f3747;
+  font-size: 0.84rem;
+  font-weight: 500;
   cursor: pointer;
+}
+
+.concierge-new-chat-btn i {
+  flex: 0 0 auto;
+  width: 16px;
+  text-align: center;
+  color: #6f7783;
+}
+
+.concierge-new-chat-btn:hover {
+  background: #ececec;
 }
 
 .concierge-conversation-list {
@@ -266,21 +319,36 @@ body#concierge-body {
   padding: 0;
   list-style: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.concierge-conversation-group-label {
+  margin: 14px 8px 4px;
+  color: #9aa1ab;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.concierge-conversation-item:first-child .concierge-conversation-group-label {
+  margin-top: 2px;
 }
 
 .concierge-conversation-item {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 .concierge-conversation-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
-  border-radius: 12px;
+  gap: 0;
+  border-radius: 8px;
 }
 
+.concierge-conversation-row:hover,
 .concierge-conversation-row.is-active {
-  background: #f0f1f4;
+  background: #ececec;
 }
 
 .concierge-conversation-btn {
@@ -288,53 +356,93 @@ body#concierge-body {
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
-  padding: 10px 10px;
-  border-radius: 12px;
+  padding: 8px 4px 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
-}
-
-.concierge-conversation-row:hover .concierge-conversation-btn {
-  background: #f6f7f9;
 }
 
 .concierge-conversation-title {
   display: block;
   overflow: hidden;
-  color: #2f3747;
+  color: #383a3f;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.concierge-conversation-meta {
-  display: block;
-  margin-top: 2px;
-  color: #9aa1ab;
-  font-size: 0.7rem;
+/* 「…」メニューはホバー時、または開いている行でのみ表示する
+   (Open WebUIのチャット一覧と同じ、常時は出さない挙動)。 */
+.concierge-conversation-menu-wrap {
+  position: relative;
+  flex: 0 0 auto;
 }
 
-.concierge-conversation-delete {
+.concierge-conversation-menu-btn {
   all: unset;
-  flex: 0 0 auto;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  color: #b0b6bf;
-  font-size: 0.8rem;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+  border-radius: 6px;
+  color: #8a909a;
+  font-size: 0.82rem;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.concierge-conversation-row:hover .concierge-conversation-menu-btn,
+.concierge-conversation-row.is-active .concierge-conversation-menu-btn,
+.concierge-conversation-menu-wrap.is-open .concierge-conversation-menu-btn {
+  opacity: 1;
+}
+
+.concierge-conversation-menu-btn:hover {
+  background: #dedede;
+  color: #2f3747;
+}
+
+.concierge-conversation-menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 20;
+  display: none;
+  min-width: 132px;
+  padding: 4px;
+  border: 1px solid #e9edf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(28, 36, 51, 0.16);
+}
+
+.concierge-conversation-menu-wrap.is-open .concierge-conversation-menu {
+  display: block;
+}
+
+.concierge-conversation-menu-delete {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  color: #d64545;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
-.concierge-conversation-delete:hover {
-  background: #f0f1f4;
-  color: #d64545;
+.concierge-conversation-menu-delete:hover {
+  background: rgba(214, 69, 69, 0.1);
 }
 
 .concierge-conversation-empty {
-  padding: 10px 6px;
+  padding: 10px 8px;
   color: #9aa1ab;
   font-size: 0.78rem;
   line-height: 1.6;
@@ -362,6 +470,8 @@ body#concierge-body {
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding-bottom:calc(var(--concierge-input-dock-height) + 18px);
   padding-right: 5px;
   margin-right: 5px;
@@ -504,6 +614,7 @@ body#concierge-body {
   max-height: 216px;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
@@ -853,28 +964,56 @@ body#concierge-body {
     border-radius: 28px;
   }
 
+  /* 履歴パネルは右側に表示する(Open WebUI風)。DOM順は変えず、
+     grid上のorderだけ入れ替えてチャット→履歴の見た目にする。 */
   .concierge-layout {
     height: 100%;
     display: grid;
-    grid-template-columns: var(--concierge-history-width) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) var(--concierge-history-width);
     gap: var(--concierge-history-gap);
+    transition: grid-template-columns 0.2s ease, gap 0.2s ease;
+  }
+
+  .concierge-chat-panel {
+    order: 1;
+    position: relative;
   }
 
   .concierge-side-panel {
+    order: 2;
     position: static;
     z-index: auto;
     width: 100%;
     height: 100%;
     padding: 16px 10px;
     border-radius: 20px;
-    border: 1px solid #e9edf2;
+    border: none;
     box-shadow: none;
     transform: none;
-    transition: none;
+    transition: opacity 0.16s ease;
   }
 
   .concierge-side-backdrop {
     display: none;
+  }
+
+  /* 履歴パネルの折りたたみ(PC専用)。折りたたむとhistory列の幅とgapを0にし、
+     チャット領域を全幅まで広げる。パネル自体はopacityで消し、
+     再展開用の丸ボタン(.concierge-side-expand-btn)をチャット右上に出す。 */
+  body.is-concierge-history-collapsed {
+    --concierge-history-width: 0px;
+    --concierge-history-gap: 0px;
+  }
+
+  body.is-concierge-history-collapsed .concierge-side-panel {
+    padding: 0;
+    border-width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.is-concierge-history-collapsed .concierge-side-expand-btn {
+    display: flex;
   }
 
   .concierge-main {
@@ -892,16 +1031,16 @@ body#concierge-body {
   }
 
   .concierge-input-dock {
-    left: calc(240px + var(--concierge-history-width) + var(--concierge-history-gap));
-    right: 0;
+    left: 240px;
+    right: calc(var(--concierge-history-width) + var(--concierge-history-gap));
     width: auto;
     transform: none;
     padding: 0 32px;
-    transition: left .24s ease;
+    transition: left .24s ease, right .2s ease;
   }
 
   body.is-side-nav-collapsed .concierge-input-dock {
-    left: calc(72px + var(--concierge-history-width) + var(--concierge-history-gap));
+    left: 72px;
   }
 
   .concierge-input-wrap {
@@ -913,4 +1052,211 @@ body#concierge-body {
     height: 58px;
   }
 
+}
+
+/* ==========================================================
+   フローティングAIコンシェルジュウィジェット（PC専用）
+   しおり画面左下にキャラを常駐させ、クリックで画面内タブとして
+   AIコンシェルジュ(concierge_v2)をiframe表示する。
+   パネルヘッダーをドラッグすると表示位置を移動できる。
+   ========================================================== */
+.concierge-fab-widget,
+.concierge-fab-panel {
+  display: none;
+}
+
+.concierge-fab-panel.is-dragging {
+  transition: none !important;
+}
+
+@media screen and (min-width: variables.$breakpoint-md) {
+  .concierge-fab-widget {
+    position: fixed;
+    left: 268px; /* サイドナブ(240px)に重ならないよう余白ぶんずらす */
+    bottom: 28px;
+    z-index: 2400;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    transition: left .24s ease;
+  }
+
+  body.is-side-nav-collapsed .concierge-fab-widget {
+    left: 100px; /* サイドナブ折りたたみ時(72px)の幅に合わせる */
+  }
+
+  .concierge-fab-bubble {
+    position: relative;
+    max-width: 240px;
+    padding: 12px 30px 12px 16px;
+    border-radius: 18px 18px 18px 4px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(47, 55, 71, 0.18);
+    animation: concierge-fab-bubble-in 0.3s ease;
+  }
+
+  .concierge-fab-bubble.is-hidden {
+    display: none;
+  }
+
+  .concierge-fab-bubble-text {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #2f3747;
+  }
+
+  .concierge-fab-bubble-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: #f2f3f7;
+    color: #8e8e8e;
+    font-size: 0.65rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .concierge-fab-bubble-close:hover {
+    background: #e4e4e4;
+  }
+
+  .concierge-fab-button {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    background: linear-gradient(180deg, variables.$accent-purple 0%, variables.$accent-pink 100%);
+    box-shadow: 0 10px 24px rgba(175, 41, 187, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .18s ease;
+  }
+
+  .concierge-fab-button:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  .concierge-fab-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+  }
+
+  .concierge-fab-panel {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 268px; /* サイドナブ(240px)に重ならないよう余白ぶんずらす */
+    bottom: 28px;
+    width: 400px;
+    height: 640px;
+    max-height: calc(100vh - 56px);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(47, 55, 71, 0.28);
+    overflow: hidden;
+    z-index: 2500;
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease, left .24s ease;
+  }
+
+  body.is-side-nav-collapsed .concierge-fab-panel {
+    left: 100px; /* サイドナブ折りたたみ時(72px)の幅に合わせる */
+  }
+
+  .concierge-fab-panel.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .concierge-fab-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, variables.$accent-purple 0%, variables.$accent-pink 100%);
+    color: #fff;
+    flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .concierge-fab-panel.is-dragging .concierge-fab-panel-header {
+    cursor: grabbing;
+  }
+
+  .concierge-fab-panel-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .concierge-fab-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .concierge-fab-panel-expand,
+  .concierge-fab-panel-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.8rem;
+  }
+
+  .concierge-fab-panel-expand:hover,
+  .concierge-fab-panel-close:hover {
+    background: rgba(255, 255, 255, 0.32);
+  }
+
+  .concierge-fab-panel-body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .concierge-fab-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+}
+
+@keyframes concierge-fab-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
