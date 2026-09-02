@@ -193,11 +193,13 @@ pipenv run python manage.py makemigrations --check --dry-run
 - AIコンシェルジュAgent経路（`concierge_agent`。任意、未設定時は全て安全側の既定値でlegacy経路のまま動作）:
   - `CONCIERGE_AGENT_ENABLED`（既定`false`）: Agent経路のグローバル有効化フラグ
   - `CONCIERGE_AGENT_ENABLED_ITINERARY_IDS`（既定空、カンマ区切りpk一覧）: 設定時はこの一覧のしおりのみAgent経路になり、`CONCIERGE_AGENT_ENABLED`より優先される（内部QAや限定公開向け）
-  - `OPENAI_AGENT_MODEL`（既定は`OPENAI_ANSWER_MODEL`と同じ）: Agent loopのtool-callingステップで使うモデル
+  - `OPENAI_AGENT_MODEL`（既定`gpt-5.6-luna`。`OPENAI_ANSWER_MODEL`とは独立）: Agent loopのtool-callingステップで使うモデル
   - `OPENAI_AGENT_STEP_TIMEOUT_SECONDS`（既定は`OPENAI_ANSWER_TIMEOUT_SECONDS`と同じ）: Agent loop1ステップあたりのタイムアウト
   - `CONCIERGE_AGENT_MAX_OPENAI_CALLS_PER_RUN`（既定`6`）: 1 run（1リクエスト）あたりのOpenAI呼び出し回数上限
   - `CONCIERGE_AGENT_MAX_TOOL_CALLS_PER_RUN`（既定`6`）: 1 runあたりのTool呼び出し回数上限（Skill Markdownの`max_tool_calls`との小さい方が実際に適用される）
   - `CONCIERGE_AGENT_MAX_RUN_SECONDS`（既定`25`）: 1 run全体の経過時間上限
+  - `CONCIERGE_AGENT_WEB_SEARCH_ENABLED`（既定`true`）: OpenAI組み込み`web_search` toolをAgentへ付与するかどうか(task-012)
+  - `CONCIERGE_AGENT_MAX_WEB_SEARCH_PER_RUN`（既定`2`）: 1 runあたりのweb_search呼び出し回数上限(課金対象tool、$10/1,000call相当)
 - Upload/Input: `MAX_COVER_IMAGE_UPLOAD_BYTES`, `MAX_REQUEST_BODY_BYTES`, `MAX_JSON_BODY_BYTES`（いずれも任意。`MAX_JSON_BODY_BYTES`はJSON API本文の上限で、既定256KiB）
 - Gunicorn: `GUNICORN_TIMEOUT`, `GUNICORN_GRACEFUL_TIMEOUT`
 - Proxy: `TRUSTED_PROXY_CIDRS`（任意。カンマ区切りのCIDR一覧、例: `10.0.0.0/8,192.0.2.10/32`。レート制限等のクライアントIP判定で `CF-Connecting-IP`/`X-Forwarded-For` を信頼してよい直前ホップの範囲を指定する。未設定時は転送ヘッダーを一切信頼せず `REMOTE_ADDR` のみを使用する安全側の既定値になる。外側Nginx等のリバースプロキシが到達するアドレス範囲を設定すること）

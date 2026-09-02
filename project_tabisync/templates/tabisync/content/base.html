@@ -129,6 +129,41 @@
         {% block contents %}
 
         {% endblock %}
+
+        <!-- AIコンシェルジュ フローティングウィジェット（PC専用・ドラッグで移動可能） -->
+        <div
+          id="conciergeFabWidget"
+          class="concierge-fab-widget"
+          data-concierge-url="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}"
+          data-page-name="{{ request.resolver_match.url_name }}"
+          data-itinerary-id="{{ itinerary.pk }}"
+        >
+          <div id="conciergeFabBubble" class="concierge-fab-bubble" role="status">
+            <button type="button" id="conciergeFabBubbleClose" class="concierge-fab-bubble-close" aria-label="吹き出しを閉じる">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <p id="conciergeFabBubbleText" class="concierge-fab-bubble-text"></p>
+          </div>
+          <button type="button" id="conciergeFabButton" class="concierge-fab-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="conciergeFabPanel" aria-label="AIコンシェルジュを開く">
+            <img src="{% static 'img/nagat-icon.webp' %}" alt="" class="concierge-fab-avatar">
+          </button>
+        </div>
+        <div id="conciergeFabPanel" class="concierge-fab-panel" role="dialog" aria-modal="false" aria-label="AIコンシェルジュ" aria-hidden="true">
+          <div id="conciergeFabPanelHeader" class="concierge-fab-panel-header">
+            <span class="concierge-fab-panel-title"><i class="fa-solid fa-robot"></i> AIコンシェルジュ</span>
+            <div class="concierge-fab-panel-actions">
+              <a href="{% url 'tabisync:V2_concierge' pk=itinerary.pk token=itinerary.token %}" target="_blank" rel="noopener noreferrer" class="concierge-fab-panel-expand" aria-label="別タブで開く" title="別タブで開く">
+                <i class="fa-solid fa-up-right-from-square"></i>
+              </a>
+              <button type="button" id="conciergeFabPanelClose" class="concierge-fab-panel-close" aria-label="閉じる">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <div class="concierge-fab-panel-body">
+            <iframe id="conciergeFabIframe" class="concierge-fab-iframe" title="AIコンシェルジュ" loading="lazy"></iframe>
+          </div>
+        </div>
         <footer>
             <amp-ad width="100vw" height="320"
                 type="adsense"
@@ -231,5 +266,6 @@
             });
         </script>
         <script src="{% static 'js/announcement_banner.js' %}" defer></script>
+        <script src="{% static 'js/concierge_widget.js' %}" defer></script>
     </body>
 </html>

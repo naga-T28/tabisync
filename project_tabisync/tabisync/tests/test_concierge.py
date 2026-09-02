@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 from datetime import date
 from unittest.mock import patch
@@ -107,6 +108,12 @@ class ConciergeQuotaReservationTests(TestCase):
     """AI利用枠は外部API呼び出し前に予約し、失敗時は解放（消費しない）される。"""
 
     def setUp(self):
+        # legacy経路(run_moderation/run_data_selection/run_answer)を検証するテストのため、
+        # 環境のCONCIERGE_AGENT_ENABLED設定に関わらずlegacy modeを強制する。
+        env_patcher = patch.dict(os.environ, {"CONCIERGE_AGENT_ENABLED": "false"}, clear=False)
+        env_patcher.start()
+        self.addCleanup(env_patcher.stop)
+
         self.itinerary = Itinerary.objects.create(
             title="Test Trip",
             concierge_daily_limit=3,
@@ -228,6 +235,12 @@ class ConciergeDailyLimitConcurrencyTests(TransactionTestCase):
             end_date=date(2026, 1, 3),
         )
         url = reverse("tabisync:V2_concierge", kwargs={"pk": itinerary.pk, "token": itinerary.token})
+
+        # legacy経路(run_answer等)をモックして検証するテストのため、
+        # 環境のCONCIERGE_AGENT_ENABLED設定に関わらずlegacy modeを強制する。
+        env_patcher = patch.dict(os.environ, {"CONCIERGE_AGENT_ENABLED": "false"}, clear=False)
+        env_patcher.start()
+        self.addCleanup(env_patcher.stop)
 
         moderation_patcher = patch(
             "tabisync.views.concierge.run_moderation",

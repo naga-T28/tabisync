@@ -1,5 +1,6 @@
 import json
 import logging
+import urllib.parse
 from uuid import UUID, uuid4
 
 from django.db import transaction
@@ -9,6 +10,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views import View
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
@@ -16,6 +18,7 @@ from django_ratelimit.decorators import ratelimit
 from ..concierge_agent.agent import run_agent
 from ..concierge_agent.context import RunContext, is_agent_mode_enabled
 from ..concierge_agent.errors import ConciergeAgentError
+from ..concierge_agent.link_preview import MAX_LINK_PREVIEW_URLS_PER_REQUEST, get_link_preview
 from ..concierge_agent.registry import get_registry
 from ..concierge_agent.usage import DailyRunUsageService, RunUsageCounters
 from ..concierge_tools import edit_actions as edit_actions_service
@@ -50,6 +53,9 @@ logger = logging.getLogger(__name__)
 class ConciergeV2View(ViewPasswordRequiredMixin, View):
     template_name = "tabisync/content/concierge_v2.html"
 
+    # サイト全体はX_FRAME_OPTIONS=DENYだが、この画面はPC版のフローティング
+    # ウィジェットから同一オリジンのiframeとして開くため、ここだけ許可する。
+    @method_decorator(xframe_options_sameorigin)
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, pk, token):
         first_date_str = None
@@ -133,7 +139,9 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
         # ここから先は外部API呼び出し。失敗時は予約を解放し、日次上限を消費しない
         # （＝失敗した呼び出しはカウントしない仕様）。
         try:
-            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message, history)
+            moderation_prompt, moderation_payload, moderation_result = run_moderation(
+                user_message, history, conversation_id=conversation_id,
+            )
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge moderation failed for itinerary_id=%s: %s",
@@ -170,7 +178,9 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
             })
 
         try:
-            selection_prompt, selection_payload, selection_result = run_data_selection(user_message, history)
+            selection_prompt, selection_payload, selection_result = run_data_selection(
+                user_message, history, conversation_id=conversation_id,
+            )
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge data selection failed for itinerary_id=%s: %s",
@@ -199,7 +209,9 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
             return JsonResponse({"status": "error", "message": "AIコンシェルジュ用の旅程データを組み立てられませんでした。"}, status=500)
 
         try:
-            answer_prompt, answer_payload, assistant_message, edit_actions = run_answer(history, user_message, selected_context)
+            answer_prompt, answer_payload, assistant_message, edit_actions = run_answer(
+                history, user_message, selected_context, conversation_id=conversation_id,
+            )
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge answer generation failed for itinerary_id=%s: %s",
@@ -242,7 +254,9 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
 
     def _post_agent_mode(self, request, user_message, history, reservation, conversation_id, daily_limit, today_count):
         try:
-            moderation_prompt, moderation_payload, moderation_result = run_moderation(user_message, history)
+            moderation_prompt, moderation_payload, moderation_result = run_moderation(
+                user_message, history, conversation_id=conversation_id,
+            )
         except OpenAIConciergeError as exc:
             logger.warning(
                 "Concierge agent moderation failed for itinerary_id=%s: %s",
@@ -327,6 +341,7 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
             selected_skill_ids=result.trace.selected_skill_ids,
             openai_call_count=result.trace.openai_call_count,
             tool_call_count=len(result.trace.tool_call_records),
+            web_search_call_count=result.trace.web_search_call_count,
             ui_component_types=ui_component_types,
             edit_action_count=len(result.edit_actions),
             run_status=result.run_status,
@@ -338,6 +353,7 @@ class ConciergeV2View(ViewPasswordRequiredMixin, View):
             "reply": result.reply_markdown,
             "edit_actions": result.edit_actions,
             "ui_components": result.ui_components,
+            "citations": result.citations,
             "daily_limit": daily_limit,
             "remaining_count": max(daily_limit - (today_count + 1), 0),
         })
@@ -508,4 +524,39 @@ def concierge_v2_apply_changes(request, pk, token):
         "applied_count": len(results),
         "results": results,
     })
+
+
+@require_POST
+@ratelimit(key=ratelimit_client_ip, rate='30/m', block=True)
+def concierge_v2_link_previews(request, pk, token):
+    itinerary = get_itinerary_or_404(pk, token)
+
+    view_gate_response = require_view_access_json(request, itinerary)
+    if view_gate_response is not None:
+        return view_gate_response
+
+    data, error_response = parse_json_object_body(request)
+    if error_response is not None:
+        return error_response
+
+    raw_urls = data.get("urls")
+    if not isinstance(raw_urls, list):
+        return JsonResponse({"status": "error", "message": "urlsが不正です。"}, status=400)
+
+    seen = set()
+    urls = []
+    for raw_url in raw_urls:
+        url = str(raw_url or "").strip()
+        if not url or url in seen:
+            continue
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            continue
+        seen.add(url)
+        urls.append(url)
+        if len(urls) >= MAX_LINK_PREVIEW_URLS_PER_REQUEST:
+            break
+
+    previews = [get_link_preview(url) for url in urls]
+    return JsonResponse({"status": "ok", "previews": previews})
 

@@ -9,6 +9,7 @@ from ..openai_concierge import (
     OPENAI_LIGHT_MODEL,
     OPENAI_SELECTION_TIMEOUT_SECONDS,
     OpenAIConciergeError,
+    build_prompt_cache_key,
     post_responses_api_raw,
 )
 from .errors import ToolExecutionError, UsageLimitExceeded
@@ -16,10 +17,30 @@ from .guardrails import DATA_NOT_INSTRUCTION_NOTICE, apply_output_guardrail
 from .schemas import MAX_EDIT_ACTIONS, MAX_UI_COMPONENTS, build_skill_routing_schema
 from .tracing import RunTrace, summarize_tool_args
 
-OPENAI_AGENT_MODEL = os.environ.get("OPENAI_AGENT_MODEL") or OPENAI_ANSWER_MODEL
+# gpt-5.6-luna(2026-07-09公開)はweb_search built-in toolに対応した低コストモデル。
+# legacy経路のOPENAI_ANSWER_MODELとは独立して既定値を持つ(task-012)。
+OPENAI_AGENT_MODEL = os.environ.get("OPENAI_AGENT_MODEL") or "gpt-5.6-luna"
 OPENAI_AGENT_STEP_TIMEOUT_SECONDS = float(
     os.environ.get("OPENAI_AGENT_STEP_TIMEOUT_SECONDS", str(OPENAI_ANSWER_TIMEOUT_SECONDS))
 )
+# web_search tool実行はOpenAI側で検索の往復が挟まる分、通常ステップより時間がかかる
+# (実測で単純応答の数倍)。タイムアウトだけ伸ばしても全体のrun deadline
+# (CONCIERGE_AGENT_MAX_RUN_SECONDS、usage.py)を超えると打ち切られるため、
+# そちらも合わせて余裕を持たせる必要がある。
+OPENAI_AGENT_WEB_SEARCH_STEP_TIMEOUT_SECONDS = float(
+    os.environ.get(
+        "OPENAI_AGENT_WEB_SEARCH_STEP_TIMEOUT_SECONDS",
+        str(max(OPENAI_AGENT_STEP_TIMEOUT_SECONDS, 45)),
+    )
+)
+
+CONCIERGE_AGENT_WEB_SEARCH_ENABLED = (
+    os.environ.get("CONCIERGE_AGENT_WEB_SEARCH_ENABLED", "true").strip().lower() == "true"
+)
+CONCIERGE_AGENT_MAX_WEB_SEARCH_PER_RUN = int(
+    os.environ.get("CONCIERGE_AGENT_MAX_WEB_SEARCH_PER_RUN", "2")
+)
+MAX_CITATIONS = 5
 
 FALLBACK_SKILL_ID = "itinerary_guide"
 FALLBACK_REPLY = "現在、処理の上限に達したため十分な回答を作成できませんでした。少し時間をおいて再度お試しください。"
@@ -38,6 +59,9 @@ INSTRUCTIONS_PREFIX = f"""あなたはTabiSyncのAIコンシェルジュです�
 - わからない情報は推測しすぎず、データにないことはそのように伝えてください。
 - Toolを呼んでいないのに、しおりを変更した・地図を表示したと述べないでください。
 - 文字数は600字程度を目安にしてください。
+- しおり内データにない最新情報(現在の天気、営業状況、料金、ニュースなど)が必要な場合のみweb_searchを使ってください。
+- web_searchを使った場合は、検索結果の要約だけで終わらせず、根拠となる公式サイト等のページを開いて内容を確認し、その記載に基づいて回答してください。出典URLは本文に直接書き込まず、参照情報(citation)として扱われるようにしてください。
+- 表形式が分かりやすい内容(比較、日程一覧など)ではMarkdownの表(`| a | b |`)を使ってよいです。
 """
 
 
@@ -46,6 +70,7 @@ class AgentRunResult:
     reply_markdown: str
     ui_components: list = field(default_factory=list)
     edit_actions: list = field(default_factory=list)
+    citations: list = field(default_factory=list)
     run_status: str = "ok"
     trace: RunTrace = None
 
@@ -107,6 +132,44 @@ def split_output(output):
     return function_calls, final_text
 
 
+def count_web_search_calls(output):
+    """出力itemのうち、OpenAI組み込みweb_search toolの実行数を数える。
+    このtoolはOpenAI側で実行されるため、function_call/function_call_outputの往復は発生しない。"""
+    if not isinstance(output, list):
+        return 0
+    return sum(1 for item in output if isinstance(item, dict) and item.get("type") == "web_search_call")
+
+
+def extract_citations(output):
+    """message contentのurl_citationアノテーションから出典を集約する。
+    モデルが本文中に書いたURL文字列は信用せず、Responses APIが構造化して返す
+    annotationのみをcitationとして扱う(task-012)。"""
+    citations = []
+    seen_urls = set()
+    if not isinstance(output, list):
+        return citations
+    for item in output:
+        if not isinstance(item, dict) or item.get("type") != "message":
+            continue
+        for content in item.get("content", []):
+            if not isinstance(content, dict):
+                continue
+            for annotation in content.get("annotations", []) or []:
+                if not isinstance(annotation, dict) or annotation.get("type") != "url_citation":
+                    continue
+                url = str(annotation.get("url") or "").strip()
+                if not url or not url.startswith(("http://", "https://")) or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                citations.append({
+                    "title": str(annotation.get("title") or url).strip()[:200],
+                    "url": url,
+                })
+                if len(citations) >= MAX_CITATIONS:
+                    return citations
+    return citations
+
+
 def build_instructions_text(skills):
     parts = [INSTRUCTIONS_PREFIX]
     for skill in skills:
@@ -114,7 +177,16 @@ def build_instructions_text(skills):
     return "\n\n".join(parts)
 
 
-def build_agent_step_payload(instructions_text, input_items, tool_params):
+def _with_web_search_tool(tool_params, web_search_allowed):
+    if not web_search_allowed:
+        return tool_params
+    # search_context_size="high"で実ページを開かせやすくする。デフォルト(medium)だと
+    # 検索結果の要約だけで済ませ、url_citationアノテーション(参照リンク表示の元)が
+    # 付かないまま回答することがあった。
+    return list(tool_params or []) + [{"type": "web_search", "search_context_size": "high"}]
+
+
+def build_agent_step_payload(instructions_text, input_items, tool_params, web_search_allowed=False, prompt_cache_key=None):
     payload = {
         "model": OPENAI_AGENT_MODEL,
         "instructions": instructions_text,
@@ -123,13 +195,16 @@ def build_agent_step_payload(instructions_text, input_items, tool_params):
         "reasoning": {"effort": "low"},
         "max_output_tokens": 1200,
     }
-    if tool_params:
-        payload["tools"] = tool_params
+    tools = _with_web_search_tool(tool_params, web_search_allowed)
+    if tools:
+        payload["tools"] = tools
         payload["tool_choice"] = "auto"
+    if prompt_cache_key:
+        payload["prompt_cache_key"] = prompt_cache_key
     return payload
 
 
-def select_skills(user_message, history, registry, counters, trace):
+def select_skills(user_message, history, registry, counters, trace, conversation_id=None):
     skill_ids = registry.all_skill_ids()
     schema = build_skill_routing_schema(skill_ids)
     prompt = (
@@ -154,6 +229,9 @@ def select_skills(user_message, history, registry, counters, trace):
         "reasoning": {"effort": "minimal"},
         "max_output_tokens": 200,
     }
+    cache_key = build_prompt_cache_key(conversation_id)
+    if cache_key:
+        payload["prompt_cache_key"] = cache_key
 
     counters.check_deadline()
     counters.check_openai_call()
@@ -250,7 +328,7 @@ def execute_tool_call(call, tool_defs_by_id, run_context, counters, tool_cache,
     return _tool_output_item(call_id, output_payload)
 
 
-def force_final_answer(instructions_text, input_items, trace):
+def force_final_answer(instructions_text, input_items, trace, conversation_id=None):
     payload = {
         "model": OPENAI_AGENT_MODEL,
         "instructions": instructions_text + (
@@ -262,14 +340,18 @@ def force_final_answer(instructions_text, input_items, trace):
         "reasoning": {"effort": "low"},
         "max_output_tokens": 800,
     }
+    cache_key = build_prompt_cache_key(conversation_id)
+    if cache_key:
+        payload["prompt_cache_key"] = cache_key
     try:
         parsed = post_responses_api_raw(payload, timeout_seconds=OPENAI_AGENT_STEP_TIMEOUT_SECONDS)
     except OpenAIConciergeError:
-        return FALLBACK_REPLY
+        return FALLBACK_REPLY, []
 
     trace.record_openai_call()
-    _, final_text = split_output(parsed.get("output") or [])
-    return final_text or parsed.get("output_text") or FALLBACK_REPLY
+    output = parsed.get("output") or []
+    _, final_text = split_output(output)
+    return final_text or parsed.get("output_text") or FALLBACK_REPLY, output
 
 
 def run_agent(user_message, history, run_context, registry, counters):
@@ -280,7 +362,9 @@ def run_agent(user_message, history, run_context, registry, counters):
     """
     trace = RunTrace(run_context)
 
-    skill_ids, reason = select_skills(user_message, history, registry, counters, trace)
+    skill_ids, reason = select_skills(
+        user_message, history, registry, counters, trace, conversation_id=run_context.conversation_id,
+    )
     trace.record_skill_selection(skill_ids, reason)
 
     skills = registry.resolve_skills(skill_ids)
@@ -303,6 +387,7 @@ def run_agent(user_message, history, run_context, registry, counters):
     sequence_index = 0
     run_status = "ok"
     reply_markdown = None
+    final_output_items = []
 
     max_iterations = counters.max_tool_calls + 1
     for _ in range(max_iterations):
@@ -311,20 +396,35 @@ def run_agent(user_message, history, run_context, registry, counters):
             counters.check_openai_call()
         except UsageLimitExceeded as exc:
             run_status = f"{exc.limit_type}_reached"
-            reply_markdown = force_final_answer(instructions_text, input_items, trace)
+            reply_markdown, final_output_items = force_final_answer(
+                instructions_text, input_items, trace, conversation_id=run_context.conversation_id,
+            )
             break
 
+        web_search_allowed = (
+            CONCIERGE_AGENT_WEB_SEARCH_ENABLED
+            and trace.web_search_call_count < CONCIERGE_AGENT_MAX_WEB_SEARCH_PER_RUN
+        )
         parsed = post_responses_api_raw(
-            build_agent_step_payload(instructions_text, input_items, tool_params),
-            timeout_seconds=OPENAI_AGENT_STEP_TIMEOUT_SECONDS,
+            build_agent_step_payload(
+                instructions_text, input_items, tool_params, web_search_allowed,
+                prompt_cache_key=build_prompt_cache_key(run_context.conversation_id),
+            ),
+            timeout_seconds=(
+                OPENAI_AGENT_WEB_SEARCH_STEP_TIMEOUT_SECONDS
+                if web_search_allowed
+                else OPENAI_AGENT_STEP_TIMEOUT_SECONDS
+            ),
         )
         trace.record_openai_call()
 
         output = parsed.get("output") or []
+        trace.record_web_search_calls(count_web_search_calls(output))
         function_calls, final_text = split_output(output)
 
         if not function_calls:
             reply_markdown = final_text or parsed.get("output_text") or ""
+            final_output_items = output
             break
 
         input_items = input_items + output
@@ -344,11 +444,13 @@ def run_agent(user_message, history, run_context, registry, counters):
             input_items = input_items + [output_item]
 
         if limit_hit:
-            reply_markdown = force_final_answer(instructions_text, input_items, trace)
+            reply_markdown, final_output_items = force_final_answer(
+                instructions_text, input_items, trace, conversation_id=run_context.conversation_id,
+            )
             break
     else:
         run_status = "tool_calls_per_run_reached"
-        reply_markdown = force_final_answer(instructions_text, input_items, trace)
+        reply_markdown, final_output_items = force_final_answer(instructions_text, input_items, trace)
 
     if not reply_markdown:
         run_status = "error" if run_status == "ok" else run_status
@@ -358,6 +460,7 @@ def run_agent(user_message, history, run_context, registry, counters):
         reply_markdown=apply_output_guardrail(reply_markdown),
         ui_components=collected_ui[:MAX_UI_COMPONENTS],
         edit_actions=collected_actions[:MAX_EDIT_ACTIONS],
+        citations=extract_citations(final_output_items),
         run_status=run_status,
         trace=trace,
     )
