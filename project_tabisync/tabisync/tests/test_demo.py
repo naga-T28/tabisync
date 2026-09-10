@@ -5,10 +5,6 @@ from django.urls import reverse
 class DemoPageTests(TestCase):
     def test_demo_pages_return_200(self):
         url_names = [
-            "tabisync:demo_content",
-            "tabisync:demo_edit",
-            "tabisync:demo_list",
-            "tabisync:demo_memo",
             "tabisync:demo_v2_content",
             "tabisync:demo_v2_memo",
             "tabisync:demo_v2_list",

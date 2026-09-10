@@ -170,6 +170,24 @@ def extract_citations(output):
     return citations
 
 
+def merge_citations(*citation_lists):
+    """複数の出典元(内部ヘルプリンク、web_searchの引用)をURLで重複排除して結合する。
+    内部ヘルプリンクは呼び出したToolに直接紐づく参照であるため、web_search由来の引用より
+    先に積む(citation_listsの順序で優先度を表す)。"""
+    merged = []
+    seen_urls = set()
+    for citations in citation_lists:
+        for citation in citations or []:
+            url = citation.get("url") if isinstance(citation, dict) else None
+            if not url or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            merged.append(citation)
+            if len(merged) >= MAX_CITATIONS:
+                return merged
+    return merged
+
+
 def build_instructions_text(skills):
     parts = [INSTRUCTIONS_PREFIX]
     for skill in skills:
@@ -262,7 +280,7 @@ def _tool_output_item(call_id, payload):
 
 
 def execute_tool_call(call, tool_defs_by_id, run_context, counters, tool_cache,
-                       collected_ui, collected_actions, trace, sequence_index):
+                       collected_ui, collected_actions, collected_citations, trace, sequence_index):
     call_id = call.get("call_id")
     tool_name = call.get("name")
     tool_def = tool_defs_by_id.get(tool_name)
@@ -312,6 +330,10 @@ def execute_tool_call(call, tool_defs_by_id, run_context, counters, tool_cache,
     if tool_def.id == "show_map":
         tool_result, ui_component = result
         collected_ui.append(ui_component)
+        output_payload = tool_result
+    elif tool_def.id == "search_app_help":
+        tool_result, link_citations = result
+        collected_citations.extend(link_citations)
         output_payload = tool_result
     elif tool_def.id == "propose_changes":
         output_payload = result
@@ -383,6 +405,7 @@ def run_agent(user_message, history, run_context, registry, counters):
 
     collected_ui = []
     collected_actions = []
+    collected_citations = []
     tool_cache = {}
     sequence_index = 0
     run_status = "ok"
@@ -435,7 +458,7 @@ def run_agent(user_message, history, run_context, registry, counters):
             try:
                 output_item = execute_tool_call(
                     call, tool_defs_by_id, run_context, counters, tool_cache,
-                    collected_ui, collected_actions, trace, sequence_index,
+                    collected_ui, collected_actions, collected_citations, trace, sequence_index,
                 )
             except UsageLimitExceeded as exc:
                 run_status = f"{exc.limit_type}_reached"
@@ -460,7 +483,7 @@ def run_agent(user_message, history, run_context, registry, counters):
         reply_markdown=apply_output_guardrail(reply_markdown),
         ui_components=collected_ui[:MAX_UI_COMPONENTS],
         edit_actions=collected_actions[:MAX_EDIT_ACTIONS],
-        citations=extract_citations(final_output_items),
+        citations=merge_citations(collected_citations, extract_citations(final_output_items)),
         run_status=run_status,
         trace=trace,
     )
