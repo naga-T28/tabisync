@@ -35,7 +35,7 @@
         <!--オリジナルCSS-->
         <link rel="stylesheet" href="{% static 'css/style2.css'%}">
     </head>
-    <body id="content-body">
+    <body id="content-body" data-sw-url="{% static 'sw.js' %}">
         <header class="page-header">
             <div class="header-wrapper">
                 <div class="header-logo">
@@ -47,9 +47,9 @@
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
-                <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
-                <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
-                
+                <button id="share-button" data-share-text="旅行しおりを共有します"><i class="fa-solid fa-share-nodes"></i>共有</button>
+                <button id="reload-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
+
                 </div>
             </div>
         </header>
@@ -119,108 +119,7 @@
             </ul>
             <small>Copyright &copy; 2024-2026 TabiSync All Rights Reserved.</small>
         </footer>
-        <script src="{% static 'js/menu.js' %}"></script>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-          const urlBox = document.getElementById("copy-url-box");
-          const urlText = document.getElementById("copy-url-text");
-
-          if (urlBox && urlText) {
-            urlBox.addEventListener("click", function () {
-              const textToCopy = urlText.textContent;
-
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(textToCopy)
-                  .then(() => alert("URLをコピーしました！"))
-                  .catch(() => prompt("コピーできませんでした。手動でコピーしてください：", textToCopy));
-              } else {
-                prompt("コピーできませんでした。手動でコピーしてください：", textToCopy);
-              }
-            });
-          }
-        });
-          const defaultId = "date-{{ default_date_id }}";
-
-          document.querySelectorAll('.date-tab').forEach(button => {
-            button.addEventListener('click', () => {
-              const targetId = button.getAttribute('data-date-id');
-              document.querySelectorAll('.date-section').forEach(section => {
-                section.style.display = 'none';
-              });
-              document.getElementById(targetId).style.display = 'block';
-            });
-          });
-                  document.getElementById('share-button').addEventListener('click', function () {
-          if (navigator.share) {
-            navigator.share({
-              title: document.title,
-              text: '旅行しおりを共有します',
-              url: window.location.href
-            })
-            .then(() => console.log('共有成功'))
-            .catch((error) => console.log('共有失敗', error));
-          } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            // Web Share API非対応時、クリップボードにURLをコピー
-            navigator.clipboard.writeText(window.location.href)
-              .then(() => {
-                alert('URLをクリップボードにコピーしました。共有したい場所に貼り付けてください。');
-              })
-              .catch(() => {
-                alert('クリップボードへのコピーに失敗しました。手動でURLをコピーしてください。\n' + window.location.href);
-              });
-          } else {
-            // クリップボードAPIも無理なら、古典的にpromptでURLを表示
-            prompt('URLをコピーしてください:', window.location.href);
-          }
-          });
-
-          if (defaultId) {
-            document.getElementById(defaultId).style.display = 'block';
-          } else {
-            // Fallback: 最初を表示
-            const firstSection = document.querySelector('.date-section');
-            if (firstSection) firstSection.style.display = 'block';
-          }
-        if ("serviceWorker" in navigator) {
-              navigator.serviceWorker.register("{% static 'sw.js' %}")
-                .then(() => console.log("Service Worker 登録成功"))
-                .catch(err => console.error("SW 登録失敗:", err));
-            }
-
-          // スマホ表示用リンク簡略化スクリプト
-          document.addEventListener("DOMContentLoaded", () => {
-            const MOBILE_MAX_WIDTH = 768;
-
-            // スマホ以外は何もしない
-            if (window.innerWidth > MOBILE_MAX_WIDTH) return;
-
-            document.querySelectorAll(".url-content a").forEach(link => {
-              try {
-                const url = new URL(link.href);
-
-                // 表示テキストをドメインのみに
-                const domain = url.hostname.replace(/^www\./, "");
-
-                // アイコン要素を作成
-                const icon = document.createElement("i");
-                icon.className = "fa-solid fa-link";
-                icon.setAttribute("aria-hidden", "true");
-
-                // 既存テキストをクリア
-                link.textContent = "";
-
-                // アイコン + 半角スペース + ドメイン
-                link.appendChild(icon);
-                link.append(" " + domain);
-
-                // フルURLを確認できるように
-                link.title = link.href;
-
-              } catch (e) {
-                // URLとして解析できない場合は何もしない
-              }
-            });
-          });
-        </script>
+        <script src="{% static 'js/menu.js' %}?v=20260115" defer></script>
+        <script src="{% static 'js/legacy_content_actions.js' %}" defer></script>
     </body>
 </html>

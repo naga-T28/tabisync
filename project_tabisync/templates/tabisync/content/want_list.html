@@ -449,14 +449,6 @@ document.getElementById("placeModal").addEventListener("click", function(e) {
 });
 
 
-// CSRF（Django cookie）
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
-
 document.getElementById("dayFilterModal").addEventListener("click", function(e) {
     if (e.target === this) {
         closeDayFilterModal();
@@ -712,7 +704,7 @@ syncPlaceDetailToggle();
    保存 / 削除（WanteditへPOST）
 ================================= */
 async function savePlace(){
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
 
   const memo = document.getElementById("memoInput").value;
   const day = parseInt(document.getElementById("plannedDayInput").value || "0", 10);
@@ -820,7 +812,7 @@ async function deletePlace(){
   if (!editTargetId) return;
   if (!confirm("この場所を削除しますか？")) return;
 
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
 
 try {
   const res = await fetch("{% url 'tabisync:Wantedit' pk=itinerary.pk token=itinerary.token %}", {
@@ -883,14 +875,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  function startMapTour(forceStart) {
-    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
-
-    const tourStorageKey = "tabisync_map_tour_seen";
-    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
-
+  TabiSyncCommon.initOnboardingTour("tabisync_map_tour_seen", function () {
     const isPc = window.matchMedia("(min-width: 960px)").matches;
-    const tourSteps = [
+    return [
       {
         popover: {
           title: '地図へようこそ',
@@ -944,35 +931,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       ] : [])
     ];
-
-    const driverObj = window.driver.js.driver({
-      animate: true,
-      overlayOpacity: 0.75,
-      showProgress: true,
-      nextBtnText: '次へ',
-      prevBtnText: '戻る',
-      doneBtnText: '完了',
-      onDestroyed: function () {
-        window.localStorage.setItem(tourStorageKey, "true");
-      },
-      steps: tourSteps
-    });
-
-    driverObj.drive();
-  }
-
-  window.startContentTour = function () {
-    startMapTour(true);
-  };
-
-  startMapTour(false);
-
-  const tourButton = document.getElementById("content-tour-button");
-  if (tourButton) {
-    tourButton.addEventListener("click", function () {
-      startMapTour(true);
-    });
-  }
+  });
 });
 </script>
 

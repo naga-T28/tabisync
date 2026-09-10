@@ -72,10 +72,6 @@ from .static_pages import (
     UserAgreementView,
 )
 from .demo import (
-    DemoContentView,
-    DemoEditView,
-    DemoListView,
-    DemoMemoView,
     DemoV2ConciergeView,
     DemoV2ContentView,
     DemoV2EditView,
@@ -173,10 +169,6 @@ __all__ = [
     "QAView",
     "UpdatesView",
     "UserAgreementView",
-    "DemoContentView",
-    "DemoEditView",
-    "DemoListView",
-    "DemoMemoView",
     "DemoV2ConciergeView",
     "DemoV2ContentView",
     "DemoV2EditView",

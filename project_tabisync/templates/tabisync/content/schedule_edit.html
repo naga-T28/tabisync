@@ -431,20 +431,12 @@ function selectScheduleIcon(target, icon) {
   });
 }
 
-let rowIndex = 1000;
 let activeScheduleRow = null;
 let selectedPlace = null;
 let placesService = null;
 let autocompleteService = null;
 let placeTargetMode = "row";
 let editingRow = null;
-
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-}
 
 function initPlaceSearch() {
   const dummyMapEl = document.createElement("div");
@@ -564,7 +556,7 @@ function sortRowsByStartTime(panel) {
 document.querySelectorAll('.day-panel').forEach(panel => sortRowsByStartTime(panel));
 
 async function saveScheduleRow(payload) {
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
 
   try {
     const res = await fetch("{% url 'tabisync:schedule_v2_row_save' pk=itinerary.pk token=itinerary.token %}", {
@@ -641,7 +633,6 @@ function appendSavedRow(panel, data) {
 
   applyResultToRow(row, data);
   panel.querySelector('.schedule-list').appendChild(row);
-  rowIndex++;
 }
 
 async function createScheduleFromModal() {
@@ -762,7 +753,7 @@ async function deleteScheduleRow(btn) {
     return;
   }
 
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
 
   try {
     const res = await fetch("{% url 'tabisync:schedule_v2_row_delete' pk=itinerary.pk token=itinerary.token %}", {
@@ -804,9 +795,9 @@ function ensureEmptyDayMessage(panel) {
   list.appendChild(message);
 }
 
-function openPlaceModalFromSchedule(btn) {
-  placeTargetMode = "row";
-  activeScheduleRow = btn.closest(".schedule-row");
+function openPlaceModal(mode) {
+  placeTargetMode = mode;
+  activeScheduleRow = null;
   selectedPlace = null;
 
   document.getElementById("searchInput").value = "";
@@ -819,31 +810,11 @@ function openPlaceModalFromSchedule(btn) {
 }
 
 function openPlaceModalForNewSchedule() {
-  placeTargetMode = "new";
-  activeScheduleRow = null;
-  selectedPlace = null;
-
-  document.getElementById("searchInput").value = "";
-  document.getElementById("placeName").value = "";
-  document.getElementById("placeAddress").value = "";
-  document.getElementById("memoInput").value = "";
-  document.getElementById("suggestions").innerHTML = "";
-
-  document.getElementById("placeEditModal").classList.add("active");
+  openPlaceModal("new");
 }
 
 function openPlaceModalForEditSchedule() {
-  placeTargetMode = "edit";
-  activeScheduleRow = null;
-  selectedPlace = null;
-
-  document.getElementById("searchInput").value = "";
-  document.getElementById("placeName").value = "";
-  document.getElementById("placeAddress").value = "";
-  document.getElementById("memoInput").value = "";
-  document.getElementById("suggestions").innerHTML = "";
-
-  document.getElementById("placeEditModal").classList.add("active");
+  openPlaceModal("edit");
 }
 
 function closePlaceEditModal() {
@@ -974,7 +945,7 @@ function getPlannedDayFromCurrentTarget() {
 }
 
 async function savePlaceForSchedule() {
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
   const name = document.getElementById("placeName").value.trim();
   const address = document.getElementById("placeAddress").value.trim();
   const memo = document.getElementById("memoInput").value.trim();

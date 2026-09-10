@@ -39,6 +39,7 @@
         <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&loading=async" async defer></script>
         {{ map_display_config|json_script:"tabisync-map-config" }}
         <script src="{% static 'js/map_renderer.js' %}"></script>
+        <script src="{% static 'js/v2_common.js' %}"></script>
         <script>
           window.TABISYNC_MAP_CONFIG = JSON.parse(document.getElementById("tabisync-map-config").textContent);
         </script>
@@ -112,9 +113,6 @@
                   <a class="footer-nav-a" id="back-home" href="{% url 'tabisync:content_v2' pk=itinerary.pk token=itinerary.token %}">
                           <i class="fa-solid fa-house"></i>
                   </a>
-                  <button id="conciergeHistoryToggle" class="content-tour-button" type="button" aria-label="チャット履歴を開く" aria-expanded="false">
-                          <i class="fa-solid fa-clock-rotate-left"></i>
-                  </button>
                 </div>
                 <div class="header-logo">
                     <h1>
@@ -124,9 +122,9 @@
                     </h1>
                 </div>
                 <div class="header-buttons">
-                    <button id="content-tour-button" class="content-tour-button --ai" type="button" aria-label="使い方を見る">
-                        <i class="fa-regular fa-circle-question"></i>
-                    </button>
+                  <button id="conciergeHistoryToggle" class="content-tour-button" type="button" aria-label="チャット履歴を開く" aria-expanded="false">
+                          <i class="fa-solid fa-clock-rotate-left"></i>
+                  </button>
                 </div>
             </div>
         </header>
@@ -170,6 +168,7 @@
                 <span id="conciergeUsageUsed">{{ concierge_today_count|default:0 }}</span>/<span id="conciergeUsageLimit">{{ concierge_daily_limit|default:5 }}</span>
               </strong>
             </div>
+            <div id="conciergeSuggestions" class="concierge-suggestions" role="group" aria-label="質問例"></div>
             <form id="conciergeForm" class="concierge-form">
               <label class="concierge-input-wrap" for="conciergeInput">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -193,6 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const messagesEl = document.getElementById("conciergeMessages");
   const formEl = document.getElementById("conciergeForm");
   const inputEl = document.getElementById("conciergeInput");
+  const suggestionsEl = document.getElementById("conciergeSuggestions");
   const sendButtonEl = formEl.querySelector(".concierge-send-btn");
   const usageCountEl = document.getElementById("conciergeUsageCount");
   const usageUsedEl = document.getElementById("conciergeUsageUsed");
@@ -241,15 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
     usageLimitEl.textContent = String(dailyLimit);
   }
 
-  function escapeHtml(text) {
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
   // URLとして許容する文字だけを列挙する(除外リスト方式だと日本語の句読点や
   // 通常の文字がURLに巻き込まれてしまうため、許可リスト方式にしている)。
   const BARE_URL_PATTERN_SOURCE = "https?:\\/\\/[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'*+,;=%]+";
@@ -272,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderInlineMarkdown(text) {
-    let html = escapeHtml(text);
+    let html = TabiSyncCommon.escapeHtml(text);
     html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
     html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
@@ -584,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
           credentials: "same-origin",
           headers: {
             "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"),
+            "X-CSRFToken": TabiSyncCommon.getCookie("csrftoken"),
           },
           body: JSON.stringify({ urls: uncached }),
         });
@@ -952,9 +943,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function showWelcomeMessage() {
     const termsUrl = "{% url 'tabisync:concierge_terms' %}";
-    const welcomeMessage = `旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。[利用規約と注意事項](${termsUrl})を必ずお読みの上、ご利用ください。\n質問例：「Day2の予定を教えて」「おすすめの場所ある？」「空いている日はある？」「持ち物を考えて」`;
+    const welcomeMessage = `旅程表、行きたいところ、持ち物、メモを必要に応じて読み分けながら案内します。[利用規約と注意事項](${termsUrl})を必ずお読みの上、ご利用ください。`;
     addMessage("assistant", welcomeMessage, { markdown: true });
     chatHistory.push({ role: "assistant", content: welcomeMessage });
+  }
+
+  // ユーザーがまだ何も入力していない状態で表示する質問例(毎回ランダムに3件)。
+  const SUGGESTION_PROMPTS = [
+    "おすすめのお土産屋さんは？",
+    "おすすめの場所ある？",
+    "空いている日はある？",
+    "持ち物を考えて",
+    "移動時間が長い区間ある？",
+    "近くのおすすめスポットは？",
+    "食事の予定を確認したい",
+    "旅程をもっと楽しくして",
+    "忘れ物ないかチェックして",
+    "行きたい場所を日程に入れて",
+    "TabiSyncでできることを教えて",
+  ];
+
+  function pickRandomSuggestions(list, count) {
+    const pool = list.slice();
+    const picked = [];
+    while (pool.length && picked.length < count) {
+      const index = Math.floor(Math.random() * pool.length);
+      picked.push(pool.splice(index, 1)[0]);
+    }
+    return picked;
+  }
+
+  function hasUserMessage() {
+    return chatHistory.some((item) => item.role === "user");
+  }
+
+  function renderSuggestions() {
+    if (!suggestionsEl) return;
+    suggestionsEl.innerHTML = "";
+    if (hasUserMessage()) {
+      suggestionsEl.hidden = true;
+      return;
+    }
+    pickRandomSuggestions(SUGGESTION_PROMPTS, 3).forEach((prompt) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "concierge-suggestion-chip";
+      chip.textContent = prompt;
+      chip.addEventListener("click", () => {
+        suggestionsEl.hidden = true;
+        submitPrompt(prompt);
+      });
+      suggestionsEl.appendChild(chip);
+    });
+    suggestionsEl.hidden = false;
   }
 
   function switchConversation(id) {
@@ -962,6 +1003,7 @@ document.addEventListener("DOMContentLoaded", function () {
     conversationId = id;
     chatHistory = Array.isArray(conversations[id].messages) ? conversations[id].messages.slice() : [];
     renderActiveConversationMessages();
+    renderSuggestions();
     window.localStorage.setItem(storageKey, conversationId);
     renderConversationList();
     closeSidePanel();
@@ -972,6 +1014,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chatHistory = [];
     messagesEl.innerHTML = "";
     showWelcomeMessage();
+    renderSuggestions();
     window.localStorage.setItem(storageKey, conversationId);
     renderConversationList();
     closeSidePanel();
@@ -1039,15 +1082,6 @@ document.addEventListener("DOMContentLoaded", function () {
     sendButtonEl.classList.toggle("is-sending", isSending);
   }
 
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      return parts.pop().split(";").shift();
-    }
-    return "";
-  }
-
   async function submitPrompt(prompt) {
     const userText = String(prompt || "").trim();
     if (!userText) return;
@@ -1060,6 +1094,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chatHistory.push({ role: "user", content: userText });
     persistHistory();
     inputEl.value = "";
+    if (suggestionsEl) suggestionsEl.hidden = true;
     setSending(true);
 
     try {
@@ -1068,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", function () {
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
+          "X-CSRFToken": TabiSyncCommon.getCookie("csrftoken"),
         },
         body: JSON.stringify({
           message: userText,
@@ -1155,7 +1190,7 @@ document.addEventListener("DOMContentLoaded", function () {
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
+          "X-CSRFToken": TabiSyncCommon.getCookie("csrftoken"),
         },
         body: JSON.stringify({ edit_actions: editActions }),
       });
@@ -1264,19 +1299,15 @@ document.addEventListener("DOMContentLoaded", function () {
     showWelcomeMessage();
     persistHistory();
   }
+  renderSuggestions();
   renderConversationList();
 });
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  function startConciergeTour(forceStart) {
-    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
-
-    const tourStorageKey = "tabisync_concierge_tour_seen";
-    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
-
+  TabiSyncCommon.initOnboardingTour("tabisync_concierge_tour_seen", function () {
     const isPc = window.matchMedia("(min-width: 960px)").matches;
-    const tourSteps = [
+    return [
       {
         popover: {
           title: 'AIコンシェルジュへようこそ',
@@ -1308,15 +1339,6 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       ...(!isPc ? [
         {
-          element: '#content-tour-button',
-          popover: {
-            title: 'ヘルプ',
-            description: 'この説明はヘルプアイコンから再度見ることができます。'
-          }
-        }
-      ] : []),      
-      ...(!isPc ? [
-        {
           element: '#back-home',
           popover: {
             title: 'ホーム',
@@ -1331,35 +1353,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       },
     ];
-
-    const driverObj = window.driver.js.driver({
-      animate: true,
-      overlayOpacity: 0.75,
-      showProgress: true,
-      nextBtnText: '次へ',
-      prevBtnText: '戻る',
-      doneBtnText: '完了',
-      onDestroyed: function () {
-        window.localStorage.setItem(tourStorageKey, "true");
-      },
-      steps: tourSteps
-    });
-
-    driverObj.drive();
-  }
-
-  window.startContentTour = function () {
-    startConciergeTour(true);
-  };
-
-  startConciergeTour(false);
-
-  const tourButton = document.getElementById("content-tour-button");
-  if (tourButton) {
-    tourButton.addEventListener("click", function () {
-      startConciergeTour(true);
-    });
-  }
+  });
 });
 </script>
 <script>

@@ -30,11 +30,11 @@ test tool
 
 
 class ConciergeRegistryRealDefinitionsTests(SimpleTestCase):
-    """実際にリポジトリに存在する5Skill/7Tool Markdownがparse・検証できることを確認する。"""
+    """実際にリポジトリに存在する6Skill/8Tool Markdownがparse・検証できることを確認する。"""
 
     def test_real_definitions_build_successfully(self):
         reg = registry.build_registry()
-        self.assertEqual(len(reg.all_skill_ids()), 5)
+        self.assertEqual(len(reg.all_skill_ids()), 6)
 
     def test_every_skill_resolves_at_least_one_tool(self):
         reg = registry.build_registry()

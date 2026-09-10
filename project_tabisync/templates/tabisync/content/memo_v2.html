@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveStatus = document.getElementById("save-status");
   const saveStatusText = saveStatus ? saveStatus.querySelector(".memo-v2-save-status-text") : null;
   const notesScript = document.getElementById("memo-notes-data");
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = TabiSyncCommon.getCookie("csrftoken");
   const canEdit = shell ? shell.dataset.canEdit === "true" : false;
   const desktopMedia = window.matchMedia("(min-width: 960px)");
   const MAX_MEMOS_PER_ITINERARY = 15;
@@ -54,24 +54,12 @@ document.addEventListener("DOMContentLoaded", function () {
     notes = [];
   }
 
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return "";
-  }
-
   function createNoteId() {
-    return `note-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    return TabiSyncCommon.createId("note");
   }
 
   function escapeHtml(text) {
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    return TabiSyncCommon.escapeHtml(text);
   }
 
   function countMemoWords(content) {
@@ -207,20 +195,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function setSaveStatus(status, text) {
     if (!saveStatus || !saveStatusText) return;
 
-    const iconClassMap = {
-      idle: "fa-circle-info",
-      saving: "fa-rotate fa-spin",
-      saved: "fa-circle-check",
-      error: "fa-circle-exclamation",
-      dirty: "fa-pen",
-    };
-
     saveStatus.dataset.status = status;
     saveStatusText.textContent = text;
 
     const icon = saveStatus.querySelector("i");
     if (icon) {
-      icon.className = `fa-solid ${iconClassMap[status] || iconClassMap.idle}`;
+      icon.className = TabiSyncCommon.statusIconClass(status);
     }
   }
 
@@ -531,14 +511,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  function startMemoTour(forceStart) {
-    if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
-
-    const tourStorageKey = "tabisync_memo_tour_seen";
-    if (!forceStart && window.localStorage.getItem(tourStorageKey)) return;
-
+  TabiSyncCommon.initOnboardingTour("tabisync_memo_tour_seen", function () {
     const isPc = window.matchMedia("(min-width: 960px)").matches;
-    const tourSteps = [
+    return [
       {
         popover: {
           title: 'メモへようこそ',
@@ -585,35 +560,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       ] : [])
     ];
-
-    const driverObj = window.driver.js.driver({
-      animate: true,
-      overlayOpacity: 0.75,
-      showProgress: true,
-      nextBtnText: '次へ',
-      prevBtnText: '戻る',
-      doneBtnText: '完了',
-      onDestroyed: function () {
-        window.localStorage.setItem(tourStorageKey, "true");
-      },
-      steps: tourSteps
-    });
-
-    driverObj.drive();
-  }
-
-  window.startContentTour = function () {
-    startMemoTour(true);
-  };
-
-  startMemoTour(false);
-
-  const tourButton = document.getElementById("content-tour-button");
-  if (tourButton) {
-    tourButton.addEventListener("click", function () {
-      startMemoTour(true);
-    });
-  }
+  });
 });
 </script>
 {% endblock %}

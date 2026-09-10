@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from ..concierge_agent.context import RunContext
 from ..concierge_agent.errors import ToolExecutionError
-from ..concierge_tools import proposal_tools, read_tools, ui_tools
+from ..concierge_tools import help_tools, proposal_tools, read_tools, ui_tools
 from ..models import Itinerary, ScheduleV2, WantToGo
 
 
@@ -190,3 +190,42 @@ class ProposeChangesToolTests(TestCase):
     def test_propose_changes_empty_actions_returns_empty_result(self):
         result = proposal_tools.propose_changes(self.run_context, [])
         self.assertEqual(result, {"accepted": [], "rejected": []})
+
+
+class SearchAppHelpTests(TestCase):
+    """search_app_help: TabiSync自体の機能説明を返す軽量検索Toolのテスト。"""
+
+    def setUp(self):
+        self.itinerary = Itinerary.objects.create(
+            title="Trip A", start_date=date(2026, 1, 1), end_date=date(2026, 1, 3),
+        )
+        self.run_context = build_run_context(self.itinerary)
+
+    def test_empty_query_raises(self):
+        with self.assertRaises(ToolExecutionError) as ctx:
+            help_tools.search_app_help(self.run_context, "  ")
+        self.assertEqual(ctx.exception.error_code, "invalid_query")
+
+    def test_relevant_query_returns_matching_guide_link(self):
+        tool_result, citations = help_tools.search_app_help(
+            self.run_context, "友達と一緒に編集できますか",
+        )
+        self.assertTrue(tool_result["results"])
+        titles = [item["title"] for item in tool_result["results"]]
+        self.assertIn("友達・家族と旅行計画を共同編集する方法", titles)
+        for item in tool_result["results"]:
+            self.assertTrue(item["url"].startswith("http"))
+        self.assertEqual(citations, [
+            {"title": item["title"], "url": item["url"]} for item in tool_result["results"]
+        ])
+
+    def test_unrelated_query_returns_no_results(self):
+        tool_result, citations = help_tools.search_app_help(
+            self.run_context, "今日の東京の天気を教えて",
+        )
+        self.assertEqual(tool_result["results"], [])
+        self.assertEqual(citations, [])
+
+    def test_results_capped_at_three(self):
+        tool_result, _ = help_tools.search_app_help(self.run_context, "しおり 機能 使い方")
+        self.assertLessEqual(len(tool_result["results"]), 3)

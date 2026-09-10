@@ -4381,7 +4381,6 @@ body#concierge-body {
 }
 
 .concierge-chat-shell {
-  border-radius: 22px;
   background: #fff;
 }
 
@@ -4391,6 +4390,7 @@ body#concierge-body {
   height: 100%;
   min-height: 0;
   padding: 0;
+  padding-bottom: -30px;
   overflow: hidden;
   border-radius: 0;
 }
@@ -4797,6 +4797,42 @@ body#concierge-body {
   font-weight: 700;
 }
 
+.concierge-suggestions {
+  pointer-events: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 860px;
+  margin: 0 auto 10px;
+  padding: 0 10px;
+}
+
+.concierge-suggestions[hidden] {
+  display: none;
+}
+
+.concierge-suggestion-chip {
+  border: 1px solid rgba(47, 55, 71, 0.14);
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #2f3747;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(28, 36, 51, 0.08);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.concierge-suggestion-chip:hover {
+  background: #f5f6f8;
+}
+
+.concierge-suggestion-chip:active {
+  transform: scale(0.97);
+}
+
 .concierge-input-wrap {
   display: flex;
   align-items: center;
@@ -4881,12 +4917,6 @@ body#concierge-body {
   .concierge-hero {
     padding: 24px;
     border-radius: 0;
-  }
-  .concierge-chat-shell {
-    border-radius: 28px;
-  }
-  .concierge-chat-shell {
-    border-radius: 28px;
   }
   /* 履歴パネルは右側に表示する(Open WebUI風)。DOM順は変えず、
      grid上のorderだけ入れ替えてチャット→履歴の見た目にする。 */

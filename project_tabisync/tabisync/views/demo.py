@@ -4,46 +4,6 @@ from django.views.generic import TemplateView
 # =========================
 # デモページ
 # =========================
-class DemoContentView(TemplateView):
-    template_name = "demo/content_demo.html"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["demo_nav"] = "content"
-        return context
-
-
-
-class DemoMemoView(TemplateView):
-    template_name = "demo/memo_demo.html"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["demo_nav"] = "memo"
-        return context
-
-
-
-class DemoEditView(TemplateView):
-    template_name = "demo/edit_demo.html"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["demo_nav"] = "edit"
-        return context
-
-
-
-class DemoListView(TemplateView):
-    template_name = "demo/list_demo.html"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["demo_nav"] = "list"
-        return context
-
-
-
 class DemoV2ContentView(TemplateView):
     template_name = "demo/v2_content_demo.html"
 
