@@ -47,9 +47,9 @@
                 </div>
                 <!-- ハンバーガーアイコン -->
                 <div class="header-buttons">
-                <button id="share-button"><i class="fa-solid fa-share-nodes"></i>共有</button>
-                <button id="share-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
-                
+                <button id="share-button" data-share-text="旅行しおりを共有します"><i class="fa-solid fa-share-nodes"></i>共有</button>
+                <button id="reload-button" onclick="location.reload();"><i class="fa-solid fa-sync"></i>更新</button>
+
                 </div>
             </div>
         </header>
@@ -157,12 +157,6 @@
     </form>
 </main>
 
-<script>
-    // 既存データの件数から index を初期化
-    const dateIndex = {{ itinerary.travel_dates.count }};
-    const memoIndex = {{ itinerary.memos.count }};
-    const itemIndex = {{ itinerary.items.count }};
-</script>
 <script src="{% static 'js/edit_form.js' %}?v=20260115"></script>
 
         <footer>
@@ -182,31 +176,7 @@
             </ul>
             <small>Copyright &copy; 2024-2026 TabiSync All Rights Reserved.</small>
         </footer>
-        <script src="{% static 'js/menu.js' %}"></script>
-        <script>
-        document.getElementById('share-button').addEventListener('click', function () {
-          if (navigator.share) {
-            navigator.share({
-              title: document.title,
-              text: '旅行しおりを共有します',
-              url: window.location.href
-            })
-            .then(() => console.log('共有成功'))
-            .catch((error) => console.log('共有失敗', error));
-          } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            // Web Share API非対応時、クリップボードにURLをコピー
-            navigator.clipboard.writeText(window.location.href)
-              .then(() => {
-                alert('URLをクリップボードにコピーしました。共有したい場所に貼り付けてください。');
-              })
-              .catch(() => {
-                alert('クリップボードへのコピーに失敗しました。手動でURLをコピーしてください。\n' + window.location.href);
-              });
-          } else {
-            // クリップボードAPIも無理なら、古典的にpromptでURLを表示
-            prompt('URLをコピーしてください:', window.location.href);
-          }
-          });
-        </script>
+        <script src="{% static 'js/menu.js' %}?v=20260115" defer></script>
+        <script src="{% static 'js/legacy_content_actions.js' %}" defer></script>
     </body>
 </html>
